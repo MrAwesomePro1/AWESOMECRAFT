@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AWESOMECRAFT</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="control-panel">
+      <div class="brand-card">
+        <p class="eyebrow">Touch-first sandbox prototype for iPad and desktop</p>
+        <h1>AWESOMECRAFT</h1>
+        <p class="subtitle">Build, battle, stream, and jump into friend-only realms.</p>
+      </div>
+
+      <section class="panel-card">
+        <div class="section-heading">
+          <h2>Player</h2>
+          <span id="connectionBadge" class="badge">Offline</span>
+        </div>
+        <label class="field">
+          <span>Name</span>
+          <input id="playerNameInput" type="text" maxlength="18" value="BuilderOne">
+        </label>
+        <div class="stats-grid">
+          <div class="stat-tile">
+            <span class="stat-label">Health</span>
+            <strong id="healthValue">20 / 20</strong>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-label">Realm</span>
+            <strong id="realmValue">Solo</strong>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-label">Voice</span>
+            <strong id="voiceStatus">Friends only</strong>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-label">Record</span>
+            <strong id="recordStatus">Ready</strong>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-label">Time</span>
+            <strong id="timeValue">Day</strong>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-label">Dimension</span>
+            <strong id="dimensionValue">Overworld</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel-card">
+        <div class="section-heading">
+          <h2>Realms + Multiplayer</h2>
+          <span class="badge accent">Local realm sync</span>
+        </div>
+        <label class="field">
+          <span>Realm code</span>
+          <input id="realmCodeInput" type="text" maxlength="12" placeholder="SLIME01">
+        </label>
+        <div class="button-row">
+          <button id="createRealmBtn" class="primary">Create Realm</button>
+          <button id="joinRealmBtn">Join Realm</button>
+          <button id="leaveRealmBtn" class="ghost">Leave</button>
+        </div>
+        <div class="friends-section">
+          <div class="section-heading compact">
+            <h3>Friends</h3>
+            <span id="playerCount" class="badge">1 online</span>
+          </div>
+          <div id="friendsList" class="list-stack"></div>
+        </div>
+      </section>
+
+      <section class="panel-card">
+        <div class="section-heading">
+          <h2>Content Library</h2>
+          <span id="activePackSummary" class="badge">Everything unlocked</span>
+        </div>
+        <div class="library-grid">
+          <div>
+            <h3>Texture Packs</h3>
+            <div id="texturePackList" class="list-stack"></div>
+          </div>
+          <div>
+            <h3>Mash-Ups</h3>
+            <div id="mashupList" class="list-stack"></div>
+          </div>
+          <div>
+            <h3>Mods</h3>
+            <div id="modsList" class="list-stack"></div>
+          </div>
+          <div>
+            <h3>Add-Ons</h3>
+            <div id="addonsList" class="list-stack"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel-card">
+        <div class="section-heading">
+          <h2>Voice + Recording</h2>
+          <span class="badge">Browser powered</span>
+        </div>
+        <div class="button-row">
+          <button id="voiceBtn" class="primary">Enable Voice</button>
+          <button id="recordBtn">Start Recording</button>
+        </div>
+        <p class="small-copy">Voice chat only plays for friends in the same realm. Recording captures the game canvas and microphone when supported.</p>
+      </section>
+    </aside>
+
+    <main class="play-panel">
+      <header class="world-header">
+        <div>
+          <p class="eyebrow">Sandbox build + survival boss fight</p>
+          <h2>Slime Frontier</h2>
+        </div>
+        <div class="hot-info">
+          <div class="mini-pill">Target: <span id="targetInfo">Select a tile</span></div>
+          <div class="mini-pill">Tool: <span id="toolInfo">Stone Block</span></div>
+          <div class="mini-pill">Time: <span id="timeBadge">Day</span></div>
+          <div class="mini-pill">BuildTube: <span id="buildTubeHint">Find a computer</span></div>
+        </div>
+      </header>
+
+      <section class="game-stage">
+        <canvas id="gameCanvas" width="1080" height="720" aria-label="AWESOMECRAFT game world"></canvas>
+        <div id="bossBanner" class="boss-banner hidden">
+          <div class="boss-title">Final Boss: Giga Slime</div>
+          <div class="boss-bar">
+            <div id="bossHealthFill" class="boss-fill"></div>
+          </div>
+          <span id="bossHealthText">100 / 100</span>
+        </div>
+        <div id="notificationStack" class="notification-stack"></div>
+        <div class="hotbar" id="hotbar"></div>
+
+        <div class="touch-controls">
+          <div class="dpad">
+            <button data-move="up" class="touch-button">Up</button>
+            <div class="dpad-row">
+              <button data-move="left" class="touch-button">Left</button>
+              <button data-move="down" class="touch-button">Down</button>
+              <button data-move="right" class="touch-button">Right</button>
+            </div>
+          </div>
+          <div class="action-cluster">
+            <button id="breakBtn" class="touch-button action">Break</button>
+            <button id="placeBtn" class="touch-button action">Place</button>
+            <button id="attackBtn" class="touch-button action danger">Attack</button>
+            <button id="interactBtn" class="touch-button action">Use / Portal</button>
+            <button id="inventoryBtn" class="touch-button action">Inventory</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel-row">
+        <article class="panel-card action-card">
+          <div class="section-heading">
+            <h2>Adventure Notes</h2>
+            <span class="badge accent">Boss has 100 HP</span>
+          </div>
+          <p class="small-copy">Press <strong>E</strong> for inventory and 3x3 crafting, press <strong>F</strong> to use portals or computers, press <strong>P</strong> to pause, and survive after dark when monsters begin to spawn.</p>
+          <div class="button-row">
+            <button id="summonBossBtn" class="primary">Summon Boss</button>
+            <button id="healBtn">Quick Heal</button>
+            <button id="openInventoryBtn">Open Inventory</button>
+            <button id="saveWorldBtn" class="ghost">Save World</button>
+          </div>
+        </article>
+
+        <article class="panel-card action-card">
+          <div class="section-heading">
+            <h2>BuildTube Computer</h2>
+            <span class="badge">Computer block app</span>
+          </div>
+          <p class="small-copy">Place or find a computer block, stand beside it, then hit <strong>F</strong> or tap Use to open BuildTube.</p>
+          <div id="tutorialPreview" class="tutorial-preview">Featured: Slime-proof tower, floating farm, pocket realm hub.</div>
+        </article>
+      </section>
+
+      <section class="panel-card">
+        <div class="section-heading">
+          <h2>Activity Log</h2>
+          <span class="badge">Latest events</span>
+        </div>
+        <div id="eventLog" class="event-log"></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="modeMenu" class="mode-menu">
+    <div class="mode-card">
+      <p class="eyebrow">Choose Your Mode</p>
+      <h2>Start AWESOMECRAFT</h2>
+      <p class="small-copy">Pick a world type before you enter. You can still use the Realms panel after this for codes and hosting.</p>
+      <div class="mode-actions">
+        <button id="singlePlayerBtn" class="primary">Single Player</button>
+        <button id="multiPlayerBtn">Multiplayer</button>
+      </div>
+      <p id="modeStatus" class="small-copy">Single player starts offline. Multiplayer starts a local realm host.</p>
+    </div>
+  </div>
+
+  <div id="pauseMenu" class="pause-menu">
+    <div class="pause-card">
+      <p class="eyebrow">Game Paused</p>
+      <h2>Pause Menu</h2>
+      <p class="small-copy">Press <strong>P</strong> again or tap Resume to jump back in.</p>
+      <div class="pause-actions">
+        <button id="resumeGameBtn" class="primary">Resume</button>
+        <button id="pauseSaveBtn">Save World</button>
+      </div>
+    </div>
+  </div>
+
+  <dialog id="computerModal" class="computer-modal">
+    <div class="computer-shell">
+      <div class="computer-header">
+        <div>
+          <p class="eyebrow">Computer block</p>
+          <h2>BuildTube</h2>
+        </div>
+        <button id="closeComputerBtn" class="ghost">Close</button>
+      </div>
+      <div class="computer-grid">
+        <div id="buildTubeList" class="buildtube-list"></div>
+        <article class="buildtube-viewer">
+          <h3 id="videoTitle">Pick a build tutorial</h3>
+          <p id="videoCreator" class="small-copy"></p>
+          <p id="videoDescription" class="video-description">Use computers to watch short build breakdowns while you craft.</p>
+          <div id="videoSteps" class="video-steps"></div>
+        </article>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="inventoryModal" class="inventory-modal">
+    <div class="inventory-shell">
+      <div class="computer-header">
+        <div>
+          <p class="eyebrow">Builder inventory</p>
+          <h2>Inventory + Crafting</h2>
+        </div>
+        <button id="closeInventoryBtn" class="ghost">Close</button>
+      </div>
+      <div class="inventory-layout">
+        <section class="inventory-panel">
+          <div class="section-heading compact">
+            <h3>Inventory</h3>
+            <span id="selectedInventoryHint" class="badge">Select a stack</span>
+          </div>
+          <div id="inventoryGrid" class="inventory-grid"></div>
+        </section>
+        <section class="inventory-panel">
+          <div class="section-heading compact">
+            <h3>3x3 Crafting</h3>
+            <button id="clearCraftingBtn" class="ghost">Clear Grid</button>
+          </div>
+          <div class="crafting-layout">
+            <div id="craftingGrid" class="crafting-grid"></div>
+            <div class="craft-output">
+              <span class="small-copy">Output</span>
+              <button id="craftOutputBtn" class="craft-output-button">Nothing Crafted</button>
+            </div>
+          </div>
+          <div id="recipeHint" class="tutorial-preview">Recipes: 2x2 stone = glass, glass shell + crystal core = computer, crystal frame + slime core = portal.</div>
+        </section>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="./boot.js"></script>
+</body>
+</html>
