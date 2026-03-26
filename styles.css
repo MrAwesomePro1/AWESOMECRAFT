@@ -574,6 +574,31 @@ input {
   width: 100%;
 }
 
+.secret-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.secret-row .small-copy {
+  margin: 0;
+}
+
+.secret-launch {
+  margin-left: auto;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  opacity: 0.76;
+}
+
+.secret-launch:hover,
+.secret-launch:focus-visible {
+  opacity: 1;
+}
+
 .saved-world-list {
   display: grid;
   gap: 10px;

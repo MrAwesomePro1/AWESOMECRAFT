@@ -8,6 +8,7 @@ AWESOMECRAFT is an original browser-based sandbox prototype inspired by block-bu
 - named worlds with save slots you can reload later
 - single-player or multiplayer world starts
 - creative or survival world creation
+- a hidden `Secret World` start that switches straight into creative mode
 - mods, add-ons, mash-ups, and texture packs
 - a full inventory screen with a `3x3` crafting grid
 - a day and night cycle with monsters spawning after dark
@@ -36,3 +37,5 @@ Keyboard controls:
 This project can be published directly with GitHub Pages from the repository root. The `.nojekyll` file is included so the static files deploy without a Jekyll build step.
 
 Touch controls are shown on screen automatically.
+
+To jump into the hidden creative realm, use the `Secret World` button on the `New World` screen. It starts a saved world slot named `Secret World`, so it also shows up later under `Load World`.

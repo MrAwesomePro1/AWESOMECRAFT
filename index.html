@@ -581,6 +581,31 @@ input {
   width: 100%;
 }
 
+.secret-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.secret-row .small-copy {
+  margin: 0;
+}
+
+.secret-launch {
+  margin-left: auto;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  opacity: 0.76;
+}
+
+.secret-launch:hover,
+.secret-launch:focus-visible {
+  opacity: 1;
+}
+
 .saved-world-list {
   display: grid;
   gap: 10px;
@@ -1026,6 +1051,10 @@ input {
           </div>
         </div>
         <button id="playNewWorldBtn" class="primary launch-button">Play</button>
+        <div class="secret-row">
+          <span class="small-copy">Psst... hidden creative realm.</span>
+          <button id="secretWorldBtn" type="button" class="ghost secret-launch">Secret World</button>
+        </div>
       </div>
       <div id="loadWorldPanel" class="start-panel hidden-panel">
         <div id="savedWorldList" class="saved-world-list"></div>
@@ -1139,6 +1168,7 @@ input {
     survivalModeBtn: document.getElementById("survivalModeBtn"),
     creativeModeBtn: document.getElementById("creativeModeBtn"),
     playNewWorldBtn: document.getElementById("playNewWorldBtn"),
+    secretWorldBtn: document.getElementById("secretWorldBtn"),
     savedWorldList: document.getElementById("savedWorldList"),
     modeStatus: document.getElementById("modeStatus"),
     pauseMenu: document.getElementById("pauseMenu"),
@@ -2001,14 +2031,16 @@ input {
     updateCamera();
   }
 
-  function createNewWorld() {
-    var name = (ui.worldNameInput.value || "My World").replace(/^\s+|\s+$/g, "") || "My World";
+  function startWorld(name, mode, connected, realmCode, logMessage, readyMessage) {
     state.playerName = (ui.playerNameInput.value || state.playerName).replace(/^\s+|\s+$/g, "") || "BuilderOne";
     state.currentWorldId = createWorldId();
     state.worldName = name;
-    state.gameMode = state.pendingWorldMode;
-    state.connected = !!state.pendingConnection;
-    state.realmCode = state.connected ? (ui.realmCodeInput.value || "COOL") : "";
+    state.gameMode = mode;
+    state.connected = !!connected;
+    state.realmCode = state.connected ? (realmCode || "COOL") : "";
+    state.pendingWorldMode = mode;
+    state.pendingConnection = !!connected;
+    ui.worldNameInput.value = state.worldName;
     ui.realmCodeInput.value = state.realmCode;
     prepareFreshWorld();
     renderHotbar();
@@ -2018,8 +2050,17 @@ input {
     updateHUD();
     saveGame();
     closeModeMenu();
-    addLog('Started ' + (state.gameMode === "creative" ? "Creative" : "Survival") + ' world "' + state.worldName + '".');
-    notify(state.worldName + " is ready.");
+    addLog(logMessage || ('Started ' + (state.gameMode === "creative" ? "Creative" : "Survival") + ' world "' + state.worldName + '".'));
+    notify(readyMessage || (state.worldName + " is ready."));
+  }
+
+  function createNewWorld() {
+    var name = (ui.worldNameInput.value || "My World").replace(/^\s+|\s+$/g, "") || "My World";
+    startWorld(name, state.pendingWorldMode, !!state.pendingConnection, ui.realmCodeInput.value || "COOL");
+  }
+
+  function createSecretWorld() {
+    startWorld("Secret World", "creative", false, "", 'The Secret World opened in Creative mode.', "Secret World unlocked.");
   }
 
   function loadWorldById(id) {
@@ -2850,6 +2891,7 @@ input {
     ui.survivalModeBtn.onclick = chooseSurvivalMode;
     ui.creativeModeBtn.onclick = chooseCreativeMode;
     ui.playNewWorldBtn.onclick = createNewWorld;
+    ui.secretWorldBtn.onclick = createSecretWorld;
     ui.resumeGameBtn.onclick = closePauseMenu;
     ui.pauseSaveBtn.onclick = function () {
       saveGame();
