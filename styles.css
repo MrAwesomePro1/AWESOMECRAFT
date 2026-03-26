@@ -551,6 +551,54 @@ input {
   flex: 1 1 180px;
 }
 
+.compact-actions {
+  margin-top: 8px;
+}
+
+.start-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.hidden-panel {
+  display: none;
+}
+
+.start-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.launch-button {
+  width: 100%;
+}
+
+.saved-world-list {
+  display: grid;
+  gap: 10px;
+}
+
+.saved-world-card {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(6, 16, 22, 0.74);
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.saved-world-card h3,
+.saved-world-card p {
+  margin: 0;
+}
+
+.saved-world-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .computer-modal {
   width: min(960px, calc(100vw - 24px));
   border: none;
@@ -708,7 +756,8 @@ input {
   .panel-row,
   .computer-grid,
   .inventory-layout,
-  .crafting-layout {
+  .crafting-layout,
+  .start-grid {
     grid-template-columns: 1fr;
     display: grid;
   }

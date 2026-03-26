@@ -24,8 +24,17 @@
     interactBtn: document.getElementById("interactBtn"),
     inventoryBtn: document.getElementById("inventoryBtn"),
     modeMenu: document.getElementById("modeMenu"),
+    newWorldTabBtn: document.getElementById("newWorldTabBtn"),
+    loadWorldTabBtn: document.getElementById("loadWorldTabBtn"),
+    newWorldPanel: document.getElementById("newWorldPanel"),
+    loadWorldPanel: document.getElementById("loadWorldPanel"),
     singlePlayerBtn: document.getElementById("singlePlayerBtn"),
     multiPlayerBtn: document.getElementById("multiPlayerBtn"),
+    worldNameInput: document.getElementById("worldNameInput"),
+    survivalModeBtn: document.getElementById("survivalModeBtn"),
+    creativeModeBtn: document.getElementById("creativeModeBtn"),
+    playNewWorldBtn: document.getElementById("playNewWorldBtn"),
+    savedWorldList: document.getElementById("savedWorldList"),
     modeStatus: document.getElementById("modeStatus"),
     pauseMenu: document.getElementById("pauseMenu"),
     resumeGameBtn: document.getElementById("resumeGameBtn"),
@@ -82,6 +91,8 @@
   var PLAYER_SPEED = 4;
   var HOTBAR_SIZE = 6;
   var SAVE_KEY = "awesomecraft.lite.v4";
+  var WORLD_INDEX_KEY = "awesomecraft.worldIndex.v1";
+  var WORLD_SAVE_PREFIX = "awesomecraft.world.";
   var portalPoints = {
     overworld: { x: 36, y: 28, target: "nether", spawnX: 24, spawnY: 24 },
     nether: { x: 24, y: 24, target: "overworld", spawnX: 37, spawnY: 29 },
@@ -153,9 +164,15 @@
 
   var state = {
     playerName: "BuilderOne",
+    worldName: "My World",
+    currentWorldId: "",
+    gameMode: "survival",
     realmCode: "",
     connected: false,
     friends: 1,
+    startMenuTab: "new",
+    pendingWorldMode: "survival",
+    pendingConnection: false,
     dimension: "overworld",
     dayClock: 0.3,
     night: false,
@@ -233,6 +250,145 @@
 
   function bossIsVisible() {
     return state.dimension === state.boss.dimension && state.boss.awake && !state.boss.defeated;
+  }
+
+  function isCreativeMode() {
+    return state.gameMode === "creative";
+  }
+
+  function applyCreativeLoadout() {
+    state.inventory = [
+      { id: "stone", count: 999 },
+      { id: "wood", count: 999 },
+      { id: "glass", count: 999 },
+      { id: "computer", count: 16 },
+      { id: "slime", count: 999 },
+      { id: "portal", count: 16 },
+      { id: "crystal", count: 64 },
+      { id: "stone", count: 999 },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ];
+  }
+
+  function worldSnapshotKey(id) {
+    return WORLD_SAVE_PREFIX + id;
+  }
+
+  function loadWorldIndex() {
+    try {
+      return JSON.parse(localStorage.getItem(WORLD_INDEX_KEY) || "[]");
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function saveWorldIndex(list) {
+    localStorage.setItem(WORLD_INDEX_KEY, JSON.stringify(list));
+  }
+
+  function formatWorldDate(value) {
+    var stamp = new Date(value);
+    if (isNaN(stamp.getTime())) {
+      return "Unknown save";
+    }
+    return stamp.toLocaleString();
+  }
+
+  function renderSavedWorlds() {
+    var worlds = loadWorldIndex();
+    var html = "";
+    var i;
+    if (!worlds.length) {
+      ui.savedWorldList.innerHTML = '<div class="saved-world-card"><h3>No saved worlds yet</h3><p class="small-copy">Create a new world, then use Save World to keep it here.</p></div>';
+      return;
+    }
+    worlds.sort(function (left, right) {
+      return String(right.updatedAt || "").localeCompare(String(left.updatedAt || ""));
+    });
+    for (i = 0; i < worlds.length; i += 1) {
+      html += '<div class="saved-world-card">';
+      html += '<h3>' + worlds[i].name + '</h3>';
+      html += '<div class="saved-world-meta">';
+      html += '<span class="badge">' + (worlds[i].mode === "creative" ? "Creative" : "Survival") + '</span>';
+      html += '<span class="badge accent">' + (worlds[i].playType === "multiplayer" ? "Multiplayer" : "Single Player") + '</span>';
+      html += '</div>';
+      html += '<p class="small-copy">Saved ' + formatWorldDate(worlds[i].updatedAt) + '</p>';
+      html += '<button type="button" class="primary" data-load-world="' + worlds[i].id + '">Play ' + worlds[i].name + '</button>';
+      html += '</div>';
+    }
+    ui.savedWorldList.innerHTML = html;
+  }
+
+  function renderStartMenu() {
+    ui.newWorldTabBtn.className = state.startMenuTab === "new" ? "primary" : "";
+    ui.loadWorldTabBtn.className = state.startMenuTab === "load" ? "primary" : "";
+    ui.newWorldPanel.className = "start-panel" + (state.startMenuTab === "new" ? "" : " hidden-panel");
+    ui.loadWorldPanel.className = "start-panel" + (state.startMenuTab === "load" ? "" : " hidden-panel");
+    ui.singlePlayerBtn.className = state.pendingConnection ? "" : "primary";
+    ui.multiPlayerBtn.className = state.pendingConnection ? "primary" : "";
+    ui.survivalModeBtn.className = state.pendingWorldMode === "survival" ? "primary" : "";
+    ui.creativeModeBtn.className = state.pendingWorldMode === "creative" ? "primary" : "";
+    renderSavedWorlds();
+  }
+
+  function buildWorldSnapshot() {
+    return {
+      playerName: state.playerName,
+      worldName: state.worldName,
+      gameMode: state.gameMode,
+      connected: state.connected,
+      realmCode: state.realmCode,
+      dimension: state.dimension,
+      dayClock: state.dayClock,
+      worlds: state.worlds,
+      monsters: state.monsters,
+      boss: state.boss,
+      player: state.player,
+      inventory: state.inventory
+    };
+  }
+
+  function applyWorldSnapshot(payload, worldId) {
+    seedInventory();
+    resetWorlds();
+    state.currentWorldId = worldId || "";
+    state.playerName = payload.playerName || state.playerName;
+    state.worldName = payload.worldName || state.worldName;
+    state.gameMode = payload.gameMode || "survival";
+    state.connected = !!payload.connected;
+    state.realmCode = payload.realmCode || "";
+    state.dimension = payload.dimension || state.dimension;
+    state.dayClock = typeof payload.dayClock === "number" ? payload.dayClock : state.dayClock;
+    state.worlds = payload.worlds || state.worlds;
+    state.monsters = payload.monsters || state.monsters;
+    state.boss = payload.boss || state.boss;
+    state.player = payload.player || state.player;
+    state.inventory = payload.inventory || state.inventory;
+    if (!state.boss.kind) {
+      setupBoss("slime");
+      state.boss.awake = false;
+      state.boss.defeated = false;
+    }
+    if (!state.worlds.end) {
+      buildEnd();
+    }
+    if (!state.monsters.end) {
+      state.monsters.end = [];
+    }
+    updateCamera();
+  }
+
+  function createWorldId() {
+    return "world-" + new Date().getTime();
   }
 
   function gridToPixel(value) {
@@ -664,12 +820,19 @@
   }
 
   function updateModeStatus() {
-    var code = ui.realmCodeInput.value || state.realmCode || "COOL";
-    if (state.connected) {
-      ui.modeStatus.textContent = "Multiplayer starts in realm " + code + ".";
-    } else {
-      ui.modeStatus.textContent = "Single player starts offline. Multiplayer starts local realm " + code + ".";
+    var code = ui.realmCodeInput.value || "COOL";
+    var worldName = (ui.worldNameInput.value || "My World").replace(/^\s+|\s+$/g, "") || "My World";
+    if (state.startMenuTab === "load") {
+      ui.modeStatus.textContent = "Load one of your saved worlds and jump back in.";
+      return;
     }
+    ui.modeStatus.textContent = worldName + " will start in " + (state.pendingWorldMode === "creative" ? "Creative" : "Survival") + " as " + (state.pendingConnection ? ("Multiplayer (" + code + ")") : "Single Player") + ".";
+  }
+
+  function showStartMenuTab(tab) {
+    state.startMenuTab = tab;
+    renderStartMenu();
+    updateModeStatus();
   }
 
   function openModeMenu() {
@@ -677,6 +840,10 @@
     if (ui.modeMenu) {
       ui.modeMenu.style.display = "flex";
     }
+    state.pendingWorldMode = state.gameMode || state.pendingWorldMode;
+    state.pendingConnection = state.connected;
+    ui.worldNameInput.value = state.worldName || "My World";
+    renderStartMenu();
     updateModeStatus();
   }
 
@@ -688,20 +855,97 @@
   }
 
   function chooseSinglePlayer() {
-    setRealm(false);
-    closeModeMenu();
-    addLog("Single-player mode selected.");
-    notify("Single-player world ready.");
+    state.pendingConnection = false;
+    renderStartMenu();
+    updateModeStatus();
   }
 
   function chooseMultiplayer() {
     if (!ui.realmCodeInput.value) {
       ui.realmCodeInput.value = "COOL";
     }
-    setRealm(true);
+    state.pendingConnection = true;
+    renderStartMenu();
+    updateModeStatus();
+  }
+
+  function chooseSurvivalMode() {
+    state.pendingWorldMode = "survival";
+    renderStartMenu();
+    updateModeStatus();
+  }
+
+  function chooseCreativeMode() {
+    state.pendingWorldMode = "creative";
+    renderStartMenu();
+    updateModeStatus();
+  }
+
+  function prepareFreshWorld() {
+    seedInventory();
+    resetWorlds();
+    if (isCreativeMode()) {
+      applyCreativeLoadout();
+    }
+    state.logs = [];
+    state.notes = [];
+    state.targetTile = null;
+    state.selectedInventoryIndex = null;
+    state.selectedHotbarIndex = 0;
+    state.crafting = ["", "", "", "", "", "", "", "", ""];
+    updateCamera();
+  }
+
+  function createNewWorld() {
+    var name = (ui.worldNameInput.value || "My World").replace(/^\s+|\s+$/g, "") || "My World";
+    state.playerName = (ui.playerNameInput.value || state.playerName).replace(/^\s+|\s+$/g, "") || "BuilderOne";
+    state.currentWorldId = createWorldId();
+    state.worldName = name;
+    state.gameMode = state.pendingWorldMode;
+    state.connected = !!state.pendingConnection;
+    state.realmCode = state.connected ? (ui.realmCodeInput.value || "COOL") : "";
+    ui.realmCodeInput.value = state.realmCode;
+    prepareFreshWorld();
+    renderHotbar();
+    renderInventory();
+    renderFriends();
+    renderLogs();
+    updateHUD();
+    saveGame();
     closeModeMenu();
-    addLog("Multiplayer mode selected.");
-    notify("Multiplayer realm ready.");
+    addLog('Started ' + (state.gameMode === "creative" ? "Creative" : "Survival") + ' world "' + state.worldName + '".');
+    notify(state.worldName + " is ready.");
+  }
+
+  function loadWorldById(id) {
+    var raw;
+    var payload;
+    try {
+      raw = localStorage.getItem(worldSnapshotKey(id));
+      if (!raw) {
+        notify("That world save is missing.");
+        return;
+      }
+      payload = JSON.parse(raw);
+      applyWorldSnapshot(payload, id);
+      state.pendingWorldMode = state.gameMode;
+      state.pendingConnection = state.connected;
+      ui.worldNameInput.value = state.worldName;
+      ui.realmCodeInput.value = state.realmCode;
+      ui.playerNameInput.value = state.playerName;
+      state.logs = [];
+      state.notes = [];
+      renderHotbar();
+      renderInventory();
+      renderFriends();
+      renderLogs();
+      updateHUD();
+      closeModeMenu();
+      addLog('Loaded world "' + state.worldName + '".');
+      notify(state.worldName + " loaded.");
+    } catch (error) {
+      notify("That world could not be loaded.");
+    }
   }
 
   function updateHUD() {
@@ -734,7 +978,10 @@
     if (!tile) {
       return true;
     }
-    if (tile.floor === "water" || tile.floor === "lava" || tile.floor === "void") {
+    if (tile.floor === "water" || tile.floor === "lava") {
+      return true;
+    }
+    if (tile.floor === "void" && !tile.object) {
       return true;
     }
     if (tile.object && tile.object !== "portal" && tile.object !== "endportal") {
@@ -999,6 +1246,10 @@
   function updateMonsters(dt) {
     var monsters = state.monsters[state.dimension];
     var i;
+    if (isCreativeMode()) {
+      state.monsters[state.dimension] = [];
+      return;
+    }
     if ((state.dimension === "nether" || state.dimension === "end" || state.night) && monsters.length < 6 && Math.random() < 0.03) {
       if (state.dimension === "nether") {
         spawnMonster("ember");
@@ -1050,7 +1301,7 @@
       state.boss.orbit += dt * 1.7;
       state.boss.x += ((state.player.x + Math.cos(state.boss.orbit) * TILE * 4.5) - state.boss.x) * dt * 2.3;
       state.boss.y += ((state.player.y + Math.sin(state.boss.orbit * 0.85) * TILE * 3.8) - state.boss.y) * dt * 2.3;
-      if (distance < 96) {
+      if (distance < 96 && !isCreativeMode()) {
         state.player.hp = clamp(state.player.hp - state.boss.damage * dt, 0, state.player.maxHp);
       }
       if (Math.random() < 0.01 && state.monsters.end.length < 6) {
@@ -1060,7 +1311,7 @@
     }
     state.boss.x += (dx / distance) * state.boss.speed * TILE * dt;
     state.boss.y += (dy / distance) * state.boss.speed * TILE * dt;
-    if (distance < 60) {
+    if (distance < 60 && !isCreativeMode()) {
       state.player.hp = clamp(state.player.hp - state.boss.damage * dt, 0, state.player.maxHp);
     }
   }
@@ -1163,7 +1414,9 @@
       notify("The altar is locked in place.");
       return;
     }
-    addItem(tile.object === "leaves" ? "wood" : tile.object, 1);
+    if (!isCreativeMode()) {
+      addItem(tile.object === "leaves" ? "wood" : tile.object, 1);
+    }
     tile.object = "";
   }
 
@@ -1180,7 +1433,9 @@
       return;
     }
     tile.object = item.id;
-    takeItem(state.selectedHotbarIndex, 1);
+    if (!isCreativeMode()) {
+      takeItem(state.selectedHotbarIndex, 1);
+    }
   }
 
   function interact() {
@@ -1270,18 +1525,38 @@
   }
 
   function saveGame() {
-    var payload = {
-      playerName: state.playerName,
-      dimension: state.dimension,
-      dayClock: state.dayClock,
-      worlds: state.worlds,
-      monsters: state.monsters,
-      boss: state.boss,
-      player: state.player,
-      inventory: state.inventory
-    };
+    var payload;
+    var worlds;
+    var i;
+    var found = false;
+    if (!state.currentWorldId) {
+      state.currentWorldId = createWorldId();
+    }
+    payload = buildWorldSnapshot();
     try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
+      worlds = loadWorldIndex();
+      localStorage.setItem(worldSnapshotKey(state.currentWorldId), JSON.stringify(payload));
+      for (i = 0; i < worlds.length; i += 1) {
+        if (worlds[i].id === state.currentWorldId) {
+          worlds[i].name = state.worldName;
+          worlds[i].mode = state.gameMode;
+          worlds[i].playType = state.connected ? "multiplayer" : "single";
+          worlds[i].updatedAt = new Date().toISOString();
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        worlds.push({
+          id: state.currentWorldId,
+          name: state.worldName,
+          mode: state.gameMode,
+          playType: state.connected ? "multiplayer" : "single",
+          updatedAt: new Date().toISOString()
+        });
+      }
+      saveWorldIndex(worlds);
+      renderSavedWorlds();
       notify("World saved.");
     } catch (error) {
       notify("Save failed on this browser.");
@@ -1289,28 +1564,14 @@
   }
 
   function loadGame() {
-    var raw;
-    var payload;
+    state.currentWorldId = "";
+    state.worldName = "My World";
+    state.gameMode = "survival";
+    state.pendingWorldMode = "survival";
+    state.pendingConnection = false;
+    state.startMenuTab = "new";
     seedInventory();
     resetWorlds();
-    try {
-      raw = localStorage.getItem(SAVE_KEY);
-      if (!raw) {
-        return;
-      }
-      payload = JSON.parse(raw);
-      state.playerName = payload.playerName || state.playerName;
-      state.dimension = payload.dimension || state.dimension;
-      state.dayClock = typeof payload.dayClock === "number" ? payload.dayClock : state.dayClock;
-      state.worlds = payload.worlds || state.worlds;
-      state.monsters = payload.monsters || state.monsters;
-      state.boss = payload.boss || state.boss;
-      state.player = payload.player || state.player;
-      state.inventory = payload.inventory || state.inventory;
-    } catch (error2) {
-      seedInventory();
-      resetWorlds();
-    }
   }
 
   function setRealm(active) {
@@ -1381,6 +1642,10 @@
         if (target.getAttribute("data-video") !== null) {
           state.videoIndex = parseInt(target.getAttribute("data-video"), 10);
           renderBuildTube();
+          return;
+        }
+        if (target.getAttribute("data-load-world") !== null) {
+          loadWorldById(target.getAttribute("data-load-world"));
           return;
         }
         target = target.parentNode;
@@ -1464,8 +1729,22 @@
     });
 
     ui.realmCodeInput.oninput = updateModeStatus;
+    ui.worldNameInput.oninput = updateModeStatus;
+    ui.playerNameInput.oninput = function () {
+      state.playerName = (ui.playerNameInput.value || "BuilderOne").replace(/^\s+|\s+$/g, "") || "BuilderOne";
+      renderFriends();
+    };
+    ui.newWorldTabBtn.onclick = function () {
+      showStartMenuTab("new");
+    };
+    ui.loadWorldTabBtn.onclick = function () {
+      showStartMenuTab("load");
+    };
     ui.singlePlayerBtn.onclick = chooseSinglePlayer;
     ui.multiPlayerBtn.onclick = chooseMultiplayer;
+    ui.survivalModeBtn.onclick = chooseSurvivalMode;
+    ui.creativeModeBtn.onclick = chooseCreativeMode;
+    ui.playNewWorldBtn.onclick = createNewWorld;
     ui.resumeGameBtn.onclick = closePauseMenu;
     ui.pauseSaveBtn.onclick = function () {
       saveGame();
@@ -1549,6 +1828,8 @@
   function init() {
     loadGame();
     ui.playerNameInput.value = state.playerName;
+    ui.worldNameInput.value = state.worldName;
+    ui.realmCodeInput.value = state.realmCode;
     closeInventory();
     closeComputer();
     closePauseMenu();

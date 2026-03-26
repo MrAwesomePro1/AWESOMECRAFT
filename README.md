@@ -4,7 +4,10 @@ AWESOMECRAFT is an original browser-based sandbox prototype inspired by block-bu
 
 - multiplayer realm syncing across browser tabs through local storage plus `BroadcastChannel`
 - touch-friendly controls for iPad and desktop keyboard controls
-- a startup mode menu for single-player or multiplayer
+- a startup world menu with `New World` and `Load World`
+- named worlds with save slots you can reload later
+- single-player or multiplayer world starts
+- creative or survival world creation
 - mods, add-ons, mash-ups, and texture packs
 - a full inventory screen with a `3x3` crafting grid
 - a day and night cycle with monsters spawning after dark

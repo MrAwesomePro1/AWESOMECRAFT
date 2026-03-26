@@ -195,14 +195,39 @@
 
   <div id="modeMenu" class="mode-menu">
     <div class="mode-card">
-      <p class="eyebrow">Choose Your Mode</p>
+      <p class="eyebrow">Choose Your World</p>
       <h2>Start AWESOMECRAFT</h2>
-      <p class="small-copy">Pick a world type before you enter. You can still use the Realms panel after this for codes and hosting.</p>
       <div class="mode-actions">
-        <button id="singlePlayerBtn" class="primary">Single Player</button>
-        <button id="multiPlayerBtn">Multiplayer</button>
+        <button id="newWorldTabBtn" class="primary">New World</button>
+        <button id="loadWorldTabBtn">Load World</button>
       </div>
-      <p id="modeStatus" class="small-copy">Single player starts offline. Multiplayer starts a local realm host.</p>
+      <div id="newWorldPanel" class="start-panel">
+        <label class="field">
+          <span>World Name</span>
+          <input id="worldNameInput" type="text" maxlength="24" value="My World">
+        </label>
+        <div class="start-grid">
+          <div>
+            <p class="small-copy">World Type</p>
+            <div class="mode-actions compact-actions">
+              <button id="singlePlayerBtn" class="primary">Single Player</button>
+              <button id="multiPlayerBtn">Multiplayer</button>
+            </div>
+          </div>
+          <div>
+            <p class="small-copy">Game Mode</p>
+            <div class="mode-actions compact-actions">
+              <button id="survivalModeBtn" class="primary">Survival</button>
+              <button id="creativeModeBtn">Creative</button>
+            </div>
+          </div>
+        </div>
+        <button id="playNewWorldBtn" class="primary launch-button">Play</button>
+      </div>
+      <div id="loadWorldPanel" class="start-panel hidden-panel">
+        <div id="savedWorldList" class="saved-world-list"></div>
+      </div>
+      <p id="modeStatus" class="small-copy">Create a world or load one of your saved worlds.</p>
     </div>
   </div>
 
