@@ -344,6 +344,19 @@ input {
   background: linear-gradient(90deg, #ff7d7d, #ffcf8d);
 }
 
+.boss-banner.dragon {
+  background: rgba(22, 8, 38, 0.88);
+  border-color: rgba(156, 124, 255, 0.34);
+}
+
+.boss-banner.dragon .boss-fill {
+  background: linear-gradient(90deg, #8c73ff, #78e0ff);
+}
+
+.boss-banner.dragon #bossHealthText {
+  color: #ddd8ff;
+}
+
 #bossHealthText {
   text-align: center;
   font-size: 0.88rem;

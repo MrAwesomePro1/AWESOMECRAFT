@@ -51,6 +51,7 @@
     buildTubeHint: document.getElementById("buildTubeHint"),
     eventLog: document.getElementById("eventLog"),
     bossBanner: document.getElementById("bossBanner"),
+    bossTitle: document.getElementById("bossTitleText"),
     bossHealthFill: document.getElementById("bossHealthFill"),
     bossHealthText: document.getElementById("bossHealthText"),
     notificationStack: document.getElementById("notificationStack"),
@@ -80,12 +81,15 @@
   var BLOCK_H = 18;
   var PLAYER_SPEED = 4;
   var HOTBAR_SIZE = 6;
-  var SAVE_KEY = "awesomecraft.lite.v2";
+  var SAVE_KEY = "awesomecraft.lite.v4";
   var portalPoints = {
     overworld: { x: 36, y: 28, target: "nether", spawnX: 24, spawnY: 24 },
-    nether: { x: 24, y: 24, target: "overworld", spawnX: 37, spawnY: 29 }
+    nether: { x: 24, y: 24, target: "overworld", spawnX: 37, spawnY: 29 },
+    netherEnd: { x: 122, y: 22, target: "end", spawnX: 74, spawnY: 56 },
+    end: { x: 76, y: 56, target: "overworld", spawnX: 16, spawnY: 16 }
   };
-  var bossPoint = { x: 136, y: 46 };
+  var slimeBossPoint = { x: 136, y: 46 };
+  var dragonBossPoint = { x: 88, y: 52 };
 
   var colors = {
     grass: "#58a85c",
@@ -101,7 +105,13 @@
     netherrack: "#7a3426",
     ash: "#5f5650",
     lava: "#ff7a38",
-    portal: "#9c5bff"
+    portal: "#9c5bff",
+    endstone: "#d6cf93",
+    obsidian: "#34294f",
+    void: "#11091d",
+    endportal: "#63d5ff",
+    dragonaltar: "#4b3e68",
+    dragon: "#26292f"
   };
 
   var texturePacks = ["Classic Crisp", "Golden Sunset", "BuildGrid XT"];
@@ -152,10 +162,10 @@
     inventoryOpen: false,
     modeMenuOpen: false,
     pauseMenuOpen: false,
-    worlds: { overworld: null, nether: null },
+    worlds: { overworld: null, nether: null, end: null },
     player: { x: 0, y: 0, hp: 20, maxHp: 20, facing: "down", attackCooldown: 0 },
-    boss: { x: 0, y: 0, hp: 100, maxHp: 100, awake: false, defeated: false, vx: 0, vy: 0, bounce: 0 },
-    monsters: { overworld: [], nether: [] },
+    boss: { kind: "slime", name: "Giga Slime", dimension: "overworld", x: 0, y: 0, hp: 100, maxHp: 100, awake: false, defeated: false, color: colors.slime, speed: 2.1, damage: 6, orbit: 0 },
+    monsters: { overworld: [], nether: [], end: [] },
     inventory: [],
     crafting: ["", "", "", "", "", "", "", "", ""],
     selectedInventoryIndex: null,
@@ -181,6 +191,48 @@
     input.down = false;
     input.left = false;
     input.right = false;
+  }
+
+  function dimensionLabel(name) {
+    if (name === "nether") {
+      return "Nether";
+    }
+    if (name === "end") {
+      return "The End";
+    }
+    return "Overworld";
+  }
+
+  function setupBoss(kind) {
+    if (kind === "dragon") {
+      state.boss.kind = "dragon";
+      state.boss.name = "Ender Dragon";
+      state.boss.dimension = "end";
+      state.boss.x = gridToPixel(dragonBossPoint.x);
+      state.boss.y = gridToPixel(dragonBossPoint.y);
+      state.boss.maxHp = 160;
+      state.boss.hp = state.boss.maxHp;
+      state.boss.color = colors.dragon;
+      state.boss.speed = 2.8;
+      state.boss.damage = 9;
+      state.boss.orbit = 0;
+      return;
+    }
+    state.boss.kind = "slime";
+    state.boss.name = "Giga Slime";
+    state.boss.dimension = "overworld";
+    state.boss.x = gridToPixel(slimeBossPoint.x + 1);
+    state.boss.y = gridToPixel(slimeBossPoint.y);
+    state.boss.maxHp = 100;
+    state.boss.hp = state.boss.maxHp;
+    state.boss.color = colors.slime;
+    state.boss.speed = 2.1;
+    state.boss.damage = 6;
+    state.boss.orbit = 0;
+  }
+
+  function bossIsVisible() {
+    return state.dimension === state.boss.dimension && state.boss.awake && !state.boss.defeated;
   }
 
   function gridToPixel(value) {
@@ -275,8 +327,8 @@
         world[y][x].floor = (x + y) % 2 === 0 ? "slime" : "stone";
       }
     }
-    world[bossPoint.y][bossPoint.x].object = "altar";
-    world[bossPoint.y][bossPoint.x + 1].object = "slime";
+    world[slimeBossPoint.y][slimeBossPoint.x].object = "altar";
+    world[slimeBossPoint.y][slimeBossPoint.x + 1].object = "slime";
     world[portalPoints.overworld.y][portalPoints.overworld.x].object = "portal";
   }
 
@@ -301,23 +353,46 @@
     placeRandom("nether", "netherrack", "slime", 44);
     placeRandom("nether", "ash", "crystal", 28);
     world[portalPoints.nether.y][portalPoints.nether.x].object = "portal";
+    world[portalPoints.netherEnd.y][portalPoints.netherEnd.x].object = "endportal";
+  }
+
+  function buildEnd() {
+    var world = makeGrid("void");
+    var x;
+    var y;
+    state.worlds.end = world;
+    paintPatch("end", dragonBossPoint.x, dragonBossPoint.y, 18, "endstone");
+    paintPatch("end", dragonBossPoint.x - 16, dragonBossPoint.y + 8, 9, "endstone");
+    paintPatch("end", portalPoints.end.x, portalPoints.end.y, 11, "endstone");
+    for (y = dragonBossPoint.y - 5; y <= dragonBossPoint.y + 5; y += 1) {
+      for (x = dragonBossPoint.x - 5; x <= dragonBossPoint.x + 5; x += 1) {
+        if (tileAt("end", x, y) && Math.abs(x - dragonBossPoint.x) + Math.abs(y - dragonBossPoint.y) < 7) {
+          tileAt("end", x, y).floor = (x + y) % 2 === 0 ? "obsidian" : "endstone";
+        }
+      }
+    }
+    placeRandom("end", "endstone", "crystal", 30);
+    placeRandom("end", "obsidian", "crystal", 10);
+    world[dragonBossPoint.y][dragonBossPoint.x].object = "dragonaltar";
+    world[dragonBossPoint.y][dragonBossPoint.x + 2].object = "crystal";
+    world[portalPoints.end.y][portalPoints.end.x].object = "endportal";
   }
 
   function resetWorlds() {
     buildOverworld();
     buildNether();
+    buildEnd();
     state.dimension = "overworld";
     state.player.x = gridToPixel(12);
     state.player.y = gridToPixel(12);
     state.player.hp = state.player.maxHp;
     state.player.facing = "down";
-    state.boss.x = gridToPixel(bossPoint.x + 1);
-    state.boss.y = gridToPixel(bossPoint.y);
-    state.boss.hp = state.boss.maxHp;
+    setupBoss("slime");
     state.boss.awake = false;
     state.boss.defeated = false;
     state.monsters.overworld = [];
     state.monsters.nether = [];
+    state.monsters.end = [];
   }
 
   function seedInventory() {
@@ -637,16 +712,17 @@
     ui.connectionBadge.textContent = state.connected ? "Realm Host" : "Offline";
     ui.voiceStatus.textContent = "Friends only";
     ui.recordStatus.textContent = "Ready";
-    ui.timeValue.textContent = state.night ? "Night" : "Day";
-    ui.dimensionValue.textContent = state.dimension === "overworld" ? "Overworld" : "Nether";
-    ui.timeBadge.textContent = state.night ? "Night monsters rising" : "Day";
+    ui.timeValue.textContent = state.dimension === "end" ? "Void" : (state.dimension === "nether" ? "Inferno" : (state.night ? "Night" : "Day"));
+    ui.dimensionValue.textContent = dimensionLabel(state.dimension);
+    ui.timeBadge.textContent = state.dimension === "end" ? "Dragon sky" : (state.dimension === "nether" ? "Nether fire" : (state.night ? "Night monsters rising" : "Day"));
     ui.toolInfo.textContent = hotbarItem ? itemLabel(hotbarItem.id) + " x" + hotbarItem.count : "Empty Slot";
     ui.activePackSummary.textContent = "Everything unlocked";
     ui.buildTubeHint.textContent = nearestObject("computer") ? "Computer in reach" : "Find a computer";
     ui.targetInfo.textContent = targetTile ? state.targetTile.x + "," + state.targetTile.y + " " + (targetTile.object || targetTile.floor) : "Select a tile";
+    ui.bossTitle.textContent = "Final Boss: " + state.boss.name;
     ui.bossHealthFill.style.width = ((state.boss.hp / state.boss.maxHp) * 100) + "%";
     ui.bossHealthText.textContent = Math.max(0, Math.ceil(state.boss.hp)) + " / " + state.boss.maxHp;
-    ui.bossBanner.className = "boss-banner" + (state.dimension === "overworld" && state.boss.awake && !state.boss.defeated ? "" : " hidden");
+    ui.bossBanner.className = "boss-banner" + (state.boss.kind === "dragon" ? " dragon" : "") + (bossIsVisible() ? "" : " hidden");
   }
 
   function isNight() {
@@ -658,10 +734,10 @@
     if (!tile) {
       return true;
     }
-    if (tile.floor === "water" || tile.floor === "lava") {
+    if (tile.floor === "water" || tile.floor === "lava" || tile.floor === "void") {
       return true;
     }
-    if (tile.object && tile.object !== "portal") {
+    if (tile.object && tile.object !== "portal" && tile.object !== "endportal") {
       return true;
     }
     return false;
@@ -727,10 +803,10 @@
     if (name === "crystal") {
       return BLOCK_H + 10;
     }
-    if (name === "portal") {
+    if (name === "portal" || name === "endportal") {
       return BLOCK_H + 12;
     }
-    if (name === "altar") {
+    if (name === "altar" || name === "dragonaltar") {
       return BLOCK_H + 6;
     }
     return BLOCK_H;
@@ -793,9 +869,9 @@
         ctx.fillStyle = "#78f6d1";
         ctx.fillRect(screen.x - 5, screen.y - 6, 10, 6);
       }
-      if (tile.object === "portal") {
+      if (tile.object === "portal" || tile.object === "endportal") {
         var portal = isoPoint(gridX, gridY, objectHeight(tile.object));
-        ctx.fillStyle = "rgba(255,255,255,0.3)";
+        ctx.fillStyle = tile.object === "endportal" ? "rgba(140, 222, 255, 0.34)" : "rgba(255,255,255,0.3)";
         ctx.fillRect(portal.x - 5, portal.y - 16, 10, 16);
       }
     }
@@ -822,10 +898,21 @@
   }
 
   function drawBoss() {
-    if (state.dimension !== "overworld" || state.boss.defeated) {
+    var bossX;
+    var bossY;
+    if (state.dimension !== state.boss.dimension || state.boss.defeated || !state.boss.awake) {
       return;
     }
-    drawCube(pixelToGrid(state.boss.x), pixelToGrid(state.boss.y), colors.slime, state.boss.awake ? BLOCK_H * 2.2 : BLOCK_H * 1.6);
+    bossX = pixelToGrid(state.boss.x);
+    bossY = pixelToGrid(state.boss.y);
+    if (state.boss.kind === "dragon") {
+      drawCube(bossX, bossY, state.boss.color, BLOCK_H * 1.9);
+      drawCube(bossX - 1, bossY, state.boss.color, BLOCK_H * 1.45);
+      drawCube(bossX + 1, bossY, state.boss.color, BLOCK_H * 1.45);
+      drawCube(bossX, bossY - 1, colors.obsidian, BLOCK_H * 1.2);
+      return;
+    }
+    drawCube(bossX, bossY, state.boss.color, BLOCK_H * 2.2);
   }
 
   function drawMonsters() {
@@ -845,7 +932,7 @@
     var x;
     var y;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = state.dimension === "nether" ? "#402016" : "#84d1e0";
+    ctx.fillStyle = state.dimension === "nether" ? "#402016" : (state.dimension === "end" ? "#170d27" : "#84d1e0");
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     for (y = startY; y < endY; y += 1) {
       for (x = startX; x < endX; x += 1) {
@@ -858,6 +945,9 @@
     if (state.dimension === "nether") {
       ctx.fillStyle = "rgba(70,18,12,0.18)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+    } else if (state.dimension === "end") {
+      ctx.fillStyle = "rgba(110,64,156,0.16)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
     } else if (state.night) {
       ctx.fillStyle = "rgba(8,18,39,0.32)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -865,7 +955,7 @@
   }
 
   function spawnMonster(type) {
-    var colorsByType = { zombie: "#a6d28a", slimelet: "#92ef64", ember: "#ffa267" };
+    var colorsByType = { zombie: "#a6d28a", slimelet: "#92ef64", ember: "#ffa267", enderling: "#b597ff" };
     var px = pixelToGrid(state.player.x);
     var py = pixelToGrid(state.player.y);
     var tries = 0;
@@ -878,8 +968,8 @@
           type: type,
           x: gridToPixel(gx),
           y: gridToPixel(gy),
-          hp: type === "ember" ? 18 : 14,
-          damage: type === "ember" ? 5 : 3,
+          hp: type === "ember" ? 18 : (type === "enderling" ? 22 : 14),
+          damage: type === "ember" ? 5 : (type === "enderling" ? 6 : 3),
           color: colorsByType[type]
         });
         return;
@@ -909,8 +999,14 @@
   function updateMonsters(dt) {
     var monsters = state.monsters[state.dimension];
     var i;
-    if ((state.dimension === "nether" || state.night) && monsters.length < 6 && Math.random() < 0.03) {
-      spawnMonster(state.dimension === "nether" ? "ember" : (Math.random() > 0.5 ? "zombie" : "slimelet"));
+    if ((state.dimension === "nether" || state.dimension === "end" || state.night) && monsters.length < 6 && Math.random() < 0.03) {
+      if (state.dimension === "nether") {
+        spawnMonster("ember");
+      } else if (state.dimension === "end") {
+        spawnMonster("enderling");
+      } else {
+        spawnMonster(Math.random() > 0.5 ? "zombie" : "slimelet");
+      }
     }
     for (i = monsters.length - 1; i >= 0; i -= 1) {
       var dx = state.player.x - monsters[i].x;
@@ -922,7 +1018,7 @@
         state.player.hp = clamp(state.player.hp - monsters[i].damage * dt, 0, state.player.maxHp);
       }
       if (monsters[i].hp <= 0) {
-        addItem(monsters[i].type === "ember" ? "crystal" : "slime", 1);
+        addItem(monsters[i].type === "ember" || monsters[i].type === "enderling" ? "crystal" : "slime", 1);
         monsters.splice(i, 1);
       }
     }
@@ -931,37 +1027,50 @@
     }
   }
 
-  function awakenBoss() {
+  function awakenBoss(kind) {
+    setupBoss(kind || "slime");
     state.boss.awake = true;
     state.boss.defeated = false;
     state.boss.hp = state.boss.maxHp;
-    notify("Giga Slime awakened.");
-    addLog("The Giga Slime wakes with 100 health.");
+    notify(state.boss.name + " awakened.");
+    addLog("The " + state.boss.name + " enters the fight with " + state.boss.maxHp + " health.");
   }
 
   function updateBoss(dt) {
-    if (state.dimension !== "overworld" || state.boss.defeated || !state.boss.awake) {
+    var dx;
+    var dy;
+    var distance;
+    if (state.dimension !== state.boss.dimension || state.boss.defeated || !state.boss.awake) {
       return;
     }
-    var dx = state.player.x - state.boss.x;
-    var dy = state.player.y - state.boss.y;
-    var distance = Math.sqrt(dx * dx + dy * dy) || 1;
-    state.boss.x += (dx / distance) * 2.1 * TILE * dt;
-    state.boss.y += (dy / distance) * 2.1 * TILE * dt;
+    dx = state.player.x - state.boss.x;
+    dy = state.player.y - state.boss.y;
+    distance = Math.sqrt(dx * dx + dy * dy) || 1;
+    if (state.boss.kind === "dragon") {
+      state.boss.orbit += dt * 1.7;
+      state.boss.x += ((state.player.x + Math.cos(state.boss.orbit) * TILE * 4.5) - state.boss.x) * dt * 2.3;
+      state.boss.y += ((state.player.y + Math.sin(state.boss.orbit * 0.85) * TILE * 3.8) - state.boss.y) * dt * 2.3;
+      if (distance < 96) {
+        state.player.hp = clamp(state.player.hp - state.boss.damage * dt, 0, state.player.maxHp);
+      }
+      if (Math.random() < 0.01 && state.monsters.end.length < 6) {
+        spawnMonster("enderling");
+      }
+      return;
+    }
+    state.boss.x += (dx / distance) * state.boss.speed * TILE * dt;
+    state.boss.y += (dy / distance) * state.boss.speed * TILE * dt;
     if (distance < 60) {
-      state.player.hp = clamp(state.player.hp - 6 * dt, 0, state.player.maxHp);
+      state.player.hp = clamp(state.player.hp - state.boss.damage * dt, 0, state.player.maxHp);
     }
   }
 
   function respawn() {
     state.player.hp = state.player.maxHp;
-    if (state.dimension === "nether") {
-      state.player.x = gridToPixel(portalPoints.overworld.spawnX);
-      state.player.y = gridToPixel(portalPoints.overworld.spawnY);
-    } else {
-      state.player.x = gridToPixel(12);
-      state.player.y = gridToPixel(12);
-    }
+    state.dimension = "overworld";
+    state.player.x = gridToPixel(12);
+    state.player.y = gridToPixel(12);
+    updateCamera();
     notify("Respawned at base camp.");
   }
 
@@ -977,7 +1086,7 @@
         return;
       }
     }
-    if (state.dimension === "overworld" && state.boss.awake && !state.boss.defeated) {
+    if (state.dimension === state.boss.dimension && state.boss.awake && !state.boss.defeated) {
       var dx = state.boss.x - state.player.x;
       var dy = state.boss.y - state.player.y;
       if (Math.sqrt(dx * dx + dy * dy) < 90) {
@@ -986,8 +1095,13 @@
           state.boss.defeated = true;
           state.boss.awake = false;
           state.boss.hp = 0;
-          notify("Giga Slime defeated.");
-          addLog("Victory! The final slime boss is down.");
+          if (state.boss.kind === "dragon") {
+            notify("Ender Dragon defeated.");
+            addLog("Victory! The Ender Dragon is down and the exit portal glows.");
+          } else {
+            notify("Giga Slime defeated.");
+            addLog("Victory! The Giga Slime is down.");
+          }
         }
         return;
       }
@@ -1045,7 +1159,7 @@
       notify("Nothing to break.");
       return;
     }
-    if (tile.object === "altar") {
+    if (tile.object === "altar" || tile.object === "dragonaltar" || tile.object === "endportal") {
       notify("The altar is locked in place.");
       return;
     }
@@ -1070,6 +1184,20 @@
   }
 
   function interact() {
+    if (nearestObject("endportal")) {
+      if (state.dimension === "nether") {
+        state.dimension = "end";
+        state.player.x = gridToPixel(portalPoints.netherEnd.spawnX);
+        state.player.y = gridToPixel(portalPoints.netherEnd.spawnY);
+      } else {
+        state.dimension = "overworld";
+        state.player.x = gridToPixel(portalPoints.end.spawnX);
+        state.player.y = gridToPixel(portalPoints.end.spawnY);
+      }
+      updateCamera();
+      addLog("Stepped through an End gate into the " + dimensionLabel(state.dimension) + ".");
+      return;
+    }
     if (nearestObject("portal")) {
       if (state.dimension === "overworld") {
         state.dimension = "nether";
@@ -1081,15 +1209,19 @@
         state.player.y = gridToPixel(portalPoints.nether.spawnY);
       }
       updateCamera();
-      addLog("Stepped through a portal into the " + (state.dimension === "overworld" ? "Overworld" : "Nether") + ".");
+      addLog("Stepped through a portal into the " + dimensionLabel(state.dimension) + ".");
       return;
     }
     if (nearestObject("computer")) {
       openComputer();
       return;
     }
+    if (nearestObject("dragonaltar")) {
+      awakenBoss("dragon");
+      return;
+    }
     if (nearestObject("altar")) {
-      awakenBoss();
+      awakenBoss("slime");
       return;
     }
     notify("Nothing special to use here.");
@@ -1130,10 +1262,10 @@
   }
 
   function summonBoss() {
-    state.dimension = "overworld";
-    state.player.x = gridToPixel(bossPoint.x - 4);
-    state.player.y = gridToPixel(bossPoint.y);
-    awakenBoss();
+    state.dimension = "end";
+    state.player.x = gridToPixel(dragonBossPoint.x - 5);
+    state.player.y = gridToPixel(dragonBossPoint.y + 2);
+    awakenBoss("dragon");
     updateCamera();
   }
 
@@ -1428,7 +1560,7 @@
     renderLogs();
     addLog("Gameplay loaded. Press E for inventory and F to use portals or computers.");
     addLog("Press P to open the pause menu.");
-    addLog("Night brings monsters, and the Nether portal works.");
+    addLog("Night brings monsters, and the Nether plus End portals are active.");
     bindEvents();
     resizeCanvas();
     updateHUD();

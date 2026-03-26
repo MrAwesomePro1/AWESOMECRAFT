@@ -8,8 +8,8 @@ AWESOMECRAFT is an original browser-based sandbox prototype inspired by block-bu
 - mods, add-ons, mash-ups, and texture packs
 - a full inventory screen with a `3x3` crafting grid
 - a day and night cycle with monsters spawning after dark
-- a larger overworld plus a Nether dimension connected by portals
-- a final boss called the Giga Slime with `100` health
+- a larger overworld plus Nether and End dimensions connected by portals
+- a Giga Slime miniboss in the overworld and an Ender Dragon final boss in the End
 - friend-only voice chat and built-in recording where the browser supports them
 - computer blocks with a built-in BuildTube app
 - a pause menu on `P`
