@@ -8,6 +8,12 @@
 
   var ui = {
     playerNameInput: document.getElementById("playerNameInput"),
+    playerLookLabel: document.getElementById("playerLookLabel"),
+    playerPreviewCard: document.getElementById("playerPreviewCard"),
+    playerSkinOptions: document.getElementById("playerSkinOptions"),
+    playerShirtOptions: document.getElementById("playerShirtOptions"),
+    playerHairOptions: document.getElementById("playerHairOptions"),
+    playerGearOptions: document.getElementById("playerGearOptions"),
     realmCodeInput: document.getElementById("realmCodeInput"),
     createRealmBtn: document.getElementById("createRealmBtn"),
     joinRealmBtn: document.getElementById("joinRealmBtn"),
@@ -161,10 +167,50 @@
     { key: "stone,crystal,stone,crystal,slime,crystal,stone,crystal,stone", item: "portal", count: 1, label: "Portal Core x1" }
   ];
 
+  var playerLookOptions = {
+    skin: [
+      { id: "sand", label: "Sand", color: "#f2d4ad" },
+      { id: "honey", label: "Honey", color: "#d4a87e" },
+      { id: "cocoa", label: "Cocoa", color: "#9c6a4f" },
+      { id: "ember", label: "Ember", color: "#71483c" }
+    ],
+    shirt: [
+      { id: "mint", label: "Mint", color: "#5fd3ad" },
+      { id: "ocean", label: "Ocean", color: "#4fa1ff" },
+      { id: "sunset", label: "Sunset", color: "#ff9d5c" },
+      { id: "violet", label: "Violet", color: "#9b74ff" }
+    ],
+    hair: [
+      { id: "night", label: "Night", color: "#1c2433" },
+      { id: "walnut", label: "Walnut", color: "#5b3929" },
+      { id: "flame", label: "Flame", color: "#b85b2e" },
+      { id: "frost", label: "Frost", color: "#d8ebff" }
+    ],
+    gear: [
+      { id: "none", label: "None", color: "#5d6872", detail: "#263039" },
+      { id: "cap", label: "Cap", color: "#39c398", detail: "#13634d" },
+      { id: "crown", label: "Crown", color: "#ffd76a", detail: "#b87d04" },
+      { id: "visor", label: "Visor", color: "#78c8ff", detail: "#1e5c86" }
+    ]
+  };
+
+  var defaultPlayerStyle = {
+    skin: "sand",
+    shirt: "mint",
+    hair: "night",
+    gear: "cap"
+  };
+
   var input = { up: false, down: false, left: false, right: false };
 
   var state = {
     playerName: "BuilderOne",
+    playerStyle: {
+      skin: "sand",
+      shirt: "mint",
+      hair: "night",
+      gear: "cap"
+    },
     worldName: "My World",
     currentWorldId: "",
     gameMode: "survival",
@@ -209,6 +255,93 @@
     input.down = false;
     input.left = false;
     input.right = false;
+  }
+
+  function playerLookOption(groupName, id) {
+    var options = playerLookOptions[groupName] || [];
+    var i;
+    for (i = 0; i < options.length; i += 1) {
+      if (options[i].id === id) {
+        return options[i];
+      }
+    }
+    return options[0];
+  }
+
+  function normalizePlayerStyle(style) {
+    style = style || defaultPlayerStyle;
+    return {
+      skin: playerLookOption("skin", style.skin).id,
+      shirt: playerLookOption("shirt", style.shirt).id,
+      hair: playerLookOption("hair", style.hair).id,
+      gear: playerLookOption("gear", style.gear).id
+    };
+  }
+
+  function playerStyleSummary() {
+    var shirt = playerLookOption("shirt", state.playerStyle.shirt);
+    var gear = playerLookOption("gear", state.playerStyle.gear);
+    return shirt.label + " " + (gear.id === "none" ? "Builder" : gear.label);
+  }
+
+  function playerOptionSwatch(groupName, option) {
+    if (groupName === "gear") {
+      return "linear-gradient(135deg, " + option.color + ", " + option.detail + ")";
+    }
+    return option.color;
+  }
+
+  function renderPlayerOptionGroup(container, groupName) {
+    var options = playerLookOptions[groupName] || [];
+    var selected = state.playerStyle[groupName];
+    var html = "";
+    var i;
+    if (!container) {
+      return;
+    }
+    for (i = 0; i < options.length; i += 1) {
+      html += '<button type="button" class="player-style-chip' + (selected === options[i].id ? ' selected' : '') + '" data-player-style-group="' + groupName + '" data-player-style-id="' + options[i].id + '">';
+      html += '<span class="player-style-swatch" style="background:' + playerOptionSwatch(groupName, options[i]) + '"></span>';
+      html += options[i].label + '</button>';
+    }
+    container.innerHTML = html;
+  }
+
+  function renderPlayerMaker() {
+    var skin;
+    var shirt;
+    var hair;
+    var gear;
+    state.playerStyle = normalizePlayerStyle(state.playerStyle);
+    skin = playerLookOption("skin", state.playerStyle.skin);
+    shirt = playerLookOption("shirt", state.playerStyle.shirt);
+    hair = playerLookOption("hair", state.playerStyle.hair);
+    gear = playerLookOption("gear", state.playerStyle.gear);
+    if (ui.playerLookLabel) {
+      ui.playerLookLabel.textContent = playerStyleSummary();
+    }
+    if (ui.playerPreviewCard) {
+      ui.playerPreviewCard.style.setProperty("--skin-color", skin.color);
+      ui.playerPreviewCard.style.setProperty("--shirt-color", shirt.color);
+      ui.playerPreviewCard.style.setProperty("--hair-color", hair.color);
+      ui.playerPreviewCard.style.setProperty("--gear-color", gear.color);
+      ui.playerPreviewCard.style.setProperty("--gear-detail", gear.detail || gear.color);
+      ui.playerPreviewCard.setAttribute("data-gear", gear.id);
+    }
+    renderPlayerOptionGroup(ui.playerSkinOptions, "skin");
+    renderPlayerOptionGroup(ui.playerShirtOptions, "shirt");
+    renderPlayerOptionGroup(ui.playerHairOptions, "hair");
+    renderPlayerOptionGroup(ui.playerGearOptions, "gear");
+  }
+
+  function setPlayerStyle(groupName, styleId) {
+    state.playerStyle = normalizePlayerStyle(state.playerStyle);
+    state.playerStyle[groupName] = playerLookOption(groupName, styleId).id;
+    renderPlayerMaker();
+    renderFriends();
+    if (state.currentWorldId) {
+      saveGame(true);
+    }
   }
 
   function dimensionLabel(name) {
@@ -344,6 +477,7 @@
   function buildWorldSnapshot() {
     return {
       playerName: state.playerName,
+      playerStyle: state.playerStyle,
       worldName: state.worldName,
       gameMode: state.gameMode,
       connected: state.connected,
@@ -363,6 +497,7 @@
     resetWorlds();
     state.currentWorldId = worldId || "";
     state.playerName = payload.playerName || state.playerName;
+    state.playerStyle = normalizePlayerStyle(payload.playerStyle);
     state.worldName = payload.worldName || state.worldName;
     state.gameMode = payload.gameMode || "survival";
     state.connected = !!payload.connected;
@@ -720,7 +855,7 @@
 
   function renderFriends() {
     if (state.connected) {
-      ui.friendsList.innerHTML = '<div class="friend-card"><h4>' + state.playerName + '</h4><p>Realm host ready</p></div>';
+      ui.friendsList.innerHTML = '<div class="friend-card"><h4>' + state.playerName + '</h4><p>' + playerStyleSummary() + ' realm host ready</p></div>';
       ui.playerCount.textContent = "1 online";
     } else {
       ui.friendsList.innerHTML = '<div class="friend-card"><h4>No realm friends yet</h4><p>Create or join a realm, then invite a friend.</p></div>';
@@ -911,6 +1046,7 @@
     prepareFreshWorld();
     renderHotbar();
     renderInventory();
+    renderPlayerMaker();
     renderFriends();
     renderLogs();
     updateHUD();
@@ -949,6 +1085,7 @@
       state.notes = [];
       renderHotbar();
       renderInventory();
+      renderPlayerMaker();
       renderFriends();
       renderLogs();
       updateHUD();
@@ -1149,11 +1286,52 @@
   }
 
   function drawPlayer() {
-    var screen = isoPoint(pixelToGrid(state.player.x), pixelToGrid(state.player.y), BLOCK_H + 10);
-    drawCube(pixelToGrid(state.player.x), pixelToGrid(state.player.y), "#f7f39a", BLOCK_H + 10);
+    var gridX = pixelToGrid(state.player.x);
+    var gridY = pixelToGrid(state.player.y);
+    var face = isoPoint(gridX, gridY, BLOCK_H + 24);
+    var torso = isoPoint(gridX, gridY, BLOCK_H + 10);
+    var skin = playerLookOption("skin", state.playerStyle.skin);
+    var shirt = playerLookOption("shirt", state.playerStyle.shirt);
+    var hair = playerLookOption("hair", state.playerStyle.hair);
+    var gear = playerLookOption("gear", state.playerStyle.gear);
+    drawCube(gridX, gridY, shirt.color, BLOCK_H + 10);
+    ctx.fillStyle = tint(shirt.color, -22);
+    ctx.fillRect(torso.x - 10, torso.y + 3, 20, 5);
+    ctx.fillStyle = skin.color;
+    ctx.fillRect(face.x - 10, face.y - 12, 20, 13);
+    ctx.fillStyle = hair.color;
+    ctx.fillRect(face.x - 11, face.y - 16, 22, 6);
+    if (gear.id === "cap") {
+      ctx.fillStyle = gear.color;
+      ctx.fillRect(face.x - 12, face.y - 20, 24, 6);
+      ctx.fillStyle = gear.detail;
+      ctx.fillRect(face.x - 13, face.y - 15, 9, 3);
+    } else if (gear.id === "crown") {
+      ctx.fillStyle = gear.color;
+      ctx.beginPath();
+      ctx.moveTo(face.x - 12, face.y - 14);
+      ctx.lineTo(face.x - 9, face.y - 21);
+      ctx.lineTo(face.x - 3, face.y - 15);
+      ctx.lineTo(face.x + 1, face.y - 23);
+      ctx.lineTo(face.x + 6, face.y - 15);
+      ctx.lineTo(face.x + 11, face.y - 20);
+      ctx.lineTo(face.x + 12, face.y - 14);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = gear.detail;
+      ctx.fillRect(face.x - 7, face.y - 20, 3, 3);
+      ctx.fillRect(face.x + 4, face.y - 19, 3, 3);
+    } else if (gear.id === "visor") {
+      ctx.fillStyle = gear.color;
+      ctx.fillRect(face.x - 11, face.y - 10, 22, 6);
+      ctx.fillStyle = gear.detail;
+      ctx.fillRect(face.x - 8, face.y - 8, 16, 2);
+    }
     ctx.fillStyle = "#13232f";
-    ctx.fillRect(screen.x - 6, screen.y - 7, 4, 4);
-    ctx.fillRect(screen.x + 2, screen.y - 7, 4, 4);
+    ctx.fillRect(face.x - 6, face.y - 7, 4, 4);
+    ctx.fillRect(face.x + 2, face.y - 7, 4, 4);
+    ctx.fillStyle = tint(skin.color, -18);
+    ctx.fillRect(face.x - 3, face.y - 2, 6, 2);
   }
 
   function drawBoss() {
@@ -1536,7 +1714,7 @@
     updateCamera();
   }
 
-  function saveGame() {
+  function saveGame(silent) {
     var payload;
     var worlds;
     var i;
@@ -1569,7 +1747,9 @@
       }
       saveWorldIndex(worlds);
       renderSavedWorlds();
-      notify("World saved.");
+      if (!silent) {
+        notify("World saved.");
+      }
     } catch (error) {
       notify("Save failed on this browser.");
     }
@@ -1577,6 +1757,7 @@
 
   function loadGame() {
     state.currentWorldId = "";
+    state.playerStyle = normalizePlayerStyle(defaultPlayerStyle);
     state.worldName = "My World";
     state.gameMode = "survival";
     state.pendingWorldMode = "survival";
@@ -1654,6 +1835,10 @@
         if (target.getAttribute("data-video") !== null) {
           state.videoIndex = parseInt(target.getAttribute("data-video"), 10);
           renderBuildTube();
+          return;
+        }
+        if (target.getAttribute("data-player-style-group") !== null) {
+          setPlayerStyle(target.getAttribute("data-player-style-group"), target.getAttribute("data-player-style-id"));
           return;
         }
         if (target.getAttribute("data-load-world") !== null) {
@@ -1745,6 +1930,9 @@
     ui.playerNameInput.oninput = function () {
       state.playerName = (ui.playerNameInput.value || "BuilderOne").replace(/^\s+|\s+$/g, "") || "BuilderOne";
       renderFriends();
+      if (state.currentWorldId) {
+        saveGame(true);
+      }
     };
     ui.newWorldTabBtn.onclick = function () {
       showStartMenuTab("new");
@@ -1850,6 +2038,7 @@
     renderBuildTube();
     renderHotbar();
     renderInventory();
+    renderPlayerMaker();
     renderFriends();
     renderLogs();
     addLog("Gameplay loaded. Press E for inventory and F to use portals or computers.");
