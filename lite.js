@@ -7,6 +7,8 @@
   var ctx = canvas.getContext("2d");
 
   var ui = {
+    installAppBtn: document.getElementById("installAppBtn"),
+    installHint: document.getElementById("installHint"),
     playerNameInput: document.getElementById("playerNameInput"),
     playerLookLabel: document.getElementById("playerLookLabel"),
     playerPreviewCard: document.getElementById("playerPreviewCard"),
@@ -202,6 +204,7 @@
   };
 
   var input = { up: false, down: false, left: false, right: false };
+  var deferredInstallPrompt = null;
 
   var state = {
     playerName: "BuilderOne",
@@ -255,6 +258,100 @@
     input.down = false;
     input.left = false;
     input.right = false;
+  }
+
+  function isStandaloneMode() {
+    return !!((window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone);
+  }
+
+  function isAppleMobileBrowser() {
+    var ua = (window.navigator.userAgent || "").toLowerCase();
+    return ua.indexOf("iphone") !== -1 || ua.indexOf("ipad") !== -1 || ua.indexOf("ipod") !== -1;
+  }
+
+  function updateInstallUI() {
+    if (!ui.installAppBtn || !ui.installHint) {
+      return;
+    }
+    if (isStandaloneMode()) {
+      ui.installAppBtn.textContent = "Installed";
+      ui.installAppBtn.disabled = true;
+      ui.installHint.textContent = "AWESOMECRAFT is ready from your home screen.";
+      return;
+    }
+    ui.installAppBtn.disabled = false;
+    if (deferredInstallPrompt) {
+      ui.installAppBtn.textContent = "Install App";
+      ui.installHint.textContent = "Add AWESOMECRAFT to your home screen for quick play.";
+      return;
+    }
+    if (isAppleMobileBrowser()) {
+      ui.installAppBtn.textContent = "Add to Home Screen";
+      ui.installHint.textContent = "On iPad, tap Share and then Add to Home Screen.";
+      return;
+    }
+    if (window.location.protocol.indexOf("http") !== 0) {
+      ui.installAppBtn.textContent = "Use Live Link";
+      ui.installHint.textContent = "Open the hosted version to install AWESOMECRAFT like an app.";
+      return;
+    }
+    ui.installAppBtn.textContent = "Install Tips";
+    ui.installHint.textContent = "Use your browser menu to install AWESOMECRAFT like an app.";
+  }
+
+  function handleInstallApp() {
+    if (isStandaloneMode()) {
+      notify("AWESOMECRAFT is already on your home screen.");
+      return;
+    }
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      deferredInstallPrompt.userChoice.then(function (choiceResult) {
+        deferredInstallPrompt = null;
+        updateInstallUI();
+        if (choiceResult && choiceResult.outcome === "accepted") {
+          notify("Install started.");
+        } else {
+          notify("Install cancelled.");
+        }
+      }).catch(function () {
+        deferredInstallPrompt = null;
+        updateInstallUI();
+      });
+      return;
+    }
+    if (isAppleMobileBrowser()) {
+      notify("On iPad, tap Share and then choose Add to Home Screen.");
+      return;
+    }
+    if (window.location.protocol.indexOf("http") !== 0) {
+      notify("Open the hosted AWESOMECRAFT link to add it to your home screen.");
+      return;
+    }
+    notify("Open your browser menu and choose Install App or Add to Home Screen.");
+  }
+
+  function registerInstallSupport() {
+    updateInstallUI();
+    if (window.addEventListener) {
+      window.addEventListener("beforeinstallprompt", function (event) {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        updateInstallUI();
+      });
+      window.addEventListener("appinstalled", function () {
+        deferredInstallPrompt = null;
+        updateInstallUI();
+        notify("AWESOMECRAFT installed.");
+      });
+    }
+    if ("serviceWorker" in navigator && window.location.protocol.indexOf("http") === 0) {
+      navigator.serviceWorker.register("./service-worker.js").then(function () {
+        updateInstallUI();
+      }).catch(function () {
+        updateInstallUI();
+      });
+    }
   }
 
   function playerLookOption(groupName, id) {
@@ -1966,6 +2063,7 @@
     ui.voiceBtn.onclick = function () {
       notify("Voice chat is browser-dependent in this compatibility build.");
     };
+    ui.installAppBtn.onclick = handleInstallApp;
     ui.recordBtn.onclick = function () {
       notify("Recording is browser-dependent in this compatibility build.");
     };
@@ -2047,6 +2145,7 @@
     bindEvents();
     resizeCanvas();
     updateHUD();
+    registerInstallSupport();
     openModeMenu();
     if (window.requestAnimationFrame) {
       window.requestAnimationFrame(function (ts) {

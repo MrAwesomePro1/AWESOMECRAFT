@@ -53,6 +53,12 @@ button {
   transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
 }
 
+button:disabled {
+  cursor: default;
+  opacity: 0.72;
+  transform: none;
+}
+
 button:hover,
 button:focus-visible {
   transform: translateY(-1px);
@@ -124,6 +130,20 @@ input {
   font-family: "Rockwell", "Georgia", serif;
   font-size: clamp(2.1rem, 5vw, 3.2rem);
   letter-spacing: 0.06em;
+}
+
+.install-stack {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.install-button {
+  width: 100%;
+}
+
+.install-hint {
+  margin: 0;
 }
 
 .subtitle,

@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>AWESOMECRAFT</title>
+  <meta name="theme-color" content="#0a1b22">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AWESOMECRAFT">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
   <style>
 :root {
   color-scheme: dark;
@@ -58,6 +64,12 @@ button {
   padding: 0.72rem 1rem;
   cursor: pointer;
   transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+
+button:disabled {
+  cursor: default;
+  opacity: 0.72;
+  transform: none;
 }
 
 button:hover,
@@ -131,6 +143,20 @@ input {
   font-family: "Rockwell", "Georgia", serif;
   font-size: clamp(2.1rem, 5vw, 3.2rem);
   letter-spacing: 0.06em;
+}
+
+.install-stack {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.install-button {
+  width: 100%;
+}
+
+.install-hint {
+  margin: 0;
 }
 
 .subtitle,
@@ -1031,6 +1057,10 @@ input {
         <p class="eyebrow">Touch-first sandbox prototype for iPad and desktop</p>
         <h1>AWESOMECRAFT</h1>
         <p class="subtitle">Build, battle, stream, and jump into friend-only realms.</p>
+        <div class="install-stack">
+          <button id="installAppBtn" class="primary install-button">Add to Home Screen</button>
+          <p id="installHint" class="small-copy install-hint">Install AWESOMECRAFT on your home screen for quick launch.</p>
+        </div>
       </div>
 
       <section class="panel-card">
@@ -1365,6 +1395,8 @@ input {
   var ctx = canvas.getContext("2d");
 
   var ui = {
+    installAppBtn: document.getElementById("installAppBtn"),
+    installHint: document.getElementById("installHint"),
     playerNameInput: document.getElementById("playerNameInput"),
     playerLookLabel: document.getElementById("playerLookLabel"),
     playerPreviewCard: document.getElementById("playerPreviewCard"),
@@ -1560,6 +1592,7 @@ input {
   };
 
   var input = { up: false, down: false, left: false, right: false };
+  var deferredInstallPrompt = null;
 
   var state = {
     playerName: "BuilderOne",
@@ -1613,6 +1646,100 @@ input {
     input.down = false;
     input.left = false;
     input.right = false;
+  }
+
+  function isStandaloneMode() {
+    return !!((window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone);
+  }
+
+  function isAppleMobileBrowser() {
+    var ua = (window.navigator.userAgent || "").toLowerCase();
+    return ua.indexOf("iphone") !== -1 || ua.indexOf("ipad") !== -1 || ua.indexOf("ipod") !== -1;
+  }
+
+  function updateInstallUI() {
+    if (!ui.installAppBtn || !ui.installHint) {
+      return;
+    }
+    if (isStandaloneMode()) {
+      ui.installAppBtn.textContent = "Installed";
+      ui.installAppBtn.disabled = true;
+      ui.installHint.textContent = "AWESOMECRAFT is ready from your home screen.";
+      return;
+    }
+    ui.installAppBtn.disabled = false;
+    if (deferredInstallPrompt) {
+      ui.installAppBtn.textContent = "Install App";
+      ui.installHint.textContent = "Add AWESOMECRAFT to your home screen for quick play.";
+      return;
+    }
+    if (isAppleMobileBrowser()) {
+      ui.installAppBtn.textContent = "Add to Home Screen";
+      ui.installHint.textContent = "On iPad, tap Share and then Add to Home Screen.";
+      return;
+    }
+    if (window.location.protocol.indexOf("http") !== 0) {
+      ui.installAppBtn.textContent = "Use Live Link";
+      ui.installHint.textContent = "Open the hosted version to install AWESOMECRAFT like an app.";
+      return;
+    }
+    ui.installAppBtn.textContent = "Install Tips";
+    ui.installHint.textContent = "Use your browser menu to install AWESOMECRAFT like an app.";
+  }
+
+  function handleInstallApp() {
+    if (isStandaloneMode()) {
+      notify("AWESOMECRAFT is already on your home screen.");
+      return;
+    }
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      deferredInstallPrompt.userChoice.then(function (choiceResult) {
+        deferredInstallPrompt = null;
+        updateInstallUI();
+        if (choiceResult && choiceResult.outcome === "accepted") {
+          notify("Install started.");
+        } else {
+          notify("Install cancelled.");
+        }
+      }).catch(function () {
+        deferredInstallPrompt = null;
+        updateInstallUI();
+      });
+      return;
+    }
+    if (isAppleMobileBrowser()) {
+      notify("On iPad, tap Share and then choose Add to Home Screen.");
+      return;
+    }
+    if (window.location.protocol.indexOf("http") !== 0) {
+      notify("Open the hosted AWESOMECRAFT link to add it to your home screen.");
+      return;
+    }
+    notify("Open your browser menu and choose Install App or Add to Home Screen.");
+  }
+
+  function registerInstallSupport() {
+    updateInstallUI();
+    if (window.addEventListener) {
+      window.addEventListener("beforeinstallprompt", function (event) {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        updateInstallUI();
+      });
+      window.addEventListener("appinstalled", function () {
+        deferredInstallPrompt = null;
+        updateInstallUI();
+        notify("AWESOMECRAFT installed.");
+      });
+    }
+    if ("serviceWorker" in navigator && window.location.protocol.indexOf("http") === 0) {
+      navigator.serviceWorker.register("./service-worker.js").then(function () {
+        updateInstallUI();
+      }).catch(function () {
+        updateInstallUI();
+      });
+    }
   }
 
   function playerLookOption(groupName, id) {
@@ -3324,6 +3451,7 @@ input {
     ui.voiceBtn.onclick = function () {
       notify("Voice chat is browser-dependent in this compatibility build.");
     };
+    ui.installAppBtn.onclick = handleInstallApp;
     ui.recordBtn.onclick = function () {
       notify("Recording is browser-dependent in this compatibility build.");
     };
@@ -3405,6 +3533,7 @@ input {
     bindEvents();
     resizeCanvas();
     updateHUD();
+    registerInstallSupport();
     openModeMenu();
     if (window.requestAnimationFrame) {
       window.requestAnimationFrame(function (ts) {

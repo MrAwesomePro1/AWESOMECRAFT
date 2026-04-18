@@ -33,6 +33,13 @@ Keyboard controls:
 - `F`: use portals and computers
 - `P`: pause menu
 
+## Install On Home Screen
+
+The GitHub Pages build now includes a web app manifest, install button, icons, and an offline cache.
+
+- On iPad Safari: open the site, tap `Share`, then choose `Add to Home Screen`
+- On desktop browsers that support install prompts: use the `Add to Home Screen` button or the browser install button
+
 ## GitHub Pages
 
 This project can be published directly with GitHub Pages from the repository root. The `.nojekyll` file is included so the static files deploy without a Jekyll build step.
