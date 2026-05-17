@@ -510,22 +510,20 @@ input {
 
 .game-stage {
   position: relative;
-  border: 1px solid var(--line);
-  border-radius: 32px;
+  border: 6px solid #1c2023;
+  border-radius: 10px;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 15% 15%, rgba(87, 166, 127, 0.2), transparent 18%),
-    radial-gradient(circle at 85% 10%, rgba(255, 215, 106, 0.12), transparent 18%),
-    linear-gradient(180deg, rgba(12, 38, 51, 0.95), rgba(4, 14, 20, 0.98));
+  background: #8badef;
   box-shadow: var(--shadow);
 }
 
 #gameCanvas {
   width: 100%;
-  height: min(72vh, 820px);
+  height: min(74vh, 840px);
   display: block;
   touch-action: none;
-  background: linear-gradient(180deg, rgba(102, 180, 196, 0.18), rgba(13, 25, 34, 0.05));
+  background: #8badef;
+  image-rendering: pixelated;
 }
 
 .boss-banner {
@@ -617,45 +615,69 @@ input {
 .hotbar {
   position: absolute;
   left: 50%;
-  bottom: 18px;
+  bottom: 12px;
   transform: translateX(-50%);
   display: flex;
-  gap: 10px;
-  padding: 10px;
-  border-radius: 22px;
-  background: rgba(5, 14, 19, 0.84);
-  border: 1px solid rgba(139, 214, 209, 0.2);
-  box-shadow: var(--shadow);
+  gap: 4px;
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
 }
 
 .hotbar-slot {
-  width: 70px;
-  min-height: 78px;
-  padding: 8px;
-  border-radius: 18px;
-  border: 1px solid transparent;
-  background: rgba(16, 34, 46, 0.8);
-  color: var(--text-main);
+  width: clamp(42px, 5.8vw, 64px);
+  min-height: clamp(42px, 5.8vw, 64px);
+  padding: 4px;
+  border-radius: 0;
+  border: 4px solid #2f332f;
+  background: linear-gradient(180deg, rgba(108, 116, 108, 0.96), rgba(66, 74, 66, 0.98));
+  color: #f7f8f2;
   display: grid;
-  gap: 6px;
-  place-items: center;
+  gap: 0;
+  place-items: stretch;
+  box-shadow:
+    inset 0 0 0 2px rgba(214, 220, 210, 0.9),
+    0 2px 0 rgba(0, 0, 0, 0.32);
 }
 
 .hotbar-slot.selected {
-  border-color: rgba(255, 215, 106, 0.58);
-  box-shadow: inset 0 0 0 1px rgba(255, 215, 106, 0.2);
+  border-color: #f5f8ec;
+  background: linear-gradient(180deg, rgba(142, 148, 142, 0.98), rgba(88, 94, 88, 0.98));
+  box-shadow:
+    inset 0 0 0 3px rgba(245, 248, 236, 0.95),
+    0 0 0 2px rgba(26, 30, 26, 0.8);
+}
+
+.slot-art {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: clamp(34px, 4.7vw, 52px);
 }
 
 .swatch {
-  width: 28px;
-  height: 28px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  border: 2px solid rgba(12, 14, 12, 0.52);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.12);
+}
+
+.slot-count-badge {
+  position: absolute;
+  right: 4px;
+  bottom: 3px;
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-shadow:
+    1px 1px 0 rgba(0, 0, 0, 0.9),
+    -1px -1px 0 rgba(0, 0, 0, 0.55);
 }
 
 .slot-name {
-  font-size: 0.76rem;
-  text-align: center;
+  display: none;
 }
 
 .touch-controls {
@@ -1036,15 +1058,15 @@ input {
   }
 
   .hotbar {
-    gap: 6px;
-    padding: 8px;
-    width: calc(100% - 18px);
+    gap: 3px;
+    width: calc(100% - 10px);
     justify-content: center;
   }
 
   .hotbar-slot {
-    width: 62px;
-    min-height: 74px;
+    width: clamp(34px, 8vw, 44px);
+    min-height: clamp(34px, 8vw, 44px);
+    border-width: 3px;
   }
 }
 
@@ -1393,6 +1415,7 @@ input {
   }
 
   var ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = false;
 
   var ui = {
     installAppBtn: document.getElementById("installAppBtn"),
@@ -1486,7 +1509,10 @@ input {
   var ISO_H = 21;
   var BLOCK_H = 18;
   var PLAYER_SPEED = 4;
-  var HOTBAR_SIZE = 6;
+  var HOTBAR_SIZE = 9;
+  var VIEW_DISTANCE = 18;
+  var CAMERA_EYE_HEIGHT = 1.7;
+  var NEAR_CLIP = 0.18;
   var SAVE_KEY = "awesomecraft.lite.v4";
   var WORLD_INDEX_KEY = "awesomecraft.worldIndex.v1";
   var WORLD_SAVE_PREFIX = "awesomecraft.world.";
@@ -2296,9 +2322,14 @@ input {
     var slot;
     for (i = 0; i < HOTBAR_SIZE; i += 1) {
       slot = state.inventory[i];
-      html += '<button type="button" class="hotbar-slot' + (state.selectedHotbarIndex === i ? " selected" : "") + '" data-hotbar="' + i + '">';
+      html += '<button type="button" title="' + (slot ? itemLabel(slot.id) + " x" + slot.count : "Empty slot") + '" class="hotbar-slot' + (state.selectedHotbarIndex === i ? " selected" : "") + '" data-hotbar="' + i + '">';
+      html += '<div class="slot-art">';
       html += '<div class="swatch" style="background:' + (slot ? itemColor(slot.id) : "rgba(255,255,255,0.08)") + '"></div>';
-      html += '<div class="slot-name">' + (slot ? itemLabel(slot.id) + " x" + slot.count : "Empty") + "</div>";
+      if (slot) {
+        html += '<span class="slot-count-badge">' + slot.count + "</span>";
+      }
+      html += "</div>";
+      html += '<div class="slot-name">' + (slot ? itemLabel(slot.id) : "") + "</div>";
       html += "</button>";
     }
     ui.hotbar.innerHTML = html;
@@ -2584,7 +2615,8 @@ input {
 
   function updateHUD() {
     var hotbarItem = selectedHotbarItem();
-    var targetTile = state.targetTile ? tileAt(state.dimension, state.targetTile.x, state.targetTile.y) : null;
+    var focusSpot = selectedTile();
+    var targetTile = focusSpot ? tileAt(state.dimension, focusSpot.x, focusSpot.y) : null;
     ui.healthValue.textContent = Math.ceil(state.player.hp) + " / " + state.player.maxHp;
     ui.realmValue.textContent = state.connected ? state.realmCode : "Solo";
     ui.connectionBadge.textContent = state.connected ? "Realm Host" : "Offline";
@@ -2596,7 +2628,7 @@ input {
     ui.toolInfo.textContent = hotbarItem ? itemLabel(hotbarItem.id) + " x" + hotbarItem.count : "Empty Slot";
     ui.activePackSummary.textContent = "Everything unlocked";
     ui.buildTubeHint.textContent = nearestObject("computer") ? "Computer in reach" : "Find a computer";
-    ui.targetInfo.textContent = targetTile ? state.targetTile.x + "," + state.targetTile.y + " " + (targetTile.object || targetTile.floor) : "Select a tile";
+    ui.targetInfo.textContent = targetTile ? focusSpot.x + "," + focusSpot.y + " " + (targetTile.object || targetTile.floor) : "Look ahead";
     ui.bossTitle.textContent = "Final Boss: " + state.boss.name;
     ui.bossHealthFill.style.width = ((state.boss.hp / state.boss.maxHp) * 100) + "%";
     ui.bossHealthText.textContent = Math.max(0, Math.ceil(state.boss.hp)) + " / " + state.boss.maxHp;
@@ -2658,222 +2690,681 @@ input {
     return "rgb(" + r + "," + g + "," + b + ")";
   }
 
-  function isoPoint(gridX, gridY, height) {
-    var dx = gridX - state.camera.x;
-    var dy = gridY - state.camera.y;
+  function facingBasis() {
+    if (state.player.facing === "up") {
+      return { fx: 0, fy: -1, rx: 1, ry: 0 };
+    }
+    if (state.player.facing === "left") {
+      return { fx: -1, fy: 0, rx: 0, ry: -1 };
+    }
+    if (state.player.facing === "right") {
+      return { fx: 1, fy: 0, rx: 0, ry: 1 };
+    }
+    return { fx: 0, fy: 1, rx: -1, ry: 0 };
+  }
+
+  function playerTilePosition() {
     return {
-      x: canvas.width / 2 + (dx - dy) * ISO_W * 0.5,
-      y: canvas.height / 2 + (dx + dy) * ISO_H * 0.5 - height
+      x: state.player.x / TILE,
+      y: state.player.y / TILE
     };
   }
 
-  function floorHeight(tile) {
-    if (!tile) {
-      return 0;
-    }
-    if (tile.floor === "water" || tile.floor === "lava") {
-      return 2;
-    }
-    return 0;
+  function viewFocalLength() {
+    return Math.min(canvas.width * 0.95, canvas.height * 1.55);
   }
 
-  function objectHeight(name) {
-    if (!name) {
-      return 0;
+  function viewHorizon() {
+    if (state.dimension === "nether") {
+      return canvas.height * 0.43;
     }
-    if (name === "crystal") {
-      return BLOCK_H + 10;
+    if (state.dimension === "end") {
+      return canvas.height * 0.39;
     }
-    if (name === "portal" || name === "endportal") {
-      return BLOCK_H + 12;
-    }
-    if (name === "altar" || name === "dragonaltar") {
-      return BLOCK_H + 6;
-    }
-    return BLOCK_H;
+    return canvas.height * 0.37;
   }
 
-  function drawDiamond(cx, cy, width, height, fill) {
-    ctx.fillStyle = fill;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - height * 0.5);
-    ctx.lineTo(cx + width * 0.5, cy);
-    ctx.lineTo(cx, cy + height * 0.5);
-    ctx.lineTo(cx - width * 0.5, cy);
-    ctx.closePath();
-    ctx.fill();
+  function worldToView(wx, wy) {
+    var basis = facingBasis();
+    var playerPos = playerTilePosition();
+    var dx = wx - playerPos.x;
+    var dy = wy - playerPos.y;
+    return {
+      side: dx * basis.rx + dy * basis.ry,
+      forward: dx * basis.fx + dy * basis.fy
+    };
   }
 
-  function drawCube(gridX, gridY, baseColor, height) {
-    var top = isoPoint(gridX, gridY, height);
-    var base = isoPoint(gridX, gridY, 0);
-    ctx.fillStyle = tint(baseColor, 22);
-    ctx.beginPath();
-    ctx.moveTo(top.x, top.y - ISO_H * 0.5);
-    ctx.lineTo(top.x + ISO_W * 0.5, top.y);
-    ctx.lineTo(top.x, top.y + ISO_H * 0.5);
-    ctx.lineTo(top.x - ISO_W * 0.5, top.y);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = tint(baseColor, -18);
-    ctx.beginPath();
-    ctx.moveTo(top.x - ISO_W * 0.5, top.y);
-    ctx.lineTo(top.x, top.y + ISO_H * 0.5);
-    ctx.lineTo(base.x, base.y + ISO_H * 0.5);
-    ctx.lineTo(base.x - ISO_W * 0.5, base.y);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = tint(baseColor, -38);
-    ctx.beginPath();
-    ctx.moveTo(top.x + ISO_W * 0.5, top.y);
-    ctx.lineTo(top.x, top.y + ISO_H * 0.5);
-    ctx.lineTo(base.x, base.y + ISO_H * 0.5);
-    ctx.lineTo(base.x + ISO_W * 0.5, base.y);
-    ctx.closePath();
-    ctx.fill();
+  function projectScenePoint(side, forward, height) {
+    var focal = viewFocalLength();
+    var horizon = viewHorizon();
+    if (forward <= NEAR_CLIP) {
+      return null;
+    }
+    return {
+      x: Math.round(canvas.width * 0.5 + (side / forward) * focal),
+      y: Math.round(horizon - ((height - CAMERA_EYE_HEIGHT) / forward) * focal)
+    };
   }
 
-  function drawTile(gridX, gridY, tile) {
-    var base = isoPoint(gridX, gridY, 0);
-    drawDiamond(base.x, base.y, ISO_W, ISO_H, colors[tile.floor] || colors.grass);
-    if (tile.floor === "water" || tile.floor === "lava") {
-      drawDiamond(base.x, base.y + 2, ISO_W - 8, ISO_H - 4, tint(colors[tile.floor], 18));
+  function viewIsVisible(view) {
+    return view.forward > NEAR_CLIP && view.forward < VIEW_DISTANCE && Math.abs(view.side) < view.forward * 1.58 + 2.2;
+  }
+
+  function tileNoise(x, y, offset) {
+    var seed = Math.sin((x + offset * 11) * 12.9898 + (y + offset * 17) * 78.233) * 43758.5453;
+    return seed - Math.floor(seed);
+  }
+
+  function fillPolygon(points, fillStyle, strokeStyle) {
+    var i;
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (i = 1; i < points.length; i += 1) {
+      ctx.lineTo(points[i].x, points[i].y);
     }
-    if (tile.object) {
-      drawCube(gridX, gridY, colors[tile.object] || colors.stone, objectHeight(tile.object));
-      if (tile.object === "computer") {
-        var screen = isoPoint(gridX, gridY, objectHeight(tile.object));
-        ctx.fillStyle = "#091822";
-        ctx.fillRect(screen.x - 7, screen.y - 8, 14, 10);
-        ctx.fillStyle = "#78f6d1";
-        ctx.fillRect(screen.x - 5, screen.y - 6, 10, 6);
-      }
-      if (tile.object === "portal" || tile.object === "endportal") {
-        var portal = isoPoint(gridX, gridY, objectHeight(tile.object));
-        ctx.fillStyle = tile.object === "endportal" ? "rgba(140, 222, 255, 0.34)" : "rgba(255,255,255,0.3)";
-        ctx.fillRect(portal.x - 5, portal.y - 16, 10, 16);
-      }
-    }
-    if (state.targetTile && state.targetTile.x === gridX && state.targetTile.y === gridY) {
-      ctx.strokeStyle = "#ffe799";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(base.x, base.y - ISO_H * 0.5);
-      ctx.lineTo(base.x + ISO_W * 0.5, base.y);
-      ctx.lineTo(base.x, base.y + ISO_H * 0.5);
-      ctx.lineTo(base.x - ISO_W * 0.5, base.y);
-      ctx.closePath();
-      ctx.stroke();
+    ctx.closePath();
+    ctx.fillStyle = fillStyle;
+    ctx.fill();
+    if (strokeStyle) {
+      ctx.strokeStyle = strokeStyle;
       ctx.lineWidth = 1;
+      ctx.stroke();
     }
   }
 
-  function drawPlayer() {
-    var gridX = pixelToGrid(state.player.x);
-    var gridY = pixelToGrid(state.player.y);
-    var face = isoPoint(gridX, gridY, BLOCK_H + 24);
-    var torso = isoPoint(gridX, gridY, BLOCK_H + 10);
-    var skin = playerLookOption("skin", state.playerStyle.skin);
-    var shirt = playerLookOption("shirt", state.playerStyle.shirt);
-    var hair = playerLookOption("hair", state.playerStyle.hair);
-    var gear = playerLookOption("gear", state.playerStyle.gear);
-    drawCube(gridX, gridY, shirt.color, BLOCK_H + 10);
-    ctx.fillStyle = tint(shirt.color, -22);
-    ctx.fillRect(torso.x - 10, torso.y + 3, 20, 5);
-    ctx.fillStyle = skin.color;
-    ctx.fillRect(face.x - 10, face.y - 12, 20, 13);
-    ctx.fillStyle = hair.color;
-    ctx.fillRect(face.x - 11, face.y - 16, 22, 6);
-    if (gear.id === "cap") {
-      ctx.fillStyle = gear.color;
-      ctx.fillRect(face.x - 12, face.y - 20, 24, 6);
-      ctx.fillStyle = gear.detail;
-      ctx.fillRect(face.x - 13, face.y - 15, 9, 3);
-    } else if (gear.id === "crown") {
-      ctx.fillStyle = gear.color;
-      ctx.beginPath();
-      ctx.moveTo(face.x - 12, face.y - 14);
-      ctx.lineTo(face.x - 9, face.y - 21);
-      ctx.lineTo(face.x - 3, face.y - 15);
-      ctx.lineTo(face.x + 1, face.y - 23);
-      ctx.lineTo(face.x + 6, face.y - 15);
-      ctx.lineTo(face.x + 11, face.y - 20);
-      ctx.lineTo(face.x + 12, face.y - 14);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = gear.detail;
-      ctx.fillRect(face.x - 7, face.y - 20, 3, 3);
-      ctx.fillRect(face.x + 4, face.y - 19, 3, 3);
-    } else if (gear.id === "visor") {
-      ctx.fillStyle = gear.color;
-      ctx.fillRect(face.x - 11, face.y - 10, 22, 6);
-      ctx.fillStyle = gear.detail;
-      ctx.fillRect(face.x - 8, face.y - 8, 16, 2);
+  function spriteRect(side, forward, baseHeight, topHeight, width) {
+    var base = projectScenePoint(side, forward, baseHeight);
+    var top = projectScenePoint(side, forward, topHeight);
+    var left = projectScenePoint(side - width * 0.5, forward, baseHeight);
+    var right = projectScenePoint(side + width * 0.5, forward, baseHeight);
+    var rectWidth;
+    if (!base || !top || !left || !right) {
+      return null;
     }
-    ctx.fillStyle = "#13232f";
-    ctx.fillRect(face.x - 6, face.y - 7, 4, 4);
-    ctx.fillRect(face.x + 2, face.y - 7, 4, 4);
-    ctx.fillStyle = tint(skin.color, -18);
-    ctx.fillRect(face.x - 3, face.y - 2, 6, 2);
+    rectWidth = Math.max(1, Math.abs(right.x - left.x));
+    return {
+      x: Math.round((left.x + right.x) * 0.5 - rectWidth * 0.5),
+      y: top.y,
+      w: rectWidth,
+      h: Math.max(1, base.y - top.y)
+    };
   }
 
-  function drawBoss() {
-    var bossX;
-    var bossY;
-    if (state.dimension !== state.boss.dimension || state.boss.defeated || !state.boss.awake) {
+  function drawSpriteRect(rect, baseColor, topColor, accentColor) {
+    if (!rect) {
       return;
     }
-    bossX = pixelToGrid(state.boss.x);
-    bossY = pixelToGrid(state.boss.y);
+    ctx.fillStyle = baseColor;
+    ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+    ctx.strokeStyle = tint(baseColor, -42);
+    ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+    if (topColor) {
+      ctx.fillStyle = topColor;
+      ctx.fillRect(rect.x, rect.y, rect.w, Math.max(2, Math.round(rect.h * 0.2)));
+    }
+    if (accentColor) {
+      ctx.fillStyle = accentColor;
+      ctx.fillRect(rect.x + Math.max(1, Math.round(rect.w * 0.14)), rect.y + Math.max(2, Math.round(rect.h * 0.24)), Math.max(2, Math.round(rect.w * 0.24)), Math.max(2, Math.round(rect.h * 0.18)));
+    }
+  }
+
+  function drawCloudCluster(x, y, scale, alpha) {
+    var blocks = [
+      { x: 0, y: 10, w: 68, h: 18 },
+      { x: 18, y: 0, w: 52, h: 14 },
+      { x: 58, y: 12, w: 26, h: 12 },
+      { x: 78, y: 18, w: 36, h: 14 }
+    ];
+    var i;
+    ctx.fillStyle = "rgba(236,242,255," + alpha + ")";
+    for (i = 0; i < blocks.length; i += 1) {
+      ctx.fillRect(Math.round(x + blocks[i].x * scale), Math.round(y + blocks[i].y * scale), Math.round(blocks[i].w * scale), Math.round(blocks[i].h * scale));
+    }
+    ctx.fillStyle = "rgba(190,206,236," + (alpha * 0.9) + ")";
+    for (i = 0; i < blocks.length; i += 1) {
+      ctx.fillRect(Math.round(x + blocks[i].x * scale), Math.round(y + (blocks[i].y + blocks[i].h - 3) * scale), Math.round(blocks[i].w * scale), Math.max(2, Math.round(4 * scale)));
+    }
+  }
+
+  function drawHorizonBand(baseColor, shadowColor, lift, bias) {
+    var horizon = viewHorizon();
+    var i;
+    var x;
+    var y;
+    ctx.fillStyle = baseColor;
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height);
+    ctx.lineTo(0, horizon + lift + 38);
+    for (i = 0; i <= 12; i += 1) {
+      x = canvas.width * i / 12;
+      y = horizon + lift + 34 + Math.sin(bias + i * 0.78) * 16 + Math.cos(bias * 0.7 + i * 1.23) * 10;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(canvas.width, canvas.height);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = shadowColor;
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height);
+    ctx.lineTo(0, horizon + lift + 54);
+    for (i = 0; i <= 10; i += 1) {
+      x = canvas.width * i / 10;
+      y = horizon + lift + 48 + Math.sin(bias * 1.2 + i * 0.92) * 12;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(canvas.width, canvas.height);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawSkyBackdrop() {
+    var playerPos = playerTilePosition();
+    var sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    var i;
+    var cloudX;
+    var cloudY;
+    if (state.dimension === "nether") {
+      sky.addColorStop(0, "#8f4d26");
+      sky.addColorStop(1, "#2b0d07");
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      drawHorizonBand("#6b2f1b", "#4c1c10", 30, playerPos.x * 0.08 + playerPos.y * 0.04);
+      drawHorizonBand("#4b2011", "#2a0e08", 66, playerPos.x * 0.12 + playerPos.y * 0.06);
+      return;
+    }
+    if (state.dimension === "end") {
+      sky.addColorStop(0, "#36224e");
+      sky.addColorStop(1, "#0d0918");
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      drawHorizonBand("#4d416d", "#2f244a", 20, playerPos.x * 0.08);
+      ctx.fillStyle = "rgba(214,203,255,0.8)";
+      for (i = 0; i < 26; i += 1) {
+        ctx.fillRect(Math.round((tileNoise(i, playerPos.x, 9) * canvas.width)), Math.round(tileNoise(i, playerPos.y, 11) * viewHorizon()), 2, 2);
+      }
+      return;
+    }
+
+    if (state.night) {
+      sky.addColorStop(0, "#143261");
+      sky.addColorStop(1, "#16233a");
+    } else {
+      sky.addColorStop(0, "#83a8ee");
+      sky.addColorStop(1, "#9fbeff");
+    }
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    drawHorizonBand(state.night ? "#314d59" : "#7da267", state.night ? "#203742" : "#5f814a", 24, playerPos.x * 0.08 + playerPos.y * 0.05);
+    drawHorizonBand(state.night ? "#253f3a" : "#4b7a33", state.night ? "#172d29" : "#365721", 58, playerPos.x * 0.12 + playerPos.y * 0.07);
+    if (!state.night) {
+      for (i = 0; i < 5; i += 1) {
+        cloudX = ((i * 220) - (playerPos.x * 48) + canvas.width * 1.3) % (canvas.width + 240) - 120;
+        cloudY = 36 + (i % 3) * 44 + Math.sin(playerPos.y * 0.18 + i) * 6;
+        drawCloudCluster(cloudX, cloudY, 0.72 + (i % 2) * 0.14, 0.84);
+      }
+    }
+  }
+
+  function drawGrassSprite(side, forward, seed) {
+    var base = projectScenePoint(side, forward, 0);
+    var top = projectScenePoint(side, forward, 0.58 + seed * 0.18);
+    var width = Math.max(2, Math.round(7 / forward));
+    if (!base || !top || forward > 8.5) {
+      return;
+    }
+    ctx.fillStyle = seed > 0.5 ? "#2d8e26" : "#4aa534";
+    ctx.fillRect(base.x - width, top.y, width, Math.max(2, base.y - top.y));
+    ctx.fillRect(base.x + 1, top.y + Math.max(0, Math.round((base.y - top.y) * 0.18)), width, Math.max(2, base.y - top.y - 2));
+  }
+
+  function drawFlowerSprite(side, forward, color) {
+    var base = projectScenePoint(side, forward, 0);
+    var top = projectScenePoint(side, forward, 0.85);
+    var petal = Math.max(2, Math.round(8 / forward));
+    if (!base || !top || forward > 10.2) {
+      return;
+    }
+    ctx.fillStyle = "#37a62c";
+    ctx.fillRect(base.x - 1, top.y, 3, Math.max(4, base.y - top.y));
+    ctx.fillStyle = color;
+    ctx.fillRect(top.x - petal, top.y - petal, petal, petal);
+    ctx.fillRect(top.x, top.y - petal, petal, petal);
+    ctx.fillRect(top.x - petal * 0.5, top.y - petal * 1.45, petal, petal);
+    ctx.fillStyle = "#ffeeb1";
+    ctx.fillRect(top.x - 1, top.y - 1, 3, 3);
+  }
+
+  function hasNearbyObject(gridX, gridY, objectName, radius) {
+    var x;
+    var y;
+    for (y = gridY - radius; y <= gridY + radius; y += 1) {
+      for (x = gridX - radius; x <= gridX + radius; x += 1) {
+        if (x === gridX && y === gridY) {
+          continue;
+        }
+        if (tileAt(state.dimension, x, y) && tileAt(state.dimension, x, y).object === objectName) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  function drawWoodFeature(gridX, gridY, side, forward) {
+    var trunk;
+    var canopy;
+    if (hasNearbyObject(gridX, gridY, "leaves", 2)) {
+      trunk = spriteRect(side, forward, 0, 2.25, 0.28);
+      canopy = spriteRect(side, forward, 1.2, 3.25, 1.5);
+      drawSpriteRect(trunk, "#75502d", "#9f7652");
+      drawSpriteRect(canopy, "#2f7c22", "#4c9a36");
+      drawSpriteRect(spriteRect(side - 0.28, forward + 0.12, 1.5, 2.85, 0.95), "#2f7c22", "#4c9a36");
+      drawSpriteRect(spriteRect(side + 0.28, forward + 0.1, 1.55, 2.8, 0.95), "#316f24", "#4c9a36");
+      return;
+    }
+    drawSpriteRect(spriteRect(side, forward, 0, 1.15, 0.62), "#76502f", "#a97d50");
+  }
+
+  function drawLeavesFeature(side, forward) {
+    drawSpriteRect(spriteRect(side, forward, 0.4, 1.75, 0.92), "#2d7422", "#4f9a3c");
+  }
+
+  function drawStoneFeature(side, forward) {
+    drawSpriteRect(spriteRect(side, forward, 0, 0.95, 0.82), "#6f7882", "#98a1ab");
+  }
+
+  function drawCrystalFeature(side, forward) {
+    drawSpriteRect(spriteRect(side, forward, 0, 1.2, 0.42), "#6cc5ff", "#baf0ff", "#effcff");
+    drawSpriteRect(spriteRect(side - 0.12, forward + 0.06, 0, 0.8, 0.18), "#5ba3ff", "#baf0ff");
+  }
+
+  function drawComputerFeature(side, forward) {
+    var shell = spriteRect(side, forward, 0, 1.05, 0.78);
+    var screen;
+    drawSpriteRect(shell, "#6a6f83", "#98a2bf");
+    screen = spriteRect(side, forward, 0.34, 0.82, 0.48);
+    if (screen) {
+      ctx.fillStyle = "#08131a";
+      ctx.fillRect(screen.x, screen.y, screen.w, screen.h);
+      ctx.fillStyle = "#78f6d1";
+      ctx.fillRect(screen.x + Math.max(2, Math.round(screen.w * 0.12)), screen.y + Math.max(2, Math.round(screen.h * 0.18)), Math.max(4, Math.round(screen.w * 0.76)), Math.max(4, Math.round(screen.h * 0.42)));
+    }
+  }
+
+  function drawPortalFeature(side, forward, isEndPortal) {
+    var outer = spriteRect(side, forward, 0, 2.45, 1.15);
+    var inner = spriteRect(side, forward, 0.15, 2.25, 0.82);
+    if (outer) {
+      drawSpriteRect(outer, isEndPortal ? "#2d415e" : "#3a2359", isEndPortal ? "#516f9f" : "#7145b5");
+    }
+    if (inner) {
+      ctx.fillStyle = isEndPortal ? "rgba(148,228,255,0.78)" : "rgba(185,126,255,0.76)";
+      ctx.fillRect(inner.x, inner.y, inner.w, inner.h);
+      ctx.fillStyle = isEndPortal ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.22)";
+      ctx.fillRect(inner.x + Math.max(1, Math.round(inner.w * 0.12)), inner.y + Math.max(2, Math.round(inner.h * 0.08)), Math.max(2, Math.round(inner.w * 0.76)), Math.max(2, Math.round(inner.h * 0.16)));
+    }
+  }
+
+  function drawSlimeFeature(side, forward, scale) {
+    var body = spriteRect(side, forward, 0, 1.08 * scale, 0.92 * scale);
+    if (body) {
+      drawSpriteRect(body, "#74d84f", "#9ef56f");
+      ctx.fillStyle = "rgba(255,255,255,0.15)";
+      ctx.fillRect(body.x + Math.max(2, Math.round(body.w * 0.16)), body.y + Math.max(2, Math.round(body.h * 0.16)), Math.max(3, Math.round(body.w * 0.22)), Math.max(3, Math.round(body.h * 0.18)));
+    }
+  }
+
+  function drawPedestalFeature(side, forward, dragonStyle) {
+    var base = spriteRect(side, forward, 0, 1.25, 0.86);
+    var orb = spriteRect(side, forward, 0.95, 1.75, 0.34);
+    drawSpriteRect(base, dragonStyle ? "#3c3455" : "#555e68", dragonStyle ? "#625882" : "#76818c");
+    if (orb) {
+      drawSpriteRect(orb, dragonStyle ? "#7fdcff" : "#9df567", dragonStyle ? "#d0f6ff" : "#d9ff95");
+    }
+  }
+
+  function drawTileFeature(gridX, gridY, tile, view) {
+    var seed = tileNoise(gridX, gridY, 3);
+    var side = view.side;
+    var forward = view.forward;
+    if (!tile.object && state.dimension === "overworld" && tile.floor === "grass") {
+      if (seed > 0.68) {
+        drawFlowerSprite(side + (tileNoise(gridX, gridY, 4) - 0.5) * 0.28, forward + (tileNoise(gridX, gridY, 5) - 0.5) * 0.22, seed > 0.9 ? "#ffd36e" : "#f3d2ff");
+      } else if (seed > 0.26) {
+        drawGrassSprite(side + (tileNoise(gridX, gridY, 6) - 0.5) * 0.26, forward, seed);
+      }
+    }
+    if (!tile.object) {
+      return;
+    }
+    if (tile.object === "wood") {
+      drawWoodFeature(gridX, gridY, side, forward);
+      return;
+    }
+    if (tile.object === "leaves") {
+      drawLeavesFeature(side, forward);
+      return;
+    }
+    if (tile.object === "stone") {
+      drawStoneFeature(side, forward);
+      return;
+    }
+    if (tile.object === "crystal") {
+      drawCrystalFeature(side, forward);
+      return;
+    }
+    if (tile.object === "computer") {
+      drawComputerFeature(side, forward);
+      return;
+    }
+    if (tile.object === "portal") {
+      drawPortalFeature(side, forward, false);
+      return;
+    }
+    if (tile.object === "endportal") {
+      drawPortalFeature(side, forward, true);
+      return;
+    }
+    if (tile.object === "slime") {
+      drawSlimeFeature(side, forward, 1);
+      return;
+    }
+    if (tile.object === "altar") {
+      drawPedestalFeature(side, forward, false);
+      return;
+    }
+    if (tile.object === "dragonaltar") {
+      drawPedestalFeature(side, forward, true);
+    }
+  }
+
+  function drawGroundTile(entry) {
+    var corners = [
+      worldToView(entry.x, entry.y),
+      worldToView(entry.x + 1, entry.y),
+      worldToView(entry.x + 1, entry.y + 1),
+      worldToView(entry.x, entry.y + 1)
+    ];
+    var points = [];
+    var center = projectScenePoint(entry.side, entry.forward, 0);
+    var i;
+    var baseColor;
+    var fillColor;
+    var insetPoints;
+    if (!center) {
+      return;
+    }
+    for (i = 0; i < corners.length; i += 1) {
+      if (corners[i].forward <= NEAR_CLIP) {
+        return;
+      }
+      points.push(projectScenePoint(corners[i].side, corners[i].forward, 0));
+    }
+    baseColor = colors[entry.tile.floor] || colors.grass;
+    fillColor = tint(baseColor, (state.dimension === "overworld" && !state.night ? 10 : 0) - Math.round(entry.forward * 6));
+    fillPolygon(points, fillColor, tint(baseColor, -34));
+    if (entry.tile.floor === "water" || entry.tile.floor === "lava") {
+      insetPoints = [];
+      for (i = 0; i < points.length; i += 1) {
+        insetPoints.push({
+          x: Math.round(center.x + (points[i].x - center.x) * 0.78),
+          y: Math.round(center.y + (points[i].y - center.y) * 0.78)
+        });
+      }
+      fillPolygon(insetPoints, tint(colors[entry.tile.floor], 18), "rgba(255,255,255,0.16)");
+    }
+    drawTileFeature(entry.x, entry.y, entry.tile, entry);
+  }
+
+  function drawMonsterEntity(monster, view) {
+    var body;
+    var head;
+    if (monster.type === "slimelet") {
+      drawSlimeFeature(view.side, view.forward, 0.72);
+      return;
+    }
+    if (monster.type === "ember") {
+      body = spriteRect(view.side, view.forward, 0, 1.15, 0.52);
+      drawSpriteRect(body, "#ff7f48", "#ffc062");
+      drawSpriteRect(spriteRect(view.side - 0.08, view.forward + 0.04, 0.75, 1.55, 0.18), "#ffdc86", "#fff4bf");
+      return;
+    }
+    if (monster.type === "enderling") {
+      body = spriteRect(view.side, view.forward, 0, 2.4, 0.4);
+      drawSpriteRect(body, "#3b244c", "#704ea2");
+      head = spriteRect(view.side, view.forward, 1.72, 2.35, 0.5);
+      if (head) {
+        ctx.fillStyle = "#f1c3ff";
+        ctx.fillRect(head.x + Math.max(1, Math.round(head.w * 0.16)), head.y + Math.max(2, Math.round(head.h * 0.22)), Math.max(2, Math.round(head.w * 0.22)), 2);
+        ctx.fillRect(head.x + Math.max(2, Math.round(head.w * 0.6)), head.y + Math.max(2, Math.round(head.h * 0.22)), Math.max(2, Math.round(head.w * 0.22)), 2);
+      }
+      return;
+    }
+    body = spriteRect(view.side, view.forward, 0, 1.7, 0.56);
+    head = spriteRect(view.side, view.forward, 1.2, 2, 0.48);
+    drawSpriteRect(body, "#537451", "#769a69");
+    drawSpriteRect(head, "#7aa36b", "#acd68c");
+  }
+
+  function drawBossEntity(view) {
+    var body;
     if (state.boss.kind === "dragon") {
-      drawCube(bossX, bossY, state.boss.color, BLOCK_H * 1.9);
-      drawCube(bossX - 1, bossY, state.boss.color, BLOCK_H * 1.45);
-      drawCube(bossX + 1, bossY, state.boss.color, BLOCK_H * 1.45);
-      drawCube(bossX, bossY - 1, colors.obsidian, BLOCK_H * 1.2);
+      drawSpriteRect(spriteRect(view.side - 0.95, view.forward + 0.18, 1.15, 2.55, 1.1), "#28242f", "#514867");
+      drawSpriteRect(spriteRect(view.side + 0.95, view.forward + 0.18, 1.15, 2.55, 1.1), "#28242f", "#514867");
+      body = spriteRect(view.side, view.forward, 0.5, 3.1, 0.82);
+      drawSpriteRect(body, "#26292f", "#4c4f59");
+      drawSpriteRect(spriteRect(view.side, view.forward - 0.1, 2.4, 3.45, 0.46), "#181a21", "#60598d");
       return;
     }
-    drawCube(bossX, bossY, state.boss.color, BLOCK_H * 2.2);
+    body = spriteRect(view.side, view.forward, 0, 2.45, 1.95);
+    drawSpriteRect(body, "#74d84f", "#a9ff78");
+    if (body) {
+      ctx.fillStyle = "rgba(255,255,255,0.15)";
+      ctx.fillRect(body.x + Math.max(3, Math.round(body.w * 0.18)), body.y + Math.max(3, Math.round(body.h * 0.14)), Math.max(6, Math.round(body.w * 0.24)), Math.max(4, Math.round(body.h * 0.14)));
+    }
   }
 
-  function drawMonsters() {
+  function drawEntityList() {
+    var drawList = [];
     var monsters = state.monsters[state.dimension];
     var i;
+    var view;
     for (i = 0; i < monsters.length; i += 1) {
-      drawCube(pixelToGrid(monsters[i].x), pixelToGrid(monsters[i].y), monsters[i].color, BLOCK_H);
+      view = worldToView(monsters[i].x / TILE, monsters[i].y / TILE);
+      if (viewIsVisible(view)) {
+        drawList.push({ kind: "monster", ref: monsters[i], view: view });
+      }
     }
+    if (state.dimension === state.boss.dimension && state.boss.awake && !state.boss.defeated) {
+      view = worldToView(state.boss.x / TILE, state.boss.y / TILE);
+      if (viewIsVisible(view)) {
+        drawList.push({ kind: "boss", ref: state.boss, view: view });
+      }
+    }
+    drawList.sort(function (left, right) {
+      return right.view.forward - left.view.forward;
+    });
+    for (i = 0; i < drawList.length; i += 1) {
+      if (drawList[i].kind === "boss") {
+        drawBossEntity(drawList[i].view);
+      } else {
+        drawMonsterEntity(drawList[i].ref, drawList[i].view);
+      }
+    }
+  }
+
+  function drawPixelPattern(pattern, x, y, cell, palette) {
+    var row;
+    var col;
+    var key;
+    for (row = 0; row < pattern.length; row += 1) {
+      for (col = 0; col < pattern[row].length; col += 1) {
+        key = pattern[row].charAt(col);
+        if (key !== "0") {
+          ctx.fillStyle = palette[key] || palette["1"];
+          ctx.fillRect(x + col * cell, y + row * cell, cell, cell);
+        }
+      }
+    }
+  }
+
+  function drawInstructionCard() {
+    var cardWidth = Math.min(Math.round(canvas.width * 0.34), 460);
+    var cardHeight = Math.max(72, Math.round(canvas.height * 0.1));
+    var x = canvas.width - cardWidth - 18;
+    var y = 18;
+    var fontSize = Math.max(12, Math.round(cardHeight * 0.28));
+    ctx.fillStyle = "rgba(242,242,242,0.97)";
+    ctx.fillRect(x, y, cardWidth, cardHeight);
+    ctx.fillStyle = "#252525";
+    ctx.fillRect(x, y, cardWidth, 7);
+    ctx.fillRect(x, y + cardHeight - 7, cardWidth, 7);
+    ctx.fillRect(x, y, 7, cardHeight);
+    ctx.fillRect(x + cardWidth - 7, y, 7, cardHeight);
+
+    ctx.fillStyle = "#d6d6d6";
+    ctx.fillRect(x + 22, y + 22, 18, 18);
+    ctx.fillRect(x + 44, y + 22, 18, 18);
+    ctx.fillRect(x + 33, y + 2, 18, 18);
+    ctx.fillRect(x + 33, y + 42, 18, 18);
+    ctx.strokeStyle = "#171717";
+    ctx.lineWidth = 4;
+    ctx.strokeRect(x + 22, y + 22, 18, 18);
+    ctx.strokeRect(x + 44, y + 22, 18, 18);
+    ctx.strokeRect(x + 33, y + 2, 18, 18);
+    ctx.strokeRect(x + 33, y + 42, 18, 18);
+
+    ctx.font = "700 " + fontSize + "px Courier New";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#4f0a65";
+    ctx.fillText("Move with W, A, S and D", x + 88, y + cardHeight * 0.33);
+    ctx.fillStyle = "#111111";
+    ctx.fillText("Attack with Space", x + 88, y + cardHeight * 0.7);
+  }
+
+  function drawStatusHud() {
+    var heartPattern = [
+      "01100110",
+      "11111111",
+      "11111111",
+      "11111111",
+      "01111110",
+      "00111100",
+      "00011000"
+    ];
+    var drumstickPattern = [
+      "00111100",
+      "01111110",
+      "11111110",
+      "11111120",
+      "01112122",
+      "00011220",
+      "00110000"
+    ];
+    var cell = canvas.width < 900 ? 2 : 3;
+    var filledHearts = Math.max(0, Math.round(state.player.hp / 2));
+    var baseY = canvas.height - (canvas.width < 900 ? 128 : 138);
+    var heartsX = Math.round(canvas.width * 0.5 - 182);
+    var hungerX = Math.round(canvas.width * 0.5 + 30);
+    var i;
+    for (i = 0; i < 10; i += 1) {
+      drawPixelPattern(heartPattern, heartsX + i * cell * 10, baseY, cell, i < filledHearts ? { "1": "#ff4747" } : { "1": "rgba(84,26,26,0.6)" });
+      drawPixelPattern(drumstickPattern, hungerX + i * cell * 10, baseY, cell, {
+        "1": "#8c4d2f",
+        "2": i < 10 ? "#f1d6c0" : "#7a6a64"
+      });
+    }
+  }
+
+  function drawCrosshair() {
+    var midX = Math.round(canvas.width * 0.5);
+    var midY = Math.round(canvas.height * 0.5);
+    ctx.fillStyle = "rgba(20,24,25,0.7)";
+    ctx.fillRect(midX - 1, midY - 11, 2, 7);
+    ctx.fillRect(midX - 1, midY + 4, 2, 7);
+    ctx.fillRect(midX - 11, midY - 1, 7, 2);
+    ctx.fillRect(midX + 4, midY - 1, 7, 2);
+    ctx.fillStyle = "#f1f4f6";
+    ctx.fillRect(midX, midY - 10, 1, 6);
+    ctx.fillRect(midX, midY + 4, 1, 6);
+    ctx.fillRect(midX - 10, midY, 6, 1);
+    ctx.fillRect(midX + 4, midY, 6, 1);
+  }
+
+  function drawHandOverlay() {
+    var skin = playerLookOption("skin", state.playerStyle.skin).color;
+    var shirt = playerLookOption("shirt", state.playerStyle.shirt).color;
+    var sleeve = [
+      { x: canvas.width - 164, y: canvas.height - 154 },
+      { x: canvas.width - 86, y: canvas.height - 122 },
+      { x: canvas.width - 62, y: canvas.height - 28 },
+      { x: canvas.width - 138, y: canvas.height - 26 },
+      { x: canvas.width - 176, y: canvas.height - 102 }
+    ];
+    var hand = [
+      { x: canvas.width - 138, y: canvas.height - 170 },
+      { x: canvas.width - 54, y: canvas.height - 128 },
+      { x: canvas.width - 20, y: canvas.height - 18 },
+      { x: canvas.width - 112, y: canvas.height - 14 },
+      { x: canvas.width - 162, y: canvas.height - 96 }
+    ];
+    fillPolygon(sleeve, tint(shirt, -18), tint(shirt, -42));
+    fillPolygon(hand, skin, tint(skin, -36));
+    ctx.fillStyle = tint(skin, -14);
+    ctx.fillRect(canvas.width - 114, canvas.height - 120, 18, 26);
+    ctx.fillRect(canvas.width - 80, canvas.height - 94, 22, 20);
   }
 
   function renderWorld() {
     var world = currentWorld();
-    var startX = Math.max(0, state.camera.x - 12);
-    var startY = Math.max(0, state.camera.y - 12);
-    var endX = Math.min(WORLD_W, state.camera.x + 13);
-    var endY = Math.min(WORLD_H, state.camera.y + 13);
+    var playerPos = playerTilePosition();
+    var startX = Math.max(0, Math.floor(playerPos.x) - VIEW_DISTANCE - 3);
+    var startY = Math.max(0, Math.floor(playerPos.y) - VIEW_DISTANCE - 3);
+    var endX = Math.min(WORLD_W, Math.ceil(playerPos.x) + VIEW_DISTANCE + 3);
+    var endY = Math.min(WORLD_H, Math.ceil(playerPos.y) + VIEW_DISTANCE + 3);
+    var visibleTiles = [];
     var x;
     var y;
+    var centerView;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = state.dimension === "nether" ? "#402016" : (state.dimension === "end" ? "#170d27" : "#84d1e0");
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    drawSkyBackdrop();
     for (y = startY; y < endY; y += 1) {
       for (x = startX; x < endX; x += 1) {
-        drawTile(x, y, world[y][x]);
+        centerView = worldToView(x + 0.5, y + 0.5);
+        if (viewIsVisible(centerView)) {
+          visibleTiles.push({
+            x: x,
+            y: y,
+            tile: world[y][x],
+            side: centerView.side,
+            forward: centerView.forward
+          });
+        }
       }
     }
-    drawBoss();
-    drawMonsters();
-    drawPlayer();
+    visibleTiles.sort(function (left, right) {
+      return right.forward - left.forward;
+    });
+    for (x = 0; x < visibleTiles.length; x += 1) {
+      drawGroundTile(visibleTiles[x]);
+    }
+    drawEntityList();
     if (state.dimension === "nether") {
-      ctx.fillStyle = "rgba(70,18,12,0.18)";
+      ctx.fillStyle = "rgba(90,24,8,0.18)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     } else if (state.dimension === "end") {
-      ctx.fillStyle = "rgba(110,64,156,0.16)";
+      ctx.fillStyle = "rgba(112,70,156,0.18)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     } else if (state.night) {
-      ctx.fillStyle = "rgba(8,18,39,0.32)";
+      ctx.fillStyle = "rgba(12,22,44,0.34)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
+    drawCrosshair();
+    drawInstructionCard();
+    drawStatusHud();
+    drawHandOverlay();
   }
 
   function spawnMonster(type) {
@@ -3060,10 +3551,7 @@ input {
     updateCamera();
   }
 
-  function selectedTile() {
-    if (state.targetTile) {
-      return state.targetTile;
-    }
+  function facingTile() {
     var px = pixelToGrid(state.player.x);
     var py = pixelToGrid(state.player.y);
     if (state.player.facing === "up") {
@@ -3076,6 +3564,13 @@ input {
       return { x: px - 1, y: py };
     }
     return { x: px + 1, y: py };
+  }
+
+  function selectedTile() {
+    if (state.targetTile) {
+      return state.targetTile;
+    }
+    return facingTile();
   }
 
   function breakTile() {
@@ -3261,22 +3756,13 @@ input {
   }
 
   function handlePointer(clientX, clientY) {
-    var rect = canvas.getBoundingClientRect();
-    var cx = clientX - rect.left - canvas.width / 2;
-    var cy = clientY - rect.top - canvas.height / 2;
-    var rx = cx / (ISO_W * 0.5);
-    var ry = cy / (ISO_H * 0.5);
-    var gx = Math.round((rx + ry) * 0.5 + state.camera.x);
-    var gy = Math.round((ry - rx) * 0.5 + state.camera.y);
-    state.targetTile = {
-      x: clamp(gx, 0, WORLD_W - 1),
-      y: clamp(gy, 0, WORLD_H - 1)
-    };
+    state.targetTile = facingTile();
   }
 
   function resizeCanvas() {
     canvas.width = canvas.clientWidth || 900;
     canvas.height = canvas.clientHeight || 620;
+    ctx.imageSmoothingEnabled = false;
     updateCamera();
   }
 
