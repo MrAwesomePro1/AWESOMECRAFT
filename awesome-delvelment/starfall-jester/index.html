@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Starfall Jester</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <section class="card brand-card">
+        <p class="eyebrow">Social Deduction Prototype</p>
+        <h1>Starfall Jester</h1>
+        <p class="small-copy">
+          A fresh browser game inspired by hidden-role spaceship deduction games, with a jester who only wins by getting voted out.
+        </p>
+      </section>
+
+      <section class="card">
+        <div class="section-heading">
+          <h2>Launch Match</h2>
+        </div>
+        <label class="field">
+          <span>Callsign</span>
+          <input id="playerNameInput" type="text" maxlength="18" value="Captain Blue">
+        </label>
+        <label class="field">
+          <span>Choose Role</span>
+          <select id="roleSelect">
+            <option value="random">Random</option>
+            <option value="crewmate">Crewmate</option>
+            <option value="reviver">Reviver</option>
+            <option value="imposter">Imposter</option>
+            <option value="jester">Jester</option>
+          </select>
+        </label>
+        <button id="startBtn" class="primary">Start New Match</button>
+        <p class="small-copy setup-note">
+          Eight total players each round: one imposter, one jester, one reviver, and five standard crewmates.
+        </p>
+      </section>
+
+      <section class="card">
+        <div class="section-heading compact">
+          <h2>Your Briefing</h2>
+          <span id="roleBadge" class="badge">No Match</span>
+        </div>
+        <p id="objectiveText" class="small-copy">
+          Pick a role and launch a round. The reviver helps the crew by bringing back fallen teammates before a body gets reported.
+        </p>
+      </section>
+
+      <section class="card">
+        <div class="section-heading compact">
+          <h2>Tasks</h2>
+          <span id="taskCounter" class="badge muted">0 / 0</span>
+        </div>
+        <ul id="taskList" class="task-list">
+          <li>Real or fake tasks for your role will appear here.</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <div class="section-heading compact">
+          <h2>Controls</h2>
+        </div>
+        <ul class="control-list">
+          <li><strong>Move:</strong> <code>WASD</code> or arrow keys</li>
+          <li><strong>Task:</strong> <code>F</code> or the task button</li>
+          <li><strong>Report:</strong> <code>R</code> or the report button</li>
+          <li><strong>Emergency:</strong> <code>Q</code> or the emergency button in Cafeteria, with a 5-minute shared cooldown</li>
+          <li><strong>Kill:</strong> <code>E</code> or the kill button if you are the imposter</li>
+          <li><strong>Revive:</strong> <code>G</code> if you are the reviver and are standing by a body</li>
+          <li><strong>Act Suspicious:</strong> <code>T</code> if you are the jester</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <div class="section-heading compact">
+          <h2>Ship Log</h2>
+          <span id="aliveCount" class="badge muted">8 alive</span>
+        </div>
+        <div id="log" class="log"></div>
+      </section>
+    </aside>
+
+    <main class="play-panel">
+      <section class="card hud-card">
+        <div class="hud-grid">
+          <div class="stat">
+            <span>Role</span>
+            <strong id="roleValue">None</strong>
+          </div>
+          <div class="stat">
+            <span>Room</span>
+            <strong id="roomValue">Dock</strong>
+          </div>
+          <div class="stat">
+            <span>Crew Tasks</span>
+            <strong id="taskValue">0%</strong>
+          </div>
+          <div class="stat">
+            <span>Heat</span>
+            <strong id="heatValue">0</strong>
+          </div>
+          <div class="stat">
+            <span>Meetings</span>
+            <strong id="meetingValue">0</strong>
+          </div>
+          <div class="stat">
+            <span>Ability</span>
+            <strong id="cooldownValue">None</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="card arena-card">
+        <canvas id="gameCanvas" width="1280" height="760"></canvas>
+        <div class="status-row">
+          <p id="hintText" class="hint">
+            Start a match to enter the ship.
+          </p>
+          <div class="progress-shell">
+            <div id="progressFill" class="progress-fill"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card action-card">
+        <div class="action-grid">
+          <button id="taskBtn">Do Task</button>
+          <button id="reportBtn">Report Body</button>
+          <button id="emergencyBtn">Emergency</button>
+          <button id="killBtn" class="danger">Kill</button>
+          <button id="reviveBtn" class="support">Revive</button>
+          <button id="susBtn" class="warning">Act Suspicious</button>
+          <button id="restartBtn" class="ghost">Reset Match</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="meetingOverlay" class="overlay hidden">
+    <div class="overlay-card">
+      <p class="eyebrow">Emergency Discussion</p>
+      <h2 id="meetingTitle">Meeting Called</h2>
+      <p id="meetingReason" class="small-copy"></p>
+      <div id="meetingCandidates" class="candidate-grid"></div>
+      <div id="meetingSummary" class="meeting-summary small-copy"></div>
+      <div class="meeting-actions">
+        <button id="skipVoteBtn" class="ghost">Skip Vote</button>
+        <button id="continueBtn" class="primary hidden">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="endOverlay" class="overlay hidden">
+    <div class="overlay-card end-card">
+      <p class="eyebrow">Round Over</p>
+      <h2 id="endTitle">Crew Wins</h2>
+      <p id="endReason" class="small-copy"></p>
+      <div id="roleReveal" class="role-reveal"></div>
+      <button id="playAgainBtn" class="primary">Play Again</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
