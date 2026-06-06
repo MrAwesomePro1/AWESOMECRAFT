@@ -113,7 +113,7 @@ const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "hi
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isTouch ? 1.7 : 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = isTouch ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = times[0].exposure;
@@ -139,10 +139,13 @@ const cars = [];
 const walkers = [];
 const steam = [];
 const rainDrops = [];
+const puddles = [];
+const waterRipples = [];
 const clockHands = [];
 let audio = null;
 let activeLamp = null;
 let rainGroup = null;
+let worldExpanded = false;
 
 const mats = makeMaterials();
 const hemi = new THREE.HemisphereLight(times[0].hemiSky, times[0].hemiGround, 1.45);
@@ -151,7 +154,7 @@ scene.add(hemi);
 const sun = new THREE.DirectionalLight(times[0].sun, 4.5);
 sun.position.set(-11, 18, 8);
 sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.mapSize.set(isTouch ? 1024 : 1536, isTouch ? 1024 : 1536);
 sun.shadow.camera.left = -38;
 sun.shadow.camera.right = 38;
 sun.shadow.camera.top = 34;
@@ -165,7 +168,6 @@ ambientFill.position.set(-3.8, 2.4, 5.5);
 scene.add(ambientFill);
 
 buildWorld();
-buildRain();
 setupControls();
 setupXR();
 updatePlaceUI();
@@ -235,12 +237,57 @@ function makeMaterials() {
     }
   }, 3, 3);
 
+  const brickTexture = makeCanvasTexture(256, 256, (ctx, w, h) => {
+    ctx.fillStyle = "#9e6f5d";
+    ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = "rgba(54,33,25,.42)";
+    ctx.lineWidth = 3;
+    for (let y = 0; y < h; y += 32) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+      const offset = y % 64 === 0 ? 0 : 32;
+      for (let x = -offset; x < w; x += 64) {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x, y + 32);
+        ctx.stroke();
+      }
+    }
+    for (let i = 0; i < 520; i++) {
+      const red = 110 + Math.random() * 45;
+      ctx.fillStyle = `rgba(${red}, ${Math.max(60, red - 35)}, ${Math.max(45, red - 50)}, .23)`;
+      ctx.fillRect(Math.random() * w, Math.random() * h, 1 + Math.random() * 3, 1 + Math.random() * 3);
+    }
+  }, 2, 5);
+
+  const fabricTexture = makeCanvasTexture(256, 256, (ctx, w, h) => {
+    ctx.fillStyle = "#2f7379";
+    ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = "rgba(255,255,255,.08)";
+    for (let i = 0; i < w; i += 5) {
+      ctx.beginPath();
+      ctx.moveTo(i, 0);
+      ctx.lineTo(i + 30, h);
+      ctx.stroke();
+    }
+    ctx.strokeStyle = "rgba(0,0,0,.12)";
+    for (let y = 0; y < h; y += 6) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y + Math.sin(y) * 4);
+      ctx.stroke();
+    }
+  }, 2, 2);
+
   return {
     grass: new THREE.MeshStandardMaterial({ map: grassTexture, roughness: 0.95, color: 0xc9f0a8 }),
     asphalt: new THREE.MeshStandardMaterial({ map: asphaltTexture, roughness: 0.92, color: 0x707a7b }),
     sidewalk: new THREE.MeshStandardMaterial({ color: 0xc7c0af, roughness: 0.87 }),
     wood: new THREE.MeshStandardMaterial({ map: woodTexture, roughness: 0.72, color: 0xffdec0 }),
     tile: new THREE.MeshStandardMaterial({ map: tileTexture, roughness: 0.78, color: 0xffffff }),
+    brick: new THREE.MeshStandardMaterial({ map: brickTexture, roughness: 0.84, color: 0xffffff }),
     wall: new THREE.MeshStandardMaterial({ color: 0xf2e7d2, roughness: 0.83 }),
     warmWall: new THREE.MeshStandardMaterial({ color: 0xd8a976, roughness: 0.72 }),
     glass: new THREE.MeshPhysicalMaterial({
@@ -253,7 +300,7 @@ function makeMaterials() {
     }),
     frame: new THREE.MeshStandardMaterial({ color: 0x293031, roughness: 0.55, metalness: 0.25 }),
     dark: new THREE.MeshStandardMaterial({ color: 0x202626, roughness: 0.78 }),
-    cloth: new THREE.MeshStandardMaterial({ color: 0x346e74, roughness: 0.9 }),
+    cloth: new THREE.MeshStandardMaterial({ map: fabricTexture, color: 0x346e74, roughness: 0.9 }),
     counter: new THREE.MeshStandardMaterial({ color: 0x45585b, roughness: 0.45, metalness: 0.1 }),
     ceramic: new THREE.MeshStandardMaterial({ color: 0xf8f3e8, roughness: 0.45 }),
     steam: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.34, depthWrite: false }),
@@ -271,7 +318,13 @@ function makeMaterials() {
     yellow: new THREE.MeshStandardMaterial({ color: 0xffcf5d, roughness: 0.45 }),
     red: new THREE.MeshStandardMaterial({ color: 0xdd5a4f, roughness: 0.54 }),
     teal: new THREE.MeshStandardMaterial({ color: 0x2baaa2, roughness: 0.58 }),
-    metal: new THREE.MeshStandardMaterial({ color: 0x8f9a9c, roughness: 0.38, metalness: 0.55 })
+    metal: new THREE.MeshStandardMaterial({ color: 0x8f9a9c, roughness: 0.38, metalness: 0.55 }),
+    chrome: new THREE.MeshStandardMaterial({ color: 0xd8e3e5, roughness: 0.18, metalness: 0.85 }),
+    screen: new THREE.MeshStandardMaterial({ color: 0x111827, emissive: 0x2fd1bf, emissiveIntensity: 0.18, roughness: 0.28 }),
+    matteBlack: new THREE.MeshStandardMaterial({ color: 0x111516, roughness: 0.64 }),
+    bookRed: new THREE.MeshStandardMaterial({ color: 0xb5463f, roughness: 0.78 }),
+    bookBlue: new THREE.MeshStandardMaterial({ color: 0x315f8f, roughness: 0.78 }),
+    puddle: new THREE.MeshPhysicalMaterial({ color: 0x9fc7d7, transparent: true, opacity: 0.42, roughness: 0.05, metalness: 0.02, transmission: 0.18 })
   };
 }
 
@@ -292,9 +345,31 @@ function makeCanvasTexture(width, height, draw, repeatX = 1, repeatY = 1) {
 function buildWorld() {
   addGround();
   addApartment();
-  addStreet();
-  addPark();
-  addMovingLife();
+  scheduleWorldExpansion();
+}
+
+function scheduleWorldExpansion() {
+  if (worldExpanded) return;
+  worldExpanded = true;
+  const tasks = [addStreet, addPark, addMovingLife, buildRain];
+  const runNext = () => {
+    const task = tasks.shift();
+    if (task) task();
+    if (tasks.length) {
+      scheduleIdle(runNext);
+      return;
+    }
+    setTime(state.timeIndex);
+  };
+  setTimeout(() => scheduleIdle(runNext), 260);
+}
+
+function scheduleIdle(callback) {
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(callback, { timeout: 700 });
+    return;
+  }
+  setTimeout(callback, 60);
 }
 
 function addGround() {
@@ -381,6 +456,80 @@ function addApartment() {
   addPlant(5.25, 0.02, 2.4, 0.9);
   addClock(-5.35, 2.05, 11.58);
   addWallArt(1.8, 1.75, 11.57);
+  addInteriorDetails();
+}
+
+function addInteriorDetails() {
+  for (const [x, z, w, d] of [
+    [0, 11.48, 13.3, 0.08],
+    [-6.72, 5.9, 0.08, 11.35],
+    [6.72, 5.9, 0.08, 11.35]
+  ]) {
+    const trim = box(w, 0.12, d, mats.warmWall);
+    trim.position.set(x, 0.18, z);
+    trim.castShadow = false;
+    scene.add(trim);
+  }
+
+  const fridge = box(0.95, 1.85, 0.85, new THREE.MeshStandardMaterial({ color: 0xe6ecec, roughness: 0.34, metalness: 0.22 }));
+  fridge.position.set(-5.7, 0.93, 8.65);
+  fridge.castShadow = true;
+  scene.add(fridge);
+  const fridgeHandle = box(0.05, 0.92, 0.04, mats.chrome);
+  fridgeHandle.position.set(-5.18, 1.05, 8.2);
+  scene.add(fridgeHandle);
+
+  const sink = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.08, 0.42), mats.chrome);
+  sink.position.set(-4.6, 0.95, 6.62);
+  sink.castShadow = true;
+  scene.add(sink);
+  const faucet = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.025, 10, 18, Math.PI), mats.chrome);
+  faucet.position.set(-4.6, 1.16, 6.62);
+  faucet.rotation.z = Math.PI;
+  scene.add(faucet);
+
+  const stove = box(0.92, 0.08, 0.58, mats.matteBlack);
+  stove.position.set(-3.34, 0.95, 6.62);
+  scene.add(stove);
+  for (const x of [-3.55, -3.2]) {
+    for (const z of [6.45, 6.75]) {
+      const burner = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.012, 8, 22), mats.chrome);
+      burner.position.set(x, 1.02, z);
+      burner.rotation.x = -Math.PI / 2;
+      scene.add(burner);
+    }
+  }
+
+  const laptopBase = box(0.68, 0.035, 0.46, mats.matteBlack);
+  laptopBase.position.set(-0.1, 0.88, 6.2);
+  scene.add(laptopBase);
+  const laptopScreen = box(0.68, 0.42, 0.035, mats.screen);
+  laptopScreen.position.set(-0.1, 1.1, 5.95);
+  laptopScreen.rotation.x = -0.18;
+  laptopScreen.userData.onActivate = () => moment("A quiet glow reflects across the table.");
+  interactive.push(laptopScreen);
+  scene.add(laptopScreen);
+
+  for (let i = 0; i < 4; i++) {
+    const book = box(0.36, 0.045, 0.5, i % 2 ? mats.bookBlue : mats.bookRed);
+    book.position.set(0.35 + i * 0.03, 0.88 + i * 0.05, 6.05 + i * 0.08);
+    book.rotation.y = 0.18;
+    scene.add(book);
+  }
+
+  addCurtain(-4.55, 0.02);
+  addCurtain(4.55, 0.02);
+}
+
+function addCurtain(x, z) {
+  const curtainMat = new THREE.MeshStandardMaterial({ color: 0xded2bd, roughness: 0.92, transparent: true, opacity: 0.86 });
+  for (let i = 0; i < 5; i++) {
+    const fold = box(0.13, 2.4, 0.06, curtainMat);
+    fold.position.set(x + i * 0.18 * Math.sign(x), 1.42, z + 0.02);
+    fold.rotation.y = Math.sign(x) * 0.1;
+    fold.castShadow = true;
+    scene.add(fold);
+  }
 }
 
 function addWall(x, y, z, w, h, d, material) {
@@ -597,11 +746,16 @@ function addStreet() {
   addNewsBox(7.1, -11);
   addTrafficLight(5.65, -7.2);
   addTrafficLight(-5.65, -8.5);
+  addStreetDetails();
 }
 
 function addBuilding(x, z, w, d, h, seed) {
   const palette = [0xa66e55, 0x87939b, 0xb69b79, 0x6d858b, 0xc0b19c, 0x8a6f73];
-  const body = box(w, h, d, new THREE.MeshStandardMaterial({ color: palette[seed % palette.length], roughness: 0.78 }));
+  const bodyMat = seed % 3 === 0
+    ? mats.brick.clone()
+    : new THREE.MeshStandardMaterial({ color: palette[seed % palette.length], roughness: 0.78 });
+  bodyMat.color.setHex(palette[seed % palette.length]);
+  const body = box(w, h, d, bodyMat);
   body.position.set(x, h / 2, z);
   body.castShadow = true;
   body.receiveShadow = true;
@@ -623,6 +777,100 @@ function addBuilding(x, z, w, d, h, seed) {
       if (x > 0) win.rotation.y = Math.PI;
       scene.add(win);
     }
+  }
+}
+
+function addStreetDetails() {
+  for (const x of [-5.3, 5.3]) {
+    const curb = box(0.18, 0.16, 49, new THREE.MeshStandardMaterial({ color: 0xb3ab9a, roughness: 0.86 }));
+    curb.position.set(x, 0.09, -23);
+    curb.castShadow = false;
+    scene.add(curb);
+  }
+
+  addStorefront(-10.2, -8.4, 1);
+  addStorefront(10.2, -15.5, -1);
+  addStorefront(-10.2, -27.5, 1);
+  addStorefront(10.2, -34.2, -1);
+
+  for (const [x, z, sx, sz] of [
+    [-2.6, -12.4, 1.2, 0.54],
+    [2.9, -24.8, 0.9, 0.42],
+    [-1.4, -36.7, 1.55, 0.52],
+    [3.2, -7.8, 0.72, 0.36]
+  ]) addPuddle(x, z, sx, sz);
+
+  for (const [x, z] of [[-1.2, -16.5], [1.4, -32]]) {
+    const manhole = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.035, 36), mats.metal);
+    manhole.position.set(x, 0.075, z);
+    manhole.rotation.x = Math.PI / 2;
+    scene.add(manhole);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.27, 0.012, 8, 34), mats.dark);
+    ring.position.set(x, 0.099, z);
+    ring.rotation.x = -Math.PI / 2;
+    scene.add(ring);
+  }
+
+  addHydrant(-6.7, -10.2);
+  addHydrant(6.65, -26.4);
+  addTrashBins(-8.4, -5.2);
+  addTrashBins(8.6, -31.6);
+}
+
+function addStorefront(x, z, facing) {
+  const sign = box(3.1, 0.38, 0.12, new THREE.MeshStandardMaterial({ color: 0xe3b95e, roughness: 0.55, emissive: 0x6b3f10, emissiveIntensity: 0.12 }));
+  sign.position.set(x, 1.95, z);
+  sign.rotation.y = facing > 0 ? Math.PI / 2 : -Math.PI / 2;
+  scene.add(sign);
+
+  const glass = box(2.8, 1.25, 0.08, mats.glass);
+  glass.position.set(x, 0.94, z);
+  glass.rotation.y = sign.rotation.y;
+  scene.add(glass);
+
+  const awningMat = new THREE.MeshStandardMaterial({ color: 0xb94646, roughness: 0.66 });
+  for (let i = 0; i < 5; i++) {
+    const strip = box(0.5, 0.12, 0.55, i % 2 ? mats.white : awningMat);
+    strip.position.set(x + facing * 0.1, 1.58, z - 1.08 + i * 0.54);
+    strip.rotation.y = sign.rotation.y;
+    scene.add(strip);
+  }
+}
+
+function addPuddle(x, z, sx, sz) {
+  const mat = mats.puddle.clone();
+  const puddle = new THREE.Mesh(new THREE.CircleGeometry(0.62, 32), mat);
+  puddle.rotation.x = -Math.PI / 2;
+  puddle.scale.set(sx, sz, 1);
+  puddle.position.set(x, 0.072, z);
+  puddle.visible = false;
+  puddles.push(puddle);
+  scene.add(puddle);
+}
+
+function addHydrant(x, z) {
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.16, 0.55, 18), mats.red);
+  body.position.set(x, 0.31, z);
+  body.castShadow = true;
+  scene.add(body);
+  const cap = new THREE.Mesh(new THREE.SphereGeometry(0.16, 18, 10), mats.red);
+  cap.position.set(x, 0.62, z);
+  cap.castShadow = true;
+  scene.add(cap);
+  const side = box(0.42, 0.09, 0.09, mats.chrome);
+  side.position.set(x, 0.43, z);
+  scene.add(side);
+}
+
+function addTrashBins(x, z) {
+  for (let i = 0; i < 2; i++) {
+    const bin = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.29, 0.78, 18), new THREE.MeshStandardMaterial({ color: i ? 0x315f55 : 0x42515a, roughness: 0.82 }));
+    bin.position.set(x + i * 0.58, 0.39, z);
+    bin.castShadow = true;
+    scene.add(bin);
+    const lid = box(0.62, 0.08, 0.46, mats.dark);
+    lid.position.set(x + i * 0.58, 0.82, z);
+    scene.add(lid);
   }
 }
 
@@ -722,6 +970,53 @@ function addPark() {
   addBench(-5.6, -45.6, 0.34);
   addBench(6.2, -51.8, -0.45);
   addGazebo(10, -45);
+  addParkDetails();
+}
+
+function addParkDetails() {
+  for (const [x, z] of [[-7.2, -50.5], [-3.4, -55.8], [5.1, -43.2], [8.4, -55.2]]) {
+    const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(rand(0.18, 0.38), 0), new THREE.MeshStandardMaterial({ color: 0x777d78, roughness: 0.92 }));
+    rock.position.set(x, 0.16, z);
+    rock.scale.y = rand(0.45, 0.72);
+    rock.rotation.set(rand(0, 1), rand(0, 1), rand(0, 1));
+    rock.castShadow = true;
+    scene.add(rock);
+  }
+
+  const flowerColors = [0xe96d70, 0xf7c35f, 0x8fcf7a, 0x75a7dd];
+  for (let i = 0; i < 46; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const radius = rand(6.8, 13.5);
+    const x = Math.cos(angle) * radius;
+    const z = -49 + Math.sin(angle) * radius * 0.62;
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.012, 0.18, 5), mats.leaf);
+    stem.position.set(x, 0.11, z);
+    scene.add(stem);
+    const bloom = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), new THREE.MeshStandardMaterial({ color: flowerColors[i % flowerColors.length], roughness: 0.74 }));
+    bloom.position.set(x, 0.23, z);
+    scene.add(bloom);
+  }
+
+  for (const [x, z] of [[-4.8, -44.2], [4.9, -44.6], [-5.3, -53.4], [5.6, -53.2]]) {
+    const post = box(0.08, 0.62, 0.08, mats.dark);
+    post.position.set(x, 0.31, z);
+    scene.add(post);
+    const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.12, 14, 8), new THREE.MeshStandardMaterial({ color: 0xffe0a1, emissive: 0xffb24c, emissiveIntensity: 0.45, roughness: 0.28 }));
+    lamp.position.set(x, 0.72, z);
+    scene.add(lamp);
+    const glow = new THREE.PointLight(0xffbf66, 0.22, 3.8, 1.8);
+    glow.position.copy(lamp.position);
+    scene.add(glow);
+  }
+
+  for (let i = 0; i < 4; i++) {
+    const ripple = new THREE.Mesh(new THREE.TorusGeometry(0.7 + i * 0.45, 0.01, 6, 72), new THREE.MeshBasicMaterial({ color: 0xd9fbff, transparent: true, opacity: 0.28 - i * 0.045 }));
+    ripple.position.set(rand(-1.4, 1.5), 0.072 + i * 0.002, -49 + rand(-0.8, 0.8));
+    ripple.rotation.x = -Math.PI / 2;
+    ripple.scale.z = 0.52;
+    waterRipples.push(ripple);
+    scene.add(ripple);
+  }
 }
 
 function addTree(x, z, scale = 1) {
@@ -1033,10 +1328,14 @@ function setTime(index) {
   hemi.groundColor.set(next.hemiGround);
   sun.color.set(next.sun);
   renderer.toneMappingExposure = next.exposure;
-  rainGroup.visible = next.rain;
+  if (rainGroup) rainGroup.visible = next.rain;
+  puddles.forEach((puddle) => {
+    puddle.visible = next.rain || next.name === "Evening";
+    puddle.material.opacity = next.rain ? 0.52 : 0.22;
+  });
   timeLabel.textContent = next.name;
   moment(next.text);
-  activeLamp.intensity = next.name === "Evening" || next.name === "Rain" ? 1.35 : 0.8;
+  if (activeLamp) activeLamp.intensity = next.name === "Evening" || next.name === "Rain" ? 1.35 : 0.8;
 }
 
 function toggleSound() {
@@ -1211,7 +1510,7 @@ function updateAnimations(dt) {
     puff.scale.setScalar(scale);
   });
 
-  if (rainGroup.visible) {
+  if (rainGroup?.visible) {
     rainDrops.forEach((drop) => {
       drop.position.y -= drop.userData.speed * dt;
       drop.position.z += 1.1 * dt;
@@ -1222,6 +1521,13 @@ function updateAnimations(dt) {
       }
     });
   }
+
+  waterRipples.forEach((ripple, index) => {
+    const pulse = 1 + Math.sin(t * 0.9 + index * 0.8) * 0.035;
+    ripple.scale.x = pulse;
+    ripple.scale.y = pulse;
+    ripple.material.opacity = 0.14 + Math.sin(t * 0.7 + index) * 0.05;
+  });
 
   clockHands.forEach(({ hour, minute }) => {
     const now = new Date();
