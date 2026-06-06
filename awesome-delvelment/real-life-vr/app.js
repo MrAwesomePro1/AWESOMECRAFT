@@ -17,6 +17,10 @@ const moveStick = document.getElementById("moveStick");
 const moveKnob = document.getElementById("moveKnob");
 const lookPad = document.getElementById("lookPad");
 const placeButtons = [...document.querySelectorAll("[data-place]")];
+const balanceLabel = document.getElementById("balanceLabel");
+const focusLabel = document.getElementById("focusLabel");
+const trustLabel = document.getElementById("trustLabel");
+const taskList = document.getElementById("taskList");
 
 const isTouch = matchMedia("(pointer: coarse)").matches || "ontouchstart" in window;
 const placements = {
@@ -40,8 +44,26 @@ const placements = {
     yaw: 0.08,
     pitch: -0.04,
     text: "Grass underfoot, water ahead, skyline behind you."
+  },
+  work: {
+    label: "Work",
+    pos: new THREE.Vector3(0, 0, -63.5),
+    yaw: 0,
+    pitch: -0.04,
+    text: "Calendar open, lights on, the workday is yours."
   }
 };
+
+const adultTasks = [
+  { id: "routine", label: "Morning routine", value: 5 },
+  { id: "calendar", label: "Calendar checked", value: 6 },
+  { id: "lunch", label: "Lunch packed", value: 4 },
+  { id: "commute", label: "Safe commute", value: 8 },
+  { id: "meeting", label: "Meeting handled", value: 12 },
+  { id: "budget", label: "Bill paid", value: -7 },
+  { id: "kindness", label: "Helped outside", value: 6 },
+  { id: "rest", label: "Healthy break", value: 4 }
+];
 const times = [
   {
     name: "Morning",
@@ -102,7 +124,9 @@ const state = {
   soundOn: false,
   lastTouchLook: null,
   xrSupported: false,
-  mixerTime: 0
+  mixerTime: 0,
+  balance: 42,
+  focus: 50
 };
 
 const scene = new THREE.Scene();
@@ -171,6 +195,7 @@ buildWorld();
 setupControls();
 setupXR();
 updatePlaceUI();
+renderAdultPanel();
 setTime(0);
 setDeviceLabel();
 hideLoadSoon();
@@ -351,7 +376,7 @@ function buildWorld() {
 function scheduleWorldExpansion() {
   if (worldExpanded) return;
   worldExpanded = true;
-  const tasks = [addStreet, addPark, addMovingLife, buildRain];
+  const tasks = [addStreet, addPark, addWorkplace, addMovingLife, buildRain];
   const runNext = () => {
     const task = tasks.shift();
     if (task) task();
@@ -474,6 +499,8 @@ function addInteriorDetails() {
   const fridge = box(0.95, 1.85, 0.85, new THREE.MeshStandardMaterial({ color: 0xe6ecec, roughness: 0.34, metalness: 0.22 }));
   fridge.position.set(-5.7, 0.93, 8.65);
   fridge.castShadow = true;
+  fridge.userData.onActivate = () => completeAdultTask("lunch", "Lunch packed. That is a very adult victory.", 5);
+  interactive.push(fridge);
   scene.add(fridge);
   const fridgeHandle = box(0.05, 0.92, 0.04, mats.chrome);
   fridgeHandle.position.set(-5.18, 1.05, 8.2);
@@ -506,7 +533,7 @@ function addInteriorDetails() {
   const laptopScreen = box(0.68, 0.42, 0.035, mats.screen);
   laptopScreen.position.set(-0.1, 1.1, 5.95);
   laptopScreen.rotation.x = -0.18;
-  laptopScreen.userData.onActivate = () => moment("A quiet glow reflects across the table.");
+  laptopScreen.userData.onActivate = () => completeAdultTask("calendar", "Calendar checked: work at 9, bill at lunch, park break after.", 7);
   interactive.push(laptopScreen);
   scene.add(laptopScreen);
 
@@ -557,7 +584,7 @@ function addCoffee(x, y, z) {
   mug.position.set(x, y + 0.13, z);
   mug.castShadow = true;
   mug.userData.onActivate = () => {
-    moment("Steam lifts from the cup.");
+    completeAdultTask("routine", "Morning routine finished: coffee, shoes, keys, and a calm breath.", 8);
     burstSteam();
   };
   interactive.push(mug);
@@ -852,6 +879,8 @@ function addHydrant(x, z) {
   const body = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.16, 0.55, 18), mats.red);
   body.position.set(x, 0.31, z);
   body.castShadow = true;
+  body.userData.onActivate = () => completeAdultTask("kindness", "You reported a loose hydrant cap and helped the block.", 5);
+  interactive.push(body);
   scene.add(body);
   const cap = new THREE.Mesh(new THREE.SphereGeometry(0.16, 18, 10), mats.red);
   cap.position.set(x, 0.62, z);
@@ -867,6 +896,8 @@ function addTrashBins(x, z) {
     const bin = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.29, 0.78, 18), new THREE.MeshStandardMaterial({ color: i ? 0x315f55 : 0x42515a, roughness: 0.82 }));
     bin.position.set(x + i * 0.58, 0.39, z);
     bin.castShadow = true;
+    bin.userData.onActivate = () => completeAdultTask("kindness", "You sorted recycling and left the sidewalk cleaner.", 6);
+    interactive.push(bin);
     scene.add(bin);
     const lid = box(0.62, 0.08, 0.46, mats.dark);
     lid.position.set(x + i * 0.58, 0.82, z);
@@ -904,7 +935,7 @@ function addBusStop(x, z) {
   const bench = box(1.55, 0.18, 0.42, mats.wood);
   bench.position.set(x, 0.55, z + 0.16);
   bench.castShadow = true;
-  bench.userData.onActivate = () => moment("The city pauses here for a minute.");
+  bench.userData.onActivate = () => completeAdultTask("commute", "Commute handled: waited, checked the street, and got there safely.", 8);
   interactive.push(bench);
   scene.add(bench);
 }
@@ -1051,7 +1082,7 @@ function addBench(x, z, rotation = 0) {
   }
   group.position.set(x, 0, z);
   group.rotation.y = rotation;
-  group.userData.onActivate = () => moment("A quiet place to sit and watch the path.");
+  group.userData.onActivate = () => completeAdultTask("rest", "Healthy break taken. Adults need rest to do good work.", 10);
   interactive.push(group);
   scene.add(group);
 }
@@ -1070,6 +1101,117 @@ function addGazebo(x, z) {
     const post = box(0.16, 2.35, 0.16, mats.dark);
     post.position.set(x + Math.cos(a) * 1.85, 1.18, z + Math.sin(a) * 1.85);
     scene.add(post);
+  }
+}
+
+function addWorkplace() {
+  const floor = plane(14, 11, mats.tile);
+  floor.position.set(0, 0.04, -64.5);
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+  const backWall = box(14, 3.2, 0.18, new THREE.MeshStandardMaterial({ color: 0xdfe5e0, roughness: 0.82 }));
+  backWall.position.set(0, 1.6, -70);
+  backWall.receiveShadow = true;
+  scene.add(backWall);
+  const leftWall = box(0.18, 3.2, 10.8, new THREE.MeshStandardMaterial({ color: 0xe8ddca, roughness: 0.84 }));
+  leftWall.position.set(-7, 1.6, -64.5);
+  scene.add(leftWall);
+  const rightWall = leftWall.clone();
+  rightWall.position.x = 7;
+  scene.add(rightWall);
+
+  const glassWall = box(8.2, 2.45, 0.08, mats.glass);
+  glassWall.position.set(0, 1.45, -59.05);
+  scene.add(glassWall);
+  for (const x of [-4.2, 0, 4.2]) {
+    const frame = box(0.08, 2.65, 0.12, mats.frame);
+    frame.position.set(x, 1.45, -59);
+    scene.add(frame);
+  }
+
+  const desk = box(3.4, 0.18, 1.45, mats.wood);
+  desk.position.set(0, 0.78, -65.4);
+  desk.castShadow = true;
+  scene.add(desk);
+  for (const x of [-1.45, 1.45]) {
+    for (const z of [-64.9, -65.95]) {
+      const leg = box(0.12, 0.74, 0.12, mats.dark);
+      leg.position.set(x, 0.39, z);
+      scene.add(leg);
+    }
+  }
+
+  const monitor = box(1.35, 0.74, 0.06, mats.screen);
+  monitor.position.set(-0.65, 1.24, -66.16);
+  monitor.userData.onActivate = () => completeAdultTask("meeting", "Meeting handled: listened, shared an idea, and wrote down the next step.", 10);
+  interactive.push(monitor);
+  scene.add(monitor);
+  const monitorStand = box(0.18, 0.35, 0.12, mats.matteBlack);
+  monitorStand.position.set(-0.65, 0.99, -66.05);
+  scene.add(monitorStand);
+
+  const billTablet = box(0.68, 0.04, 0.48, new THREE.MeshStandardMaterial({ color: 0x172030, emissive: 0x4c6fff, emissiveIntensity: 0.18, roughness: 0.26 }));
+  billTablet.position.set(0.9, 0.92, -65.15);
+  billTablet.rotation.y = -0.22;
+  billTablet.userData.onActivate = () => completeAdultTask("budget", "Small bill paid. Money went down, trust went up.", 4);
+  interactive.push(billTablet);
+  scene.add(billTablet);
+
+  const keyboard = box(1.05, 0.04, 0.32, mats.matteBlack);
+  keyboard.position.set(-0.62, 0.92, -65.42);
+  scene.add(keyboard);
+
+  const badge = box(0.46, 0.04, 0.3, new THREE.MeshStandardMaterial({ color: 0xf7f2df, roughness: 0.46 }));
+  badge.position.set(1.42, 0.92, -65.72);
+  badge.rotation.y = 0.16;
+  badge.userData.onActivate = () => moment("Badge on. You belong in the room.");
+  interactive.push(badge);
+  scene.add(badge);
+
+  const conference = box(3.8, 0.16, 1.3, new THREE.MeshStandardMaterial({ color: 0x8f6744, roughness: 0.58 }));
+  conference.position.set(0, 0.76, -68.35);
+  conference.castShadow = true;
+  scene.add(conference);
+  for (const x of [-2.35, -1.15, 1.15, 2.35]) addOfficeChair(x, -68.35, x < 0 ? Math.PI / 2 : -Math.PI / 2);
+
+  const whiteboard = box(3.6, 1.35, 0.06, new THREE.MeshStandardMaterial({ color: 0xf4fbff, roughness: 0.34 }));
+  whiteboard.position.set(-3.2, 1.8, -69.88);
+  whiteboard.userData.onActivate = () => moment("Plan: finish work, be kind, save a little, rest well.");
+  interactive.push(whiteboard);
+  scene.add(whiteboard);
+
+  addOfficePlant(5.3, -68.8);
+  addOfficePlant(-5.4, -60.4);
+}
+
+function addOfficeChair(x, z, rotation) {
+  const group = new THREE.Group();
+  const seat = box(0.55, 0.1, 0.55, mats.matteBlack);
+  seat.position.y = 0.55;
+  group.add(seat);
+  const back = box(0.55, 0.65, 0.1, mats.matteBlack);
+  back.position.set(0, 0.93, 0.28);
+  group.add(back);
+  const post = box(0.08, 0.48, 0.08, mats.chrome);
+  post.position.y = 0.28;
+  group.add(post);
+  group.position.set(x, 0, z);
+  group.rotation.y = rotation;
+  scene.add(group);
+}
+
+function addOfficePlant(x, z) {
+  const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.32, 0.42, 18), mats.matteBlack);
+  pot.position.set(x, 0.23, z);
+  scene.add(pot);
+  for (let i = 0; i < 9; i++) {
+    const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 6), mats.leaf);
+    const angle = i / 9 * Math.PI * 2;
+    leaf.scale.set(0.45, 1.35, 0.25);
+    leaf.rotation.set(rand(-0.5, 0.5), angle, rand(-0.2, 0.2));
+    leaf.position.set(x + Math.cos(angle) * 0.14, rand(0.58, 1.1), z + Math.sin(angle) * 0.14);
+    scene.add(leaf);
   }
 }
 
@@ -1319,6 +1461,31 @@ function updatePlaceUI() {
   placeButtons.forEach((button) => button.classList.toggle("active", button.dataset.place === state.place));
 }
 
+function renderAdultPanel() {
+  const doneCount = adultTasks.filter((task) => task.done).length;
+  balanceLabel.textContent = `$${state.balance}`;
+  focusLabel.textContent = `Focus ${state.focus}%`;
+  trustLabel.textContent = `Trust ${doneCount}/${adultTasks.length}`;
+  taskList.innerHTML = adultTasks.map((task) => {
+    const reward = task.value > 0 ? `+$${task.value}` : task.value < 0 ? `-$${Math.abs(task.value)}` : "";
+    return `<li class="${task.done ? "done" : ""}"><span>${task.label}</span><small>${reward}</small></li>`;
+  }).join("");
+}
+
+function completeAdultTask(id, text, focusChange = 6) {
+  const task = adultTasks.find((item) => item.id === id);
+  if (!task || task.done) {
+    if (text) moment(text);
+    return;
+  }
+
+  task.done = true;
+  state.balance = Math.max(0, state.balance + task.value);
+  state.focus = THREE.MathUtils.clamp(state.focus + focusChange, 0, 100);
+  renderAdultPanel();
+  moment(text || `${task.label}.`);
+}
+
 function setTime(index) {
   state.timeIndex = index;
   const next = times[index];
@@ -1466,13 +1633,13 @@ function updateMovement(dt) {
   const speed = state.keys.has("ShiftLeft") || state.keys.has("ShiftRight") ? 4.2 : 2.45;
   player.position.addScaledVector(tempVec, speed * dt);
   player.position.x = THREE.MathUtils.clamp(player.position.x, -9.5, 9.5);
-  player.position.z = THREE.MathUtils.clamp(player.position.z, -59, 10.3);
+  player.position.z = THREE.MathUtils.clamp(player.position.z, -71, 10.3);
   updateNearestPlace();
 }
 
 function updateNearestPlace() {
   const z = player.position.z;
-  const nextPlace = z > -2 ? "home" : z > -33 ? "street" : "park";
+  const nextPlace = z > -2 ? "home" : z > -33 ? "street" : z > -58 ? "park" : "work";
   if (nextPlace === state.place) return;
   state.place = nextPlace;
   updatePlaceUI();
