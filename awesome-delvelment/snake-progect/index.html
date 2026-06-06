@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AWESOMECRAFT Snake</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg-panel: rgba(8, 20, 28, 0.9);
+      --bg-panel-strong: rgba(11, 32, 43, 0.96);
+      --line: rgba(139, 214, 209, 0.18);
+      --line-strong: rgba(139, 214, 209, 0.42);
+      --text-main: #f3f6ec;
+      --text-soft: #bdd8d0;
+      --accent: #8bead3;
+      --accent-strong: #39c398;
+      --warn: #ff8578;
+      --gold: #ffd76a;
+      --shadow: 0 22px 50px rgba(0, 0, 0, 0.34);
+      --radius-xl: 28px;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --board-size: min(72vw, 72vh, 680px);
+      --cell-gap: 3px;
+      --cell-radius: 8px;
+      --grid-count: 18;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at top left, rgba(57, 195, 152, 0.22), transparent 34%),
+        radial-gradient(circle at top right, rgba(255, 215, 106, 0.18), transparent 28%),
+        linear-gradient(180deg, #09151c 0%, #071116 46%, #04070d 100%);
+      color: var(--text-main);
+      font-family: "Trebuchet MS", "Gill Sans", sans-serif;
+    }
+
+    body {
+      padding: 18px;
+    }
+
+    button {
+      font: inherit;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(16, 38, 52, 0.92);
+      color: var(--text-main);
+      padding: 0.72rem 1rem;
+      cursor: pointer;
+    }
+
+    button:hover,
+    button:focus-visible {
+      border-color: var(--line-strong);
+      outline: none;
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, rgba(57, 195, 152, 0.95), rgba(96, 237, 187, 0.72));
+      color: #04271c;
+      font-weight: 700;
+    }
+
+    button.ghost {
+      background: rgba(5, 14, 19, 0.8);
+    }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: minmax(280px, 350px) minmax(0, 1fr);
+      gap: 18px;
+      min-height: calc(100vh - 36px);
+    }
+
+    .control-panel,
+    .play-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .brand-card,
+    .panel-card {
+      border: 1px solid var(--line);
+      background: var(--bg-panel);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .brand-card {
+      padding: 22px 22px 26px;
+      background:
+        linear-gradient(135deg, rgba(57, 195, 152, 0.24), rgba(9, 19, 26, 0.92)),
+        var(--bg-panel-strong);
+    }
+
+    .brand-card h1,
+    .panel-card h2,
+    .panel-card h3,
+    .play-header h2 {
+      margin: 0;
+      font-family: "Rockwell", "Georgia", serif;
+      font-weight: 700;
+    }
+
+    .brand-card h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      letter-spacing: 0.06em;
+    }
+
+    .panel-card {
+      padding: 18px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--gold);
+      font-size: 0.82rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .subtitle,
+    .small-copy,
+    .control-list,
+    .status-message {
+      color: var(--text-soft);
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .stat-tile {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: rgba(6, 15, 20, 0.75);
+      padding: 12px;
+    }
+
+    .stat-label {
+      color: var(--text-soft);
+      font-size: 0.84rem;
+    }
+
+    .stat-tile strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 1.1rem;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .button-row > * {
+      flex: 1 1 130px;
+    }
+
+    .control-list {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .play-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 12px 6px 0;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .mini-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 0.35rem 0.7rem;
+      font-size: 0.8rem;
+      color: #d8fff1;
+      background: rgba(18, 50, 54, 0.88);
+      border: 1px solid rgba(139, 214, 209, 0.22);
+    }
+
+    .game-stage {
+      border: 1px solid var(--line);
+      border-radius: 32px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 15% 15%, rgba(87, 166, 127, 0.2), transparent 18%),
+        radial-gradient(circle at 85% 10%, rgba(255, 215, 106, 0.12), transparent 18%),
+        linear-gradient(180deg, rgba(12, 38, 51, 0.95), rgba(4, 14, 20, 0.98));
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .board-wrap {
+      display: grid;
+      justify-items: center;
+      gap: 14px;
+    }
+
+    .status-message {
+      min-height: 1.4em;
+      text-align: center;
+      font-size: 0.95rem;
+    }
+
+    .snake-board {
+      width: var(--board-size);
+      height: var(--board-size);
+      display: grid;
+      grid-template-columns: repeat(var(--grid-count), 1fr);
+      grid-template-rows: repeat(var(--grid-count), 1fr);
+      gap: var(--cell-gap);
+      padding: 14px;
+      border-radius: 28px;
+      background:
+        linear-gradient(180deg, rgba(11, 34, 46, 0.95), rgba(5, 17, 23, 0.98));
+      border: 1px solid rgba(139, 214, 209, 0.16);
+      touch-action: none;
+    }
+
+    .cell {
+      border-radius: var(--cell-radius);
+      background: rgba(132, 209, 224, 0.07);
+      border: 1px solid rgba(139, 214, 209, 0.05);
+    }
+
+    .cell.snake {
+      background: linear-gradient(180deg, rgba(96, 237, 187, 0.92), rgba(57, 195, 152, 0.88));
+      border-color: rgba(96, 237, 187, 0.2);
+    }
+
+    .cell.head {
+      background: linear-gradient(180deg, rgba(255, 215, 106, 0.96), rgba(255, 185, 67, 0.86));
+      border-color: rgba(255, 215, 106, 0.3);
+    }
+
+    .cell.food {
+      background: linear-gradient(180deg, rgba(255, 133, 120, 0.95), rgba(255, 98, 98, 0.82));
+      border-color: rgba(255, 133, 120, 0.34);
+    }
+
+    .control-pad {
+      display: grid;
+      gap: 10px;
+      width: min(320px, 100%);
+      margin: 0 auto;
+    }
+
+    .control-pad-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .pad-button {
+      min-width: 86px;
+      padding: 0.95rem 1rem;
+      border-radius: 22px;
+      background: rgba(7, 25, 34, 0.82);
+      border: 1px solid rgba(139, 214, 209, 0.22);
+    }
+
+    .pad-button.primary {
+      color: #04271c;
+    }
+
+    @media (max-width: 1080px) {
+      .app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .control-panel {
+        order: 2;
+      }
+
+      .play-panel {
+        order: 1;
+      }
+    }
+
+    @media (max-width: 760px) {
+      body {
+        padding: 10px;
+      }
+
+      :root {
+        --board-size: min(calc(100vw - 36px), 520px);
+        --cell-gap: 2px;
+      }
+
+      .status-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .play-header {
+        flex-direction: column;
+      }
+
+      .pill-row {
+        justify-content: flex-start;
+      }
+
+      .pad-button {
+        min-width: 72px;
+        padding: 0.82rem 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="control-panel">
+      <div class="brand-card">
+        <p class="eyebrow">Classic arcade mode</p>
+        <h1>Snake</h1>
+        <p class="subtitle">A small standalone page inside AWESOMECRAFT with the classic loop: move, eat, grow, survive, restart.</p>
+      </div>
+
+      <section class="panel-card">
+        <div class="status-grid">
+          <div class="stat-tile">
+            <span class="stat-label">Score</span>
+            <strong id="scoreValue">0</strong>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-label">Best</span>
+            <strong id="bestValue">0</strong>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-label">Length</span>
+            <strong id="lengthValue">3</strong>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-label">State</span>
+            <strong id="stateValue">Ready</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel-card">
+        <h2>Actions</h2>
+        <div class="button-row">
+          <button id="startBtn" class="primary">Start</button>
+          <button id="pauseBtn">Pause</button>
+          <button id="restartBtn" class="ghost">Restart</button>
+        </div>
+      </section>
+
+      <section class="panel-card">
+        <h2>Controls</h2>
+        <ul class="control-list">
+          <li>Use arrow keys or <strong>WASD</strong> to steer.</li>
+          <li>Press <strong>P</strong> to pause or resume.</li>
+          <li>Press <strong>Enter</strong> to restart after game over.</li>
+          <li>Walls and your own body both end the run.</li>
+        </ul>
+      </section>
+    </aside>
+
+    <main class="play-panel">
+      <header class="play-header">
+        <div>
+          <p class="eyebrow">Minimal standalone page</p>
+          <h2>Snake Grid</h2>
+        </div>
+        <div class="pill-row">
+          <div class="mini-pill">Board: <span id="boardInfo">18 x 18</span></div>
+          <div class="mini-pill">Speed: <span id="speedInfo">7 ticks/s</span></div>
+        </div>
+      </header>
+
+      <section class="game-stage">
+        <div class="board-wrap">
+          <div id="statusMessage" class="status-message">Press Start or tap a direction to begin.</div>
+          <div id="board" class="snake-board" role="grid" aria-label="Snake game board"></div>
+          <div class="control-pad" aria-label="On-screen direction controls">
+            <div class="control-pad-row">
+              <button class="pad-button" type="button" data-direction="up">Up</button>
+            </div>
+            <div class="control-pad-row">
+              <button class="pad-button" type="button" data-direction="left">Left</button>
+              <button class="pad-button" type="button" data-direction="down">Down</button>
+              <button class="pad-button" type="button" data-direction="right">Right</button>
+            </div>
+            <div class="control-pad-row">
+              <button id="mobilePauseBtn" class="pad-button" type="button">Pause</button>
+              <button id="mobileRestartBtn" class="pad-button primary" type="button">Restart</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      var GRID_SIZE = 18;
+      var TICK_MS = 140;
+      var STORAGE_KEY = "awesomecraft.snake.best.v1";
+      var DIRECTION_VECTORS = {
+        up: { x: 0, y: -1 },
+        down: { x: 0, y: 1 },
+        left: { x: -1, y: 0 },
+        right: { x: 1, y: 0 }
+      };
+
+      function createRng(seed) {
+        var value = seed % 2147483647;
+        if (value <= 0) {
+          value += 2147483646;
+        }
+        return function () {
+          value = value * 16807 % 2147483647;
+          return (value - 1) / 2147483646;
+        };
+      }
+
+      function pointKey(point) {
+        return point.x + "," + point.y;
+      }
+
+      function samePoint(a, b) {
+        return a.x === b.x && a.y === b.y;
+      }
+
+      function isOppositeDirection(current, next) {
+        return (
+          (current === "up" && next === "down") ||
+          (current === "down" && next === "up") ||
+          (current === "left" && next === "right") ||
+          (current === "right" && next === "left")
+        );
+      }
+
+      function listOpenCells(gridSize, snake) {
+        var occupied = {};
+        var cells = [];
+        var x;
+        var y;
+        var i;
+
+        for (i = 0; i < snake.length; i += 1) {
+          occupied[pointKey(snake[i])] = true;
+        }
+
+        for (y = 0; y < gridSize; y += 1) {
+          for (x = 0; x < gridSize; x += 1) {
+            if (!occupied[x + "," + y]) {
+              cells.push({ x: x, y: y });
+            }
+          }
+        }
+
+        return cells;
+      }
+
+      function pickFoodCell(gridSize, snake, rng) {
+        var openCells = listOpenCells(gridSize, snake);
+        if (!openCells.length) {
+          return null;
+        }
+        return openCells[Math.floor(rng() * openCells.length)];
+      }
+
+      function createInitialSnake(gridSize) {
+        var mid = Math.floor(gridSize / 2);
+        return [
+          { x: mid, y: mid },
+          { x: mid - 1, y: mid },
+          { x: mid - 2, y: mid }
+        ];
+      }
+
+      function createInitialState(options) {
+        var gridSize = options.gridSize;
+        var rng = options.rng;
+        var snake = createInitialSnake(gridSize);
+
+        return {
+          gridSize: gridSize,
+          snake: snake,
+          direction: "right",
+          queuedDirection: "right",
+          food: pickFoodCell(gridSize, snake, rng),
+          score: 0,
+          status: "ready",
+          gameOverReason: "",
+          tick: 0
+        };
+      }
+
+      function applyDirection(state, nextDirection) {
+        if (!nextDirection) {
+          return state.direction;
+        }
+        if (state.snake.length > 1 && isOppositeDirection(state.direction, nextDirection)) {
+          return state.direction;
+        }
+        return nextDirection;
+      }
+
+      function queueDirection(state, nextDirection) {
+        if (!DIRECTION_VECTORS[nextDirection]) {
+          return state;
+        }
+        return {
+          gridSize: state.gridSize,
+          snake: state.snake.slice(),
+          direction: state.direction,
+          queuedDirection: state.snake.length > 1 && isOppositeDirection(state.direction, nextDirection) ? state.queuedDirection : nextDirection,
+          food: state.food ? { x: state.food.x, y: state.food.y } : null,
+          score: state.score,
+          status: state.status,
+          gameOverReason: state.gameOverReason,
+          tick: state.tick
+        };
+      }
+
+      function stepState(state, rng) {
+        var direction;
+        var vector;
+        var nextHead;
+        var nextSnake;
+        var willGrow;
+        var i;
+
+        if (state.status !== "playing") {
+          return state;
+        }
+
+        direction = applyDirection(state, state.queuedDirection);
+        vector = DIRECTION_VECTORS[direction];
+        nextHead = {
+          x: state.snake[0].x + vector.x,
+          y: state.snake[0].y + vector.y
+        };
+
+        if (nextHead.x < 0 || nextHead.y < 0 || nextHead.x >= state.gridSize || nextHead.y >= state.gridSize) {
+          return {
+            gridSize: state.gridSize,
+            snake: state.snake.slice(),
+            direction: direction,
+            queuedDirection: direction,
+            food: state.food ? { x: state.food.x, y: state.food.y } : null,
+            score: state.score,
+            status: "over",
+            gameOverReason: "Hit the wall.",
+            tick: state.tick + 1
+          };
+        }
+
+        nextSnake = [nextHead].concat(state.snake);
+        willGrow = state.food && samePoint(nextHead, state.food);
+
+        if (!willGrow) {
+          nextSnake.pop();
+        }
+
+        for (i = 1; i < nextSnake.length; i += 1) {
+          if (samePoint(nextHead, nextSnake[i])) {
+            return {
+              gridSize: state.gridSize,
+              snake: nextSnake,
+              direction: direction,
+              queuedDirection: direction,
+              food: state.food ? { x: state.food.x, y: state.food.y } : null,
+              score: state.score,
+              status: "over",
+              gameOverReason: "Ran into yourself.",
+              tick: state.tick + 1
+            };
+          }
+        }
+
+        return {
+          gridSize: state.gridSize,
+          snake: nextSnake,
+          direction: direction,
+          queuedDirection: direction,
+          food: willGrow ? pickFoodCell(state.gridSize, nextSnake, rng) : (state.food ? { x: state.food.x, y: state.food.y } : null),
+          score: state.score + (willGrow ? 1 : 0),
+          status: willGrow && nextSnake.length === state.gridSize * state.gridSize ? "over" : "playing",
+          gameOverReason: willGrow && nextSnake.length === state.gridSize * state.gridSize ? "Board cleared." : "",
+          tick: state.tick + 1
+        };
+      }
+
+      var ui = {
+        board: document.getElementById("board"),
+        scoreValue: document.getElementById("scoreValue"),
+        bestValue: document.getElementById("bestValue"),
+        lengthValue: document.getElementById("lengthValue"),
+        stateValue: document.getElementById("stateValue"),
+        stateMessage: document.getElementById("statusMessage"),
+        startBtn: document.getElementById("startBtn"),
+        pauseBtn: document.getElementById("pauseBtn"),
+        restartBtn: document.getElementById("restartBtn"),
+        mobilePauseBtn: document.getElementById("mobilePauseBtn"),
+        mobileRestartBtn: document.getElementById("mobileRestartBtn"),
+        boardInfo: document.getElementById("boardInfo"),
+        speedInfo: document.getElementById("speedInfo")
+      };
+
+      var cells = [];
+      var runtime = {
+        seed: Math.floor(Date.now() % 2147483647) || 1,
+        rng: null,
+        state: null,
+        timerId: null,
+        bestScore: 0
+      };
+
+      function safeReadBest() {
+        try {
+          return parseInt(localStorage.getItem(STORAGE_KEY), 10) || 0;
+        } catch (error) {
+          return 0;
+        }
+      }
+
+      function safeWriteBest(score) {
+        try {
+          localStorage.setItem(STORAGE_KEY, String(score));
+        } catch (error) {
+        }
+      }
+
+      function boardIndex(x, y) {
+        return y * GRID_SIZE + x;
+      }
+
+      function createBoard() {
+        var fragment = document.createDocumentFragment();
+        var total = GRID_SIZE * GRID_SIZE;
+        var i;
+        var cell;
+
+        ui.board.style.setProperty("--grid-count", String(GRID_SIZE));
+        for (i = 0; i < total; i += 1) {
+          cell = document.createElement("div");
+          cell.className = "cell";
+          fragment.appendChild(cell);
+          cells.push(cell);
+        }
+        ui.board.appendChild(fragment);
+      }
+
+      function ensureRunning() {
+        if (runtime.state.status === "ready") {
+          runtime.state = {
+            gridSize: runtime.state.gridSize,
+            snake: runtime.state.snake.slice(),
+            direction: runtime.state.direction,
+            queuedDirection: runtime.state.queuedDirection,
+            food: runtime.state.food ? { x: runtime.state.food.x, y: runtime.state.food.y } : null,
+            score: runtime.state.score,
+            status: "playing",
+            gameOverReason: "",
+            tick: runtime.state.tick
+          };
+        }
+      }
+
+      function updateBestScore() {
+        if (runtime.state.score > runtime.bestScore) {
+          runtime.bestScore = runtime.state.score;
+          safeWriteBest(runtime.bestScore);
+        }
+      }
+
+      function syncControls() {
+        var paused = runtime.state.status === "paused";
+        ui.pauseBtn.textContent = paused ? "Resume" : "Pause";
+        ui.mobilePauseBtn.textContent = paused ? "Resume" : "Pause";
+      }
+
+      function statusLabel(status) {
+        if (status === "ready") {
+          return "Ready";
+        }
+        if (status === "playing") {
+          return "Playing";
+        }
+        if (status === "paused") {
+          return "Paused";
+        }
+        return "Game Over";
+      }
+
+      function renderStatusMessage() {
+        if (runtime.state.status === "ready") {
+          ui.stateMessage.textContent = "Press Start or tap a direction to begin.";
+          return;
+        }
+        if (runtime.state.status === "paused") {
+          ui.stateMessage.textContent = "Paused. Press P or Resume when you're ready.";
+          return;
+        }
+        if (runtime.state.status === "over") {
+          ui.stateMessage.textContent = runtime.state.gameOverReason + " Press Restart or Enter to try again.";
+          return;
+        }
+        ui.stateMessage.textContent = "Collect food, keep moving, and avoid walls.";
+      }
+
+      function renderBoard() {
+        var i;
+        var segment;
+
+        for (i = 0; i < cells.length; i += 1) {
+          cells[i].className = "cell";
+        }
+
+        if (runtime.state.food) {
+          cells[boardIndex(runtime.state.food.x, runtime.state.food.y)].className = "cell food";
+        }
+
+        for (i = 0; i < runtime.state.snake.length; i += 1) {
+          segment = runtime.state.snake[i];
+          cells[boardIndex(segment.x, segment.y)].className = i === 0 ? "cell snake head" : "cell snake";
+        }
+      }
+
+      function renderHud() {
+        updateBestScore();
+        ui.scoreValue.textContent = String(runtime.state.score);
+        ui.bestValue.textContent = String(runtime.bestScore);
+        ui.lengthValue.textContent = String(runtime.state.snake.length);
+        ui.stateValue.textContent = statusLabel(runtime.state.status);
+        renderStatusMessage();
+        syncControls();
+      }
+
+      function render() {
+        renderBoard();
+        renderHud();
+      }
+
+      function stopTimer() {
+        if (runtime.timerId !== null) {
+          window.clearInterval(runtime.timerId);
+          runtime.timerId = null;
+        }
+      }
+
+      function tick() {
+        runtime.state = stepState(runtime.state, runtime.rng);
+        render();
+        if (runtime.state.status === "over") {
+          stopTimer();
+        }
+      }
+
+      function startTimer() {
+        stopTimer();
+        runtime.timerId = window.setInterval(tick, TICK_MS);
+      }
+
+      function startGame() {
+        if (runtime.state.status === "over") {
+          restartGame();
+        }
+        if (runtime.state.status === "paused") {
+          runtime.state = {
+            gridSize: runtime.state.gridSize,
+            snake: runtime.state.snake.slice(),
+            direction: runtime.state.direction,
+            queuedDirection: runtime.state.queuedDirection,
+            food: runtime.state.food ? { x: runtime.state.food.x, y: runtime.state.food.y } : null,
+            score: runtime.state.score,
+            status: "playing",
+            gameOverReason: "",
+            tick: runtime.state.tick
+          };
+        } else {
+          ensureRunning();
+        }
+        startTimer();
+        render();
+      }
+
+      function pauseGame() {
+        if (runtime.state.status === "playing") {
+          runtime.state = {
+            gridSize: runtime.state.gridSize,
+            snake: runtime.state.snake.slice(),
+            direction: runtime.state.direction,
+            queuedDirection: runtime.state.queuedDirection,
+            food: runtime.state.food ? { x: runtime.state.food.x, y: runtime.state.food.y } : null,
+            score: runtime.state.score,
+            status: "paused",
+            gameOverReason: "",
+            tick: runtime.state.tick
+          };
+          stopTimer();
+        } else if (runtime.state.status === "paused") {
+          startGame();
+          return;
+        }
+        render();
+      }
+
+      function restartGame() {
+        runtime.seed = (runtime.seed + 97) % 2147483647;
+        if (runtime.seed <= 0) {
+          runtime.seed = 1;
+        }
+        runtime.rng = createRng(runtime.seed);
+        runtime.state = createInitialState({
+          gridSize: GRID_SIZE,
+          rng: runtime.rng
+        });
+        stopTimer();
+        render();
+      }
+
+      function turn(direction) {
+        runtime.state = queueDirection(runtime.state, direction);
+        if (runtime.state.status === "ready") {
+          startGame();
+        } else {
+          render();
+        }
+      }
+
+      function handleDirectionInput(direction) {
+        if (!DIRECTION_VECTORS[direction]) {
+          return;
+        }
+        if (runtime.state.status === "over") {
+          restartGame();
+        }
+        turn(direction);
+      }
+
+      function bindEvents() {
+        document.addEventListener("keydown", function (event) {
+          var key = event.key.toLowerCase();
+          if (event.key === "ArrowUp" || key === "w") {
+            event.preventDefault();
+            handleDirectionInput("up");
+          } else if (event.key === "ArrowDown" || key === "s") {
+            event.preventDefault();
+            handleDirectionInput("down");
+          } else if (event.key === "ArrowLeft" || key === "a") {
+            event.preventDefault();
+            handleDirectionInput("left");
+          } else if (event.key === "ArrowRight" || key === "d") {
+            event.preventDefault();
+            handleDirectionInput("right");
+          } else if (key === "p") {
+            event.preventDefault();
+            pauseGame();
+          } else if (event.key === "Enter" && runtime.state.status === "over") {
+            event.preventDefault();
+            startGame();
+          } else if (event.key === " ") {
+            event.preventDefault();
+            if (runtime.state.status === "playing" || runtime.state.status === "paused") {
+              pauseGame();
+            } else {
+              startGame();
+            }
+          }
+        });
+
+        document.querySelectorAll("[data-direction]").forEach(function (button) {
+          button.addEventListener("click", function () {
+            handleDirectionInput(button.getAttribute("data-direction"));
+          });
+        });
+
+        ui.startBtn.addEventListener("click", startGame);
+        ui.pauseBtn.addEventListener("click", pauseGame);
+        ui.restartBtn.addEventListener("click", restartGame);
+        ui.mobilePauseBtn.addEventListener("click", pauseGame);
+        ui.mobileRestartBtn.addEventListener("click", restartGame);
+      }
+
+      function init() {
+        runtime.bestScore = safeReadBest();
+        runtime.rng = createRng(runtime.seed);
+        runtime.state = createInitialState({
+          gridSize: GRID_SIZE,
+          rng: runtime.rng
+        });
+        ui.boardInfo.textContent = GRID_SIZE + " x " + GRID_SIZE;
+        ui.speedInfo.textContent = Math.round(1000 / TICK_MS) + " ticks/s";
+        createBoard();
+        bindEvents();
+        render();
+      }
+
+      window.SnakeLogic = {
+        createRng: createRng,
+        createInitialState: createInitialState,
+        queueDirection: queueDirection,
+        stepState: stepState,
+        pickFoodCell: pickFoodCell,
+        listOpenCells: listOpenCells,
+        isOppositeDirection: isOppositeDirection
+      };
+
+      init();
+    }());
+  </script>
+</body>
+</html>

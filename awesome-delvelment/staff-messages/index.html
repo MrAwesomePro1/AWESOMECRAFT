@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Staff Messages | Awesome Delvelment</title>
+  <meta name="description" content="Staff messages for the Awesome Delvelment team.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <section class="signin-screen" id="signin-screen">
+    <form class="signin-card" id="signin-form">
+      <a class="brand" href="../index.html" aria-label="Back to Awesome Delvelment launcher">
+        <span class="brand-mark">AD</span>
+        <span>
+          <strong>Staff Messages</strong>
+          <small>Awesome Delvelment</small>
+        </span>
+      </a>
+
+      <div class="signin-copy">
+        <p>Staff only</p>
+        <h1>Sign in to messages.</h1>
+      </div>
+
+      <label for="signin-name">
+        <span>Name</span>
+        <input id="signin-name" type="text" autocomplete="name" placeholder="Your staff name" required>
+      </label>
+
+      <label for="signin-code">
+        <span>Staff code</span>
+        <input id="signin-code" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Enter code" required>
+      </label>
+
+      <p class="signin-error" id="signin-error" aria-live="polite"></p>
+
+      <button class="signin-button" type="submit">Sign in</button>
+    </form>
+  </section>
+
+  <div class="app-shell" id="app-shell" hidden>
+    <aside class="sidebar" aria-label="Staff rooms">
+      <a class="brand" href="../index.html" aria-label="Back to Awesome Delvelment launcher">
+        <span class="brand-mark">AD</span>
+        <span>
+          <strong>Staff Messages</strong>
+          <small>Awesome Delvelment</small>
+        </span>
+      </a>
+
+      <section class="account-card" aria-label="Signed in account">
+        <div class="account-row">
+          <span class="avatar" id="current-avatar">AD</span>
+          <span>
+            <strong id="current-name">Staff</strong>
+            <small>Signed in</small>
+          </span>
+        </div>
+        <button class="secondary-tool" id="sign-out-button" type="button">Sign out</button>
+      </section>
+
+      <label class="search-control" for="room-search">
+        <span class="sr-only">Search rooms</span>
+        <svg aria-hidden="true" viewBox="0 0 24 24">
+          <path d="m21 21-4.35-4.35m1.35-5.15a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0Z"></path>
+        </svg>
+        <input id="room-search" type="search" autocomplete="off" placeholder="Search staff rooms">
+      </label>
+
+      <nav class="room-list" id="room-list" aria-label="Message rooms"></nav>
+    </aside>
+
+    <main class="conversation" aria-label="Conversation">
+      <header class="chat-header">
+        <div class="room-badge" id="room-badge">G</div>
+        <div class="room-heading">
+          <p id="room-kicker">Channel</p>
+          <h1 id="room-title">General</h1>
+          <span id="room-meta">0 messages</span>
+        </div>
+        <div class="header-actions">
+          <button class="icon-button" id="pin-room" type="button" title="Pin room" aria-label="Pin room">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M12 17v5M5 17h14M7 3h10l-2 6 3 4v4H6v-4l3-4-2-6Z"></path>
+            </svg>
+          </button>
+          <button class="icon-button" id="copy-room" type="button" title="Copy room summary" aria-label="Copy room summary">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M9 9h10v12H9V9Z"></path>
+              <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"></path>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <section class="notice-strip" id="notice-strip" aria-live="polite"></section>
+
+      <section class="messages-toolbar" aria-label="Message tools">
+        <label class="search-control message-search" for="message-search">
+          <span class="sr-only">Search messages</span>
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="m21 21-4.35-4.35m1.35-5.15a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0Z"></path>
+          </svg>
+          <input id="message-search" type="search" autocomplete="off" placeholder="Search messages">
+        </label>
+        <div class="segmented" aria-label="Message view">
+          <button type="button" class="is-active" data-view="all">All</button>
+          <button type="button" data-view="pinned">Pinned</button>
+          <button type="button" data-view="mine">Mine</button>
+        </div>
+      </section>
+
+      <section class="message-list" id="message-list" aria-live="polite"></section>
+
+      <form class="composer" id="compose-form">
+        <input id="file-input" type="file" multiple hidden>
+        <div class="quick-replies" aria-label="Quick replies">
+          <button type="button" data-insert="Ready for review.">Ready</button>
+          <button type="button" data-insert="I am checking this now.">Checking</button>
+          <button type="button" data-insert="Blocked until I get one more detail.">Blocked</button>
+        </div>
+        <div class="composer-box">
+          <button class="icon-button" id="attach-button" type="button" title="Attach file name" aria-label="Attach file name">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="m21.4 11.6-8.9 8.9a6 6 0 0 1-8.5-8.5l9.6-9.6a4 4 0 0 1 5.7 5.7L9.7 17.7a2 2 0 1 1-2.8-2.8l8.9-8.9"></path>
+            </svg>
+          </button>
+          <textarea id="message-input" rows="1" placeholder="Message staff"></textarea>
+          <button class="send-button" type="submit">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M22 2 11 13"></path>
+              <path d="m22 2-7 20-4-9-9-4 20-7Z"></path>
+            </svg>
+            <span>Send</span>
+          </button>
+        </div>
+        <div class="composer-options">
+          <label for="priority-select">
+            <span>Priority</span>
+            <select id="priority-select">
+              <option value="normal">Normal</option>
+              <option value="important">Important</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </label>
+          <label class="check-control" for="needs-reply">
+            <input id="needs-reply" type="checkbox">
+            <span>Needs reply</span>
+          </label>
+        </div>
+      </form>
+    </main>
+
+    <aside class="detail-panel" aria-label="Room details">
+      <section class="detail-section">
+        <h2>Room Brief</h2>
+        <p id="room-brief"></p>
+      </section>
+
+      <section class="detail-section">
+        <h2>Access</h2>
+        <div class="access-list" id="access-list"></div>
+      </section>
+
+      <section class="detail-section">
+        <h2>Pinned</h2>
+        <div class="pinned-list" id="pinned-list"></div>
+      </section>
+
+      <section class="detail-section controls-panel">
+        <h2>Staff Tools</h2>
+        <button class="tool-button" id="export-button" type="button">
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="M12 3v12"></path>
+            <path d="m7 10 5 5 5-5"></path>
+            <path d="M5 21h14"></path>
+          </svg>
+          Export chat
+        </button>
+        <button class="tool-button danger" id="reset-button" type="button">
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="M3 6h18"></path>
+            <path d="M8 6V4h8v2"></path>
+            <path d="m19 6-1 14H6L5 6"></path>
+          </svg>
+          Reset local data
+        </button>
+      </section>
+    </aside>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>

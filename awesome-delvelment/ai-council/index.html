@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI Council</title>
+    <meta name="theme-color" content="#3fc8b4">
+    <meta name="description" content="AI Council: every AI voice in one installable chat app.">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="side-panel" aria-label="AI roster">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">AC</div>
+          <div>
+            <h1>AI Council</h1>
+            <p>Every AI in one chat</p>
+          </div>
+        </div>
+
+        <div class="panel-group">
+          <div class="panel-title">Inside AI Council</div>
+          <div class="model-list" id="modelList"></div>
+        </div>
+
+        <div class="panel-group compact-controls">
+          <div class="panel-title">Controls</div>
+          <label class="switch-row">
+            <span>Research</span>
+            <input id="researchToggle" type="checkbox">
+          </label>
+          <label class="switch-row">
+            <span>Code lens</span>
+            <input id="codeToggle" type="checkbox">
+          </label>
+          <label class="slider-row">
+            <span>Depth</span>
+            <input id="depthRange" type="range" min="1" max="5" value="3">
+          </label>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <section class="status-band" aria-label="AI Council status">
+          <canvas id="signalCanvas" width="560" height="160" aria-hidden="true"></canvas>
+          <div class="status-copy">
+            <p id="activeKicker">One chat</p>
+            <h2 id="activeTitle">Every AI answers together</h2>
+          </div>
+          <div class="metric-strip" aria-label="Mode strengths">
+            <div><span id="logicScore">100</span><small>logic</small></div>
+            <div><span id="creativeScore">100</span><small>creative</small></div>
+            <div><span id="speedScore">100</span><small>speed</small></div>
+          </div>
+        </section>
+
+        <section class="chat-panel" aria-label="Conversation">
+          <div class="chat-topbar">
+            <div>
+              <p>Session</p>
+              <strong id="sessionLabel">AI Council unified chat</strong>
+            </div>
+            <div class="presence-strip" aria-label="Council presence">
+              <span>ChatGPT is listening</span>
+              <span>Claude is thinking</span>
+              <span>Grok is ready</span>
+            </div>
+            <button id="installApp" class="install-button" type="button" hidden>Install</button>
+            <button id="clearChat" class="icon-button" type="button" title="Clear chat" aria-label="Clear chat">Clear</button>
+          </div>
+          <div class="messages" id="messages" aria-live="polite"></div>
+          <section class="imagine-panel" aria-label="Imagine video generator">
+            <div>
+              <strong>Imagine</strong>
+              <p>Say it naturally, like "make a 5 min video of this flying."</p>
+              <div class="duration-control" id="durationControl" aria-label="Video duration">
+                <button type="button" data-duration="6">6 sec</button>
+                <button type="button" data-duration="10">10 sec</button>
+                <button type="button" data-duration="20">20 sec</button>
+                <button type="button" data-duration="60" class="active">1 min</button>
+                <button type="button" data-duration="300">5 min</button>
+                <button type="button" data-duration="1800">30 min</button>
+                <button type="button" data-duration="3600">1 hour</button>
+                <button type="button" data-duration="7200">2 hours</button>
+              </div>
+            </div>
+            <form class="imagine-composer" id="imagineComposer">
+              <input id="imaginePictureInput" class="picture-input" type="file" accept="image/*">
+              <button id="imaginePictureButton" class="imagine-picture-button" type="button" title="Add reference picture" aria-label="Add reference picture">Ref Pic</button>
+              <div class="imagine-reference" id="imagineReference" hidden>
+                <img id="imaginePicturePreview" alt="Imagine reference picture preview">
+                <span>Reference picture attached</span>
+                <button id="removeImaginePicture" type="button" aria-label="Remove Imagine reference picture">Remove</button>
+              </div>
+              <input id="imagineInput" type="text" placeholder="Make a 1 min video of a neon dragon flying..." autocomplete="off">
+              <button type="submit">Make Video</button>
+            </form>
+          </section>
+          <form class="composer" id="composer">
+            <input id="pictureInput" class="picture-input" type="file" accept="image/*">
+            <button id="pictureButton" class="picture-button" type="button" title="Insert picture" aria-label="Insert picture">Pic</button>
+            <div class="attached-picture" id="attachedPicture" hidden>
+              <img id="attachedPicturePreview" alt="Selected picture preview">
+              <button id="removePicture" type="button" aria-label="Remove picture">Remove</button>
+            </div>
+            <textarea id="promptInput" rows="1" placeholder="Ask anything..." autocomplete="off"></textarea>
+            <button type="submit">Send</button>
+          </form>
+        </section>
+      </main>
+    </div>
+
+    <script src="ais/chatgpt.js"></script>
+    <script src="ais/claude.js"></script>
+    <script src="ais/grok.js"></script>
+    <script src="ais/codex.js"></script>
+    <script src="ais/gemini.js"></script>
+    <script src="ais/perplexity.js"></script>
+    <script src="ais/viders.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

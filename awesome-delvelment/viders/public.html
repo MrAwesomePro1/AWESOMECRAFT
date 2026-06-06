@@ -1,0 +1,2505 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Viders</title>
+    <style>
+:root {
+  --bg: #0c1022;
+  --panel: rgba(12, 18, 38, 0.88);
+  --panel-strong: #141d3c;
+  --text: #f7f5ef;
+  --muted: #b7bfd9;
+  --accent: #ff6b3d;
+  --accent-soft: #ff9f4d;
+  --accent-cool: #43d2d1;
+  --border: rgba(255, 255, 255, 0.09);
+  --shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+  --radius-xl: 28px;
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --font-display: "Trebuchet MS", "Avenir Next", "Segoe UI", sans-serif;
+  --font-body: "Gill Sans", "Segoe UI", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  font-family: var(--font-body);
+  background:
+    radial-gradient(circle at top left, rgba(255, 107, 61, 0.22), transparent 28%),
+    radial-gradient(circle at 85% 12%, rgba(67, 210, 209, 0.18), transparent 30%),
+    linear-gradient(145deg, #050914, #111833 52%, #0e1430);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: radial-gradient(circle at center, black 36%, transparent 90%);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: 0;
+}
+
+.app-shell {
+  width: min(1520px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 22px 0 36px;
+}
+
+.topbar,
+.card {
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.topbar {
+  display: grid;
+  grid-template-columns: 220px minmax(220px, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  padding: 18px 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: rgba(10, 14, 31, 0.8);
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 16px;
+  z-index: 5;
+}
+
+.brand-lockup {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.brand-mark {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #11131f;
+  background: linear-gradient(145deg, var(--accent), #ffcc67);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-family: var(--font-display);
+  letter-spacing: -0.03em;
+}
+
+h1 {
+  font-size: 1.9rem;
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-soft);
+}
+
+.search-wrap {
+  display: grid;
+  gap: 8px;
+}
+
+.search-wrap span,
+.section-heading span,
+.stat-label,
+.meta-row {
+  color: var(--muted);
+}
+
+.search-wrap input,
+.promo-input input,
+.upload-form input,
+.upload-form select,
+.upload-form textarea,
+.auth-form input {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  outline: none;
+  transition: border-color 180ms ease, transform 180ms ease, background 180ms ease;
+}
+
+.search-wrap input:focus,
+.promo-input input:focus,
+.upload-form input:focus,
+.upload-form select:focus,
+.upload-form textarea:focus,
+.auth-form input:focus {
+  border-color: rgba(255, 159, 77, 0.8);
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.topbar-actions,
+.hero-actions,
+.discount-actions,
+.watch-info {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.primary-button,
+.ghost-button,
+.chip,
+.nav-button {
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-weight: 700;
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.primary-button:hover,
+.ghost-button:hover,
+.chip:hover,
+.nav-button:hover {
+  transform: translateY(-2px);
+}
+
+.primary-button:disabled,
+.ghost-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+  box-shadow: none;
+}
+
+.primary-button {
+  color: #11131f;
+  background: linear-gradient(145deg, var(--accent), #ffcb61);
+  box-shadow: 0 14px 28px rgba(255, 107, 61, 0.22);
+}
+
+.ghost-button,
+.chip,
+.nav-button {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.small-button {
+  padding: 10px 14px;
+}
+
+.layout {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: 228px minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.sidebar {
+  padding: 20px 18px;
+  position: sticky;
+  top: 114px;
+  display: grid;
+  gap: 12px;
+}
+
+.nav-button {
+  width: 100%;
+  text-align: left;
+}
+
+.nav-button.is-active,
+.chip.is-active {
+  background: linear-gradient(145deg, rgba(255, 107, 61, 0.26), rgba(67, 210, 209, 0.16));
+  border-color: rgba(255, 159, 77, 0.35);
+}
+
+.sidebar-note {
+  margin-top: 14px;
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+}
+
+.sidebar-note strong,
+.summary-card strong,
+.hero-stats strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 1.3rem;
+}
+
+.content-column {
+  display: grid;
+  gap: 22px;
+}
+
+.hero {
+  overflow: hidden;
+  padding: 28px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(240px, 0.8fr);
+  gap: 26px;
+  position: relative;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: auto -10% -34% auto;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 207, 97, 0.42), transparent 64%);
+}
+
+.hero-copy h2 {
+  max-width: 16ch;
+  font-size: clamp(2.1rem, 4vw, 3.7rem);
+  line-height: 0.94;
+  margin-bottom: 14px;
+}
+
+.hero-copy p:not(.eyebrow) {
+  max-width: 58ch;
+  color: var(--muted);
+  font-size: 1.02rem;
+}
+
+.hero-stats {
+  display: grid;
+  gap: 14px;
+}
+
+.hero-stats article {
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+}
+
+.watch-grid,
+.studio-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) 360px;
+  gap: 22px;
+}
+
+.watch-panel,
+.channels-panel,
+.plans,
+.studio,
+.library {
+  padding: 24px;
+}
+
+.player-shell {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border-radius: 24px;
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.04), transparent 36%),
+    var(--player-gradient, linear-gradient(145deg, #112252, #141d3c 56%, #1f476e));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.player-shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.1), transparent 32%);
+}
+
+#videoPlayer {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+.ad-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    linear-gradient(160deg, rgba(6, 9, 22, 0.7), rgba(6, 9, 22, 0.42)),
+    radial-gradient(circle at top right, rgba(255, 159, 77, 0.22), transparent 28%);
+}
+
+.ad-card {
+  width: min(100%, 520px);
+  padding: 24px;
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(10, 14, 31, 0.88);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
+}
+
+.ad-topline,
+.ad-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+}
+
+.ad-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 107, 61, 0.16);
+  color: var(--accent-soft);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ad-copy,
+.ad-helper {
+  color: var(--muted);
+}
+
+.ad-card h3 {
+  margin-top: 8px;
+  font-size: clamp(1.5rem, 4vw, 2.3rem);
+}
+
+.ad-progress {
+  margin-top: 18px;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ad-progress-fill {
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(145deg, var(--accent), #ffcb61);
+  transition: width 180ms linear;
+}
+
+.ad-actions {
+  margin-top: 18px;
+}
+
+.watch-info,
+.meta-row,
+.section-heading,
+.plan-grid,
+.studio-summary {
+  margin-top: 18px;
+}
+
+.meta-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.watch-description,
+.status-line,
+.comment-card p,
+.channel-entry p,
+.plan-card p,
+.discount-panel p,
+.summary-card,
+#userStatus {
+  color: var(--muted);
+}
+
+.channel-highlight {
+  margin-top: 20px;
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(145deg, rgba(67, 210, 209, 0.14), rgba(255, 255, 255, 0.03));
+}
+
+.comment-block {
+  margin-top: 24px;
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: end;
+}
+
+.comment-list,
+.channel-list,
+.video-grid {
+  margin-top: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.comment-card,
+.channel-entry,
+.summary-card,
+.video-card,
+.plan-card,
+.discount-panel,
+.upload-form {
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.comment-card,
+.channel-entry,
+.summary-card,
+.plan-card,
+.discount-panel {
+  padding: 18px;
+}
+
+.channel-entry {
+  display: grid;
+  gap: 8px;
+  text-align: left;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.channel-entry:hover {
+  transform: translateY(-2px);
+  border-color: rgba(67, 210, 209, 0.28);
+}
+
+.channel-entry strong {
+  font-size: 1.08rem;
+}
+
+.channel-entry.active {
+  background: linear-gradient(145deg, rgba(255, 107, 61, 0.18), rgba(67, 210, 209, 0.12));
+  border-color: rgba(255, 159, 77, 0.32);
+}
+
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.plan-card h4 {
+  margin: 4px 0 10px;
+  font-size: 2rem;
+}
+
+.accent-plan {
+  background: linear-gradient(145deg, rgba(255, 107, 61, 0.18), rgba(255, 255, 255, 0.04));
+}
+
+.premium-plan {
+  background: linear-gradient(145deg, rgba(67, 210, 209, 0.18), rgba(255, 255, 255, 0.04));
+}
+
+.discount-panel {
+  margin-top: 18px;
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: center;
+}
+
+.discount-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  align-items: end;
+}
+
+.promo-input {
+  min-width: 230px;
+  display: grid;
+  gap: 8px;
+}
+
+.studio-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.studio-stack {
+  display: grid;
+  gap: 16px;
+}
+
+.upload-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding: 18px;
+}
+
+.form-heading {
+  display: grid;
+  gap: 4px;
+}
+
+.field-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.form-heading h4,
+.studio-ads h4,
+.studio-videos h4 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.upload-form label,
+.auth-form label {
+  display: grid;
+  gap: 8px;
+}
+
+.upload-form label span,
+.auth-form label span,
+.promo-input span {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.promo-code-list,
+.creator-ad-list,
+.creator-video-list {
+  display: grid;
+  gap: 10px;
+}
+
+.promo-code-list {
+  width: min(100%, 420px);
+}
+
+.promo-code-button {
+  justify-content: start;
+  text-align: left;
+}
+
+.studio-ads {
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.studio-ads .section-heading,
+.studio-videos .section-heading {
+  margin-top: 0;
+}
+
+.creator-ad-card {
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.creator-ad-card strong {
+  display: block;
+  font-size: 1.05rem;
+}
+
+.creator-ad-card p {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.studio-videos {
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.creator-video-card {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.creator-video-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.creator-video-meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.danger-button {
+  justify-self: start;
+  color: #ffd8c7;
+  background: rgba(255, 107, 61, 0.12);
+  border: 1px solid rgba(255, 107, 61, 0.2);
+}
+
+.library .chip-row {
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.video-grid {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.video-card {
+  overflow: hidden;
+  padding: 0;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.video-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 159, 77, 0.28);
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.24);
+}
+
+.thumbnail {
+  aspect-ratio: 16 / 9;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.09), transparent 38%),
+    var(--thumb-gradient, linear-gradient(145deg, #183369, #0d5f71));
+}
+
+.thumbnail span {
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.video-copy {
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.video-copy h4 {
+  font-size: 1.12rem;
+}
+
+.video-copy p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.video-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.92rem;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.48);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 10;
+}
+
+.modal {
+  width: min(480px, 100%);
+  padding: 24px;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text);
+}
+
+.auth-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  min-width: min(420px, calc(100% - 32px));
+  padding: 14px 18px;
+  border-radius: 999px;
+  background: rgba(17, 24, 47, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: var(--shadow);
+  text-align: center;
+  z-index: 15;
+}
+
+@media (max-width: 1180px) {
+  .topbar,
+  .hero,
+  .watch-grid,
+  .studio-grid,
+  .layout,
+  .plan-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+  }
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    width: min(100% - 20px, 1520px);
+    padding-top: 12px;
+  }
+
+  .topbar,
+  .watch-panel,
+  .channels-panel,
+  .plans,
+  .studio,
+  .library,
+  .hero {
+    padding: 18px;
+  }
+
+  .discount-panel,
+  .topbar-actions,
+  .watch-info,
+  .section-heading {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .upload-form {
+    grid-template-columns: 1fr;
+  }
+
+  .studio-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+</style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand-lockup">
+          <div class="brand-mark">V</div>
+          <div>
+            <p class="eyebrow">Stream louder</p>
+            <h1>Viders</h1>
+          </div>
+        </div>
+
+        <label class="search-wrap" for="searchInput">
+          <span>Search videos, channels, vibes</span>
+          <input
+            id="searchInput"
+            type="search"
+            placeholder="Try: gaming, beats, skyline..."
+            autocomplete="off"
+          />
+        </label>
+
+        <div class="topbar-actions">
+          <button class="ghost-button" id="plansButton" type="button">Plans</button>
+          <button class="primary-button" id="authButton" type="button">Sign in to create</button>
+        </div>
+      </header>
+
+      <main class="layout">
+        <aside class="sidebar card">
+          <button class="nav-button is-active" type="button" data-target="heroSection">Home</button>
+          <button class="nav-button" type="button" data-target="librarySection">Explore</button>
+          <button class="nav-button" type="button" data-target="channelsSection">Channels</button>
+          <button class="nav-button" type="button" data-target="plansSection">Plans</button>
+          <button class="nav-button" type="button" data-target="studioSection">Studio</button>
+
+          <div class="sidebar-note">
+            <p class="eyebrow">Built for creators</p>
+            <strong id="planBadge">Viewer mode</strong>
+            <p id="userStatus">Watching as a guest viewer. No sign-in needed.</p>
+          </div>
+        </aside>
+
+        <div class="content-column">
+          <section class="hero card" id="heroSection">
+            <div class="hero-copy">
+              <p class="eyebrow">Video platform concept</p>
+              <h2>A bold YouTube-style home for watching and making videos.</h2>
+              <p>
+                Browse other people's channels and watch featured uploads right away. Sign in only
+                if you want creator plans and content tools of your own.
+              </p>
+              <div class="hero-actions">
+                <button class="primary-button" id="heroWatchButton" type="button">Watch trending</button>
+                <button class="ghost-button" id="heroStudioButton" type="button">Open studio</button>
+              </div>
+            </div>
+
+            <div class="hero-stats">
+              <article>
+                <span class="stat-label">Featured videos</span>
+                <strong id="heroVideoCount">0</strong>
+              </article>
+              <article>
+                <span class="stat-label">Top channels</span>
+                <strong id="heroChannelCount">0</strong>
+              </article>
+              <article>
+                <span class="stat-label">Your plan</span>
+                <strong id="heroPlanName">Viewer</strong>
+              </article>
+            </div>
+          </section>
+
+          <section class="watch-grid">
+            <article class="watch-panel card">
+              <div class="player-shell" id="playerShell">
+                <video id="videoPlayer" controls playsinline></video>
+                <div class="ad-overlay hidden" id="adOverlay">
+                  <div class="ad-card">
+                    <div class="ad-topline">
+                      <span class="ad-badge">Ad</span>
+                      <span id="adCountdownLabel">5s</span>
+                    </div>
+                    <p class="eyebrow">Sponsored message</p>
+                    <h3 id="adTitle">Viders Pro</h3>
+                    <p class="ad-copy" id="adCopy">
+                      Creator tools, featured placements, and analytics for channels that want to grow.
+                    </p>
+                    <div class="ad-progress">
+                      <div class="ad-progress-fill" id="adProgressFill"></div>
+                    </div>
+                    <div class="ad-actions">
+                      <span class="ad-helper" id="adHelperText">Skip available in 3s</span>
+                      <button class="ghost-button small-button" id="skipAdButton" type="button" disabled>
+                        Skip ad
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="watch-info">
+                <div>
+                  <p class="eyebrow" id="watchCategory">Featured</p>
+                  <h3 id="watchTitle">Loading video...</h3>
+                </div>
+                <button class="ghost-button small-button" id="watchChannelButton" type="button">
+                  Open channel
+                </button>
+              </div>
+
+              <div class="meta-row">
+                <span id="watchMeta">0 views</span>
+                <span id="watchLength">00:00</span>
+              </div>
+
+              <p class="watch-description" id="watchDescription"></p>
+              <div class="channel-highlight" id="channelHighlight"></div>
+
+              <div class="comment-block">
+                <div class="section-heading">
+                  <h3>What people are saying</h3>
+                  <span id="commentCount">0 comments</span>
+                </div>
+                <div class="comment-list" id="commentList"></div>
+              </div>
+            </article>
+
+            <article class="channels-panel card" id="channelsSection">
+              <div class="section-heading">
+                <h3>Channel views</h3>
+                <span>Tap a channel to filter the feed</span>
+              </div>
+              <div class="channel-list" id="channelList"></div>
+            </article>
+          </section>
+
+          <section class="plans card" id="plansSection">
+            <div class="section-heading">
+              <h3>Plans</h3>
+              <span>Viewer and Creator see ads on long videos. Pro is ad-free watch-only. Premium does both.</span>
+            </div>
+
+            <div class="plan-grid">
+              <article class="plan-card">
+                <p class="eyebrow">Viewer</p>
+                <h4>Free</h4>
+                <p>Watch videos and explore channels instantly as a guest, with no sign-in required.</p>
+                <button class="ghost-button small-button" type="button" data-plan="Viewer">
+                  Stay on Viewer
+                </button>
+              </article>
+
+              <article class="plan-card accent-plan">
+                <p class="eyebrow">Creator</p>
+                <h4>$9/mo</h4>
+                <p>Upload videos, build your channel, and create your own pre-roll ads. Ads still play while you watch.</p>
+                <button class="primary-button small-button" type="button" data-plan="Creator">
+                  Choose Creator
+                </button>
+              </article>
+
+              <article class="plan-card">
+                <p class="eyebrow">Pro</p>
+                <h4>$19 once</h4>
+                <p>Watch ad-free across Viders, but this plan is view-only and does not publish videos or ads.</p>
+                <button class="primary-button small-button" type="button" data-plan="Pro">
+                  Choose Pro
+                </button>
+              </article>
+
+              <article class="plan-card premium-plan">
+                <p class="eyebrow">Premium</p>
+                <h4>$20/mo</h4>
+                <p>Create videos, build ad campaigns, and watch everything on Viders without ads.</p>
+                <button class="primary-button small-button" type="button" data-plan="Premium">
+                  Choose Premium
+                </button>
+              </article>
+            </div>
+
+            <div class="discount-panel">
+              <div>
+                <p class="eyebrow">Discount button</p>
+                <h4>Free awesome codes for every paid plan</h4>
+                <p>
+                  Use the demo codes below, load one into the promo box, and apply it after
+                  signing in to make Creator, Pro, or Premium free.
+                </p>
+              </div>
+
+              <div class="discount-actions">
+                <div class="promo-code-list" id="promoCodeList">
+                  <button class="chip promo-code-button" type="button" data-code="AWESOMECREATORFREE">
+                    Creator: AWESOMECREATORFREE
+                  </button>
+                  <button class="chip promo-code-button" type="button" data-code="AWESOMEPROFREE">
+                    Pro: AWESOMEPROFREE
+                  </button>
+                  <button class="chip promo-code-button" type="button" data-code="AWESOMEPREMIUMFREE">
+                    Premium: AWESOMEPREMIUMFREE
+                  </button>
+                </div>
+                <label class="promo-input">
+                  <span>Promo code</span>
+                  <input id="promoCodeInput" type="text" value="AWESOMECREATORFREE" />
+                </label>
+                <button class="primary-button" id="applyPromoButton" type="button">Apply code</button>
+              </div>
+            </div>
+            <p class="status-line" id="planMessage"></p>
+          </section>
+
+          <section class="studio card" id="studioSection">
+            <div class="section-heading">
+              <h3>Creator studio</h3>
+              <span>Creator and Premium can publish videos and make ads. Pro stays ad-free but watch-only.</span>
+            </div>
+
+            <div class="studio-grid">
+              <article class="studio-summary">
+                <div class="summary-card">
+                  <span class="stat-label">Account</span>
+                  <strong id="summaryAccount">Guest</strong>
+                </div>
+                <div class="summary-card">
+                  <span class="stat-label">Active plan</span>
+                  <strong id="summaryPlan">Viewer</strong>
+                </div>
+                <div class="summary-card">
+                  <span class="stat-label">Uploads</span>
+                  <strong id="summaryUploads">0</strong>
+                </div>
+                <div class="summary-card">
+                  <span class="stat-label">Channel views</span>
+                  <strong id="summaryViews">0</strong>
+                </div>
+                <div class="summary-card">
+                  <span class="stat-label">Campaign ads</span>
+                  <strong id="summaryAds">0</strong>
+                </div>
+              </article>
+
+              <div class="studio-stack">
+                <form class="upload-form" id="uploadForm">
+                  <div class="form-heading full-width">
+                    <p class="eyebrow">Video upload</p>
+                    <h4>Publish to Viders</h4>
+                    <p class="field-note">
+                      Upload a direct video URL or pick a video file from this device. Local files stay in this browser on this device.
+                    </p>
+                  </div>
+
+                  <label>
+                    <span>Video title</span>
+                    <input name="title" type="text" placeholder="My first Viders upload" required />
+                  </label>
+
+                  <label>
+                    <span>Category</span>
+                    <select name="category">
+                      <option>Gaming</option>
+                      <option>Music</option>
+                      <option>Design</option>
+                      <option>Lifestyle</option>
+                      <option>Education</option>
+                      <option>Tech</option>
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>Video URL</span>
+                    <input
+                      name="src"
+                      type="url"
+                      placeholder="https://example.com/video.mp4"
+                      inputmode="url"
+                    />
+                  </label>
+
+                  <label>
+                    <span>Video file</span>
+                    <input id="videoFileInput" name="videoFile" type="file" accept="video/*" />
+                  </label>
+
+                  <label class="full-width">
+                    <span>Description</span>
+                    <textarea
+                      name="description"
+                      rows="4"
+                      placeholder="Tell people what your video is about..."
+                      required
+                    ></textarea>
+                  </label>
+
+                  <button class="primary-button" id="publishButton" type="submit">Publish to Viders</button>
+                  <p class="status-line" id="studioMessage"></p>
+                </form>
+
+                <form class="upload-form ad-form" id="adForm">
+                  <div class="form-heading full-width">
+                    <p class="eyebrow">Ad builder</p>
+                    <h4>Create a pre-roll ad</h4>
+                  </div>
+
+                  <label>
+                    <span>Sponsor name</span>
+                    <input name="sponsor" type="text" placeholder="Awesome Energy" required />
+                  </label>
+
+                  <label>
+                    <span>Headline</span>
+                    <input name="headline" type="text" placeholder="Charge your next upload" required />
+                  </label>
+
+                  <label class="full-width">
+                    <span>Ad copy</span>
+                    <textarea
+                      name="copy"
+                      rows="3"
+                      placeholder="Tell viewers why they should care about your brand..."
+                      required
+                    ></textarea>
+                  </label>
+
+                  <button class="primary-button" id="createAdButton" type="submit">Launch ad campaign</button>
+                  <p class="status-line" id="adMessage"></p>
+                </form>
+
+                <div class="studio-ads">
+                  <div class="section-heading">
+                    <h4>Your creator ads</h4>
+                    <span>These rotate before 1 minute+ videos for ad-supported viewers</span>
+                  </div>
+                  <div class="creator-ad-list" id="creatorAdList"></div>
+                </div>
+
+                <div class="studio-videos">
+                  <div class="section-heading">
+                    <h4>Your videos</h4>
+                    <span>Delete videos you uploaded from your own Viders account</span>
+                  </div>
+                  <div class="creator-video-list" id="creatorVideoList"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="library card" id="librarySection">
+            <div class="section-heading">
+              <h3>Explore videos</h3>
+              <span>Search, filter, and jump into the watch panel</span>
+            </div>
+
+            <div class="chip-row">
+              <button class="chip is-active" type="button" data-category="All">All</button>
+              <button class="chip" type="button" data-category="Gaming">Gaming</button>
+              <button class="chip" type="button" data-category="Music">Music</button>
+              <button class="chip" type="button" data-category="Design">Design</button>
+              <button class="chip" type="button" data-category="Lifestyle">Lifestyle</button>
+              <button class="chip" type="button" data-category="Education">Education</button>
+              <button class="chip" type="button" data-category="Tech">Tech</button>
+            </div>
+
+            <div class="video-grid" id="videoGrid"></div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <div class="modal-backdrop hidden" id="authModal">
+      <div class="modal card">
+        <button class="modal-close" id="closeAuthModal" type="button" aria-label="Close sign in">
+          x
+        </button>
+        <p class="eyebrow">Optional sign in</p>
+        <h3>Join Viders</h3>
+        <p>Viewers can keep watching as guests. Sign in to unlock Creator, Pro, or Premium features.</p>
+
+        <form id="authForm" class="auth-form">
+          <label>
+            <span>Display name</span>
+            <input name="name" type="text" placeholder="Viders Creator" required />
+          </label>
+          <label>
+            <span>Email</span>
+            <input name="email" type="email" placeholder="creator@example.com" required />
+          </label>
+          <button class="primary-button" type="submit">Continue</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="toast hidden" id="toast"></div>
+
+    <script>
+const sampleSource = "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+const mediaDbName = "viders-media";
+const mediaStoreName = "video-files";
+
+const seededVideos = [
+  {
+    id: "skyline-sprint",
+    title: "Skyline Sprint Build Montage",
+    channel: "Nova Lane",
+    category: "Gaming",
+    length: "12:41",
+    views: 1243000,
+    subscribers: 512000,
+    uploadedAt: "2 days ago",
+    description:
+      "Fast city parkour, layered edits, and a clean creator breakdown make this one of the most replayed gaming clips on Viders.",
+    src: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+    gradient: "linear-gradient(145deg, #243b73, #0f6da6 52%, #2bc4c9)",
+    comments: [
+      { author: "PixelDash", text: "The transitions are so clean. I would watch the full breakdown next." },
+      { author: "NeonMaps", text: "This channel always makes movement edits feel huge." }
+    ]
+  },
+  {
+    id: "midnight-beats",
+    title: "Midnight Beats Rooftop Session",
+    channel: "Cass Ember",
+    category: "Music",
+    length: "08:32",
+    views: 892400,
+    subscribers: 341000,
+    uploadedAt: "5 days ago",
+    description:
+      "A late-night rooftop performance with glowing city lights and a locked-in live mix for headphone listeners.",
+    src: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+    gradient: "linear-gradient(145deg, #5b2245, #a93d64 54%, #ff9f4d)",
+    comments: [
+      { author: "Riven", text: "The bass drop at the halfway mark is absurdly good." },
+      { author: "Theo", text: "This feels like a real featured music premiere." }
+    ]
+  },
+  {
+    id: "studio-tour",
+    title: "Inside My Tiny Design Studio",
+    channel: "Mira Vale",
+    category: "Design",
+    length: "10:09",
+    views: 564200,
+    subscribers: 218000,
+    uploadedAt: "1 week ago",
+    description:
+      "Desk setup, lighting tips, sketch walls, and a fast walkthrough of the workflow behind a compact creative room.",
+    src: "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+    gradient: "linear-gradient(145deg, #135c53, #1f8a70 54%, #f2c94c)",
+    comments: [
+      { author: "Aster", text: "The lighting section alone is worth saving." },
+      { author: "Lu", text: "This made me want to reorganize my whole room." }
+    ]
+  },
+  {
+    id: "smart-home-hacks",
+    title: "Smart Home Tricks That Actually Help",
+    channel: "Kian Orbit",
+    category: "Tech",
+    length: "14:25",
+    views: 1300800,
+    subscribers: 660000,
+    uploadedAt: "3 days ago",
+    description:
+      "No gimmicks here. Just practical automations, cable-clean setups, and tech that improves a daily routine.",
+    src: "https://storage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
+    gradient: "linear-gradient(145deg, #1b2449, #2f4cc7 54%, #43d2d1)",
+    comments: [
+      { author: "Dez", text: "The lighting automation was the first smart-home tip I actually copied." },
+      { author: "Ivo", text: "This channel's view count makes sense. Every upload is useful." }
+    ]
+  },
+  {
+    id: "weekend-reset",
+    title: "Weekend Reset Routine",
+    channel: "Sunny Harbor",
+    category: "Lifestyle",
+    length: "09:18",
+    views: 447900,
+    subscribers: 193000,
+    uploadedAt: "6 days ago",
+    description:
+      "A calm reset routine that moves through planning, meal prep, and a simple Sunday edit session.",
+    src: "https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+    gradient: "linear-gradient(145deg, #5f3b17, #b36a2e 54%, #ffd370)",
+    comments: [
+      { author: "Mae", text: "This is exactly the kind of lifestyle video I leave on while planning my week." },
+      { author: "Jules", text: "Love the balance between cozy and practical." }
+    ]
+  },
+  {
+    id: "math-energy",
+    title: "Math Tricks With Real Energy",
+    channel: "Professor Loop",
+    category: "Education",
+    length: "11:56",
+    views: 739500,
+    subscribers: 278000,
+    uploadedAt: "4 days ago",
+    description:
+      "A high-energy lesson that turns quick pattern recognition into something visual, memorable, and fun.",
+    src: "https://storage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4",
+    gradient: "linear-gradient(145deg, #16394f, #1b5f7b 54%, #ff8c42)",
+    comments: [
+      { author: "Milo", text: "Finally, a lesson video that feels alive." },
+      { author: "Rae", text: "Would absolutely subscribe after one watch." }
+    ]
+  }
+];
+
+const storageKey = "viders.state";
+
+const defaultState = {
+  currentVideoId: seededVideos[0].id,
+  selectedCategory: "All",
+  searchQuery: "",
+  activeChannel: "All",
+  user: null,
+  plan: "Viewer",
+  promoCode: "",
+  uploads: [],
+  ads: [],
+  viewBoosts: {}
+};
+
+const planCatalog = {
+  Viewer: {
+    canUpload: false,
+    canCreateAds: false,
+    adFree: false
+  },
+  Creator: {
+    canUpload: true,
+    canCreateAds: true,
+    adFree: false
+  },
+  Pro: {
+    canUpload: false,
+    canCreateAds: false,
+    adFree: true
+  },
+  Premium: {
+    canUpload: true,
+    canCreateAds: true,
+    adFree: true
+  }
+};
+
+const promoCodeCatalog = {
+  AWESOMECREATORFREE: {
+    plan: "Creator",
+    message: "Promo applied. Creator is now free on your account in this Viders demo."
+  },
+  AWESOMEPROFREE: {
+    plan: "Pro",
+    message: "Promo applied. Pro is now free on your account in this Viders demo."
+  },
+  AWESOMEPREMIUMFREE: {
+    plan: "Premium",
+    message: "Promo applied. Premium is now free on your account in this Viders demo."
+  }
+};
+
+const adLibrary = [
+  {
+    sponsor: "Viders Pro",
+    copy: "Featured placement, creator analytics, and channel growth tools built right into your studio."
+  },
+  {
+    sponsor: "Nova Mic",
+    copy: "Capture cleaner voiceovers and sharper live sessions with studio-ready sound in one compact setup."
+  },
+  {
+    sponsor: "FrameForge",
+    copy: "Design thumbnails, social banners, and fast channel art packs without slowing down your workflow."
+  }
+];
+
+const adConfig = {
+  durationSeconds: 5,
+  skipAfterSeconds: 3
+};
+
+const adSession = {
+  videoId: null,
+  active: false,
+  finished: false,
+  remainingSeconds: 0,
+  totalSeconds: adConfig.durationSeconds,
+  ad: adLibrary[0],
+  timer: null
+};
+
+const elements = {
+  authButton: document.querySelector("#authButton"),
+  plansButton: document.querySelector("#plansButton"),
+  planBadge: document.querySelector("#planBadge"),
+  userStatus: document.querySelector("#userStatus"),
+  heroPlanName: document.querySelector("#heroPlanName"),
+  heroVideoCount: document.querySelector("#heroVideoCount"),
+  heroChannelCount: document.querySelector("#heroChannelCount"),
+  videoPlayer: document.querySelector("#videoPlayer"),
+  playerShell: document.querySelector("#playerShell"),
+  adOverlay: document.querySelector("#adOverlay"),
+  adTitle: document.querySelector("#adTitle"),
+  adCopy: document.querySelector("#adCopy"),
+  adCountdownLabel: document.querySelector("#adCountdownLabel"),
+  adHelperText: document.querySelector("#adHelperText"),
+  adProgressFill: document.querySelector("#adProgressFill"),
+  skipAdButton: document.querySelector("#skipAdButton"),
+  watchTitle: document.querySelector("#watchTitle"),
+  watchCategory: document.querySelector("#watchCategory"),
+  watchMeta: document.querySelector("#watchMeta"),
+  watchLength: document.querySelector("#watchLength"),
+  watchDescription: document.querySelector("#watchDescription"),
+  channelHighlight: document.querySelector("#channelHighlight"),
+  commentCount: document.querySelector("#commentCount"),
+  commentList: document.querySelector("#commentList"),
+  channelList: document.querySelector("#channelList"),
+  videoGrid: document.querySelector("#videoGrid"),
+  searchInput: document.querySelector("#searchInput"),
+  categoryChips: [...document.querySelectorAll(".chip")],
+  navButtons: [...document.querySelectorAll(".nav-button")],
+  heroWatchButton: document.querySelector("#heroWatchButton"),
+  heroStudioButton: document.querySelector("#heroStudioButton"),
+  watchChannelButton: document.querySelector("#watchChannelButton"),
+  authModal: document.querySelector("#authModal"),
+  closeAuthModal: document.querySelector("#closeAuthModal"),
+  authForm: document.querySelector("#authForm"),
+  planButtons: [...document.querySelectorAll("[data-plan]")],
+  promoCodeList: document.querySelector("#promoCodeList"),
+  promoCodeInput: document.querySelector("#promoCodeInput"),
+  applyPromoButton: document.querySelector("#applyPromoButton"),
+  planMessage: document.querySelector("#planMessage"),
+  uploadForm: document.querySelector("#uploadForm"),
+  videoFileInput: document.querySelector("#videoFileInput"),
+  publishButton: document.querySelector("#publishButton"),
+  studioMessage: document.querySelector("#studioMessage"),
+  adForm: document.querySelector("#adForm"),
+  createAdButton: document.querySelector("#createAdButton"),
+  adMessage: document.querySelector("#adMessage"),
+  creatorAdList: document.querySelector("#creatorAdList"),
+  creatorVideoList: document.querySelector("#creatorVideoList"),
+  summaryAccount: document.querySelector("#summaryAccount"),
+  summaryPlan: document.querySelector("#summaryPlan"),
+  summaryUploads: document.querySelector("#summaryUploads"),
+  summaryViews: document.querySelector("#summaryViews"),
+  summaryAds: document.querySelector("#summaryAds"),
+  toast: document.querySelector("#toast")
+};
+
+let state = loadState();
+const mediaRuntime = {
+  dbPromise: null,
+  fileUrls: new Map(),
+  pendingKeys: new Set()
+};
+
+function loadState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(storageKey) || "null");
+    const nextState = {
+      ...defaultState,
+      ...saved,
+      uploads: Array.isArray(saved?.uploads) ? saved.uploads : [],
+      ads: Array.isArray(saved?.ads) ? saved.ads : [],
+      viewBoosts: saved?.viewBoosts || {}
+    };
+
+    if (!nextState.user) {
+      nextState.plan = "Viewer";
+    }
+
+    if (!planCatalog[nextState.plan]) {
+      nextState.plan = nextState.user ? "Creator" : "Viewer";
+    }
+
+    return nextState;
+  } catch {
+    return { ...defaultState };
+  }
+}
+
+function saveState() {
+  localStorage.setItem(storageKey, JSON.stringify(state));
+}
+
+function openMediaDb() {
+  if (!("indexedDB" in window)) {
+    return Promise.reject(new Error("IndexedDB is not available."));
+  }
+
+  if (!mediaRuntime.dbPromise) {
+    mediaRuntime.dbPromise = new Promise((resolve, reject) => {
+      const request = window.indexedDB.open(mediaDbName, 1);
+
+      request.onupgradeneeded = () => {
+        const database = request.result;
+        if (!database.objectStoreNames.contains(mediaStoreName)) {
+          database.createObjectStore(mediaStoreName, { keyPath: "key" });
+        }
+      };
+
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error || new Error("Failed to open media database."));
+    });
+  }
+
+  return mediaRuntime.dbPromise;
+}
+
+async function putStoredVideoFile(fileKey, fileBlob) {
+  const database = await openMediaDb();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(mediaStoreName, "readwrite");
+    const store = transaction.objectStore(mediaStoreName);
+    const request = store.put({
+      key: fileKey,
+      blob: fileBlob,
+      updatedAt: Date.now()
+    });
+
+    request.onsuccess = () => resolve(true);
+    request.onerror = () => reject(request.error || new Error("Failed to store the uploaded video file."));
+  });
+}
+
+async function getStoredVideoFile(fileKey) {
+  const database = await openMediaDb();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(mediaStoreName, "readonly");
+    const store = transaction.objectStore(mediaStoreName);
+    const request = store.get(fileKey);
+
+    request.onsuccess = () => resolve(request.result?.blob || null);
+    request.onerror = () => reject(request.error || new Error("Failed to read the uploaded video file."));
+  });
+}
+
+async function deleteStoredVideoFile(fileKey) {
+  const database = await openMediaDb();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(mediaStoreName, "readwrite");
+    const store = transaction.objectStore(mediaStoreName);
+    const request = store.delete(fileKey);
+
+    request.onsuccess = () => resolve(true);
+    request.onerror = () => reject(request.error || new Error("Failed to delete the uploaded video file."));
+  });
+}
+
+function revokeStoredVideoUrl(fileKey) {
+  const existingUrl = mediaRuntime.fileUrls.get(fileKey);
+  if (existingUrl) {
+    URL.revokeObjectURL(existingUrl);
+    mediaRuntime.fileUrls.delete(fileKey);
+  }
+}
+
+function formatDurationLabel(totalSeconds) {
+  const safeSeconds = Math.max(1, Math.round(totalSeconds || 0));
+  const minutes = Math.floor(safeSeconds / 60);
+  const seconds = safeSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function formatNumber(value) {
+  return new Intl.NumberFormat("en-US", {
+    notation: value >= 1000 ? "compact" : "standard",
+    maximumFractionDigits: 1
+  }).format(value);
+}
+
+async function getVideoFileDurationLabel(fileBlob) {
+  const tempUrl = URL.createObjectURL(fileBlob);
+
+  return new Promise((resolve) => {
+    const probe = document.createElement("video");
+    probe.preload = "metadata";
+    probe.onloadedmetadata = () => {
+      const duration = Number.isFinite(probe.duration) ? probe.duration : 360;
+      URL.revokeObjectURL(tempUrl);
+      resolve(formatDurationLabel(duration));
+    };
+    probe.onerror = () => {
+      URL.revokeObjectURL(tempUrl);
+      resolve("06:00");
+    };
+    probe.src = tempUrl;
+  });
+}
+
+function getPlanDetails(plan = state.plan) {
+  return planCatalog[plan] || planCatalog.Viewer;
+}
+
+function canCreate() {
+  return Boolean(state.user) && getPlanDetails().canUpload;
+}
+
+function canCreateAds() {
+  return Boolean(state.user) && getPlanDetails().canCreateAds;
+}
+
+function hasAdFreePlayback() {
+  return getPlanDetails().adFree;
+}
+
+function getUserUploads() {
+  if (!state.user) {
+    return [];
+  }
+
+  return state.uploads.filter((video) => video.channel === state.user.name);
+}
+
+function getUserAds() {
+  if (!state.user) {
+    return [];
+  }
+
+  return state.ads.filter((ad) => ad.owner === state.user.name);
+}
+
+function resolveVideoSrc(video) {
+  if (video?.sourceType === "file") {
+    return mediaRuntime.fileUrls.get(video.fileKey) || "";
+  }
+
+  return video?.src || "";
+}
+
+function ensureUploadSources() {
+  state.uploads
+    .filter((video) => video.sourceType === "file" && video.fileKey)
+    .forEach(async (video) => {
+      if (mediaRuntime.fileUrls.has(video.fileKey) || mediaRuntime.pendingKeys.has(video.fileKey)) {
+        return;
+      }
+
+      mediaRuntime.pendingKeys.add(video.fileKey);
+
+      try {
+        const storedBlob = await getStoredVideoFile(video.fileKey);
+        if (storedBlob) {
+          revokeStoredVideoUrl(video.fileKey);
+          mediaRuntime.fileUrls.set(video.fileKey, URL.createObjectURL(storedBlob));
+          render();
+        }
+      } catch {
+        // Keep the upload metadata visible even if the file blob cannot be restored.
+      } finally {
+        mediaRuntime.pendingKeys.delete(video.fileKey);
+      }
+    });
+}
+
+function getAllAds() {
+  return [...adLibrary, ...state.ads].map((ad) => ({
+    ...ad,
+    headline: ad.headline || ad.sponsor
+  }));
+}
+
+function parseDurationSeconds(lengthText) {
+  const parts = String(lengthText || "")
+    .split(":")
+    .map((part) => Number(part));
+
+  if (!parts.length || parts.some((part) => Number.isNaN(part))) {
+    return 0;
+  }
+
+  return parts.reduce((total, part) => total * 60 + part, 0);
+}
+
+function getAdForVideo(video) {
+  const ads = getAllAds();
+  const key = String(video?.id || "")
+    .split("")
+    .reduce((sum, character) => sum + character.charCodeAt(0), 0);
+
+  return ads[key % ads.length];
+}
+
+function videoNeedsAd(video) {
+  return parseDurationSeconds(video?.length) > 60 && !hasAdFreePlayback();
+}
+
+function clearAdTimer() {
+  if (adSession.timer) {
+    clearInterval(adSession.timer);
+    adSession.timer = null;
+  }
+}
+
+function finishAdSession() {
+  clearAdTimer();
+  adSession.active = false;
+  adSession.finished = true;
+  adSession.remainingSeconds = 0;
+  renderAdOverlay(getCurrentVideo());
+}
+
+function tickAdSession() {
+  adSession.remainingSeconds = Math.max(0, adSession.remainingSeconds - 1);
+
+  if (adSession.remainingSeconds <= 0) {
+    finishAdSession();
+    return;
+  }
+
+  renderAdOverlay(getCurrentVideo());
+}
+
+function startAdSession(video) {
+  clearAdTimer();
+  adSession.videoId = video.id;
+  adSession.active = true;
+  adSession.finished = false;
+  adSession.totalSeconds = adConfig.durationSeconds;
+  adSession.remainingSeconds = adConfig.durationSeconds;
+  adSession.ad = getAdForVideo(video);
+  adSession.timer = setInterval(tickAdSession, 1000);
+}
+
+function syncAdSession(video) {
+  if (!videoNeedsAd(video)) {
+    clearAdTimer();
+    adSession.videoId = video.id;
+    adSession.active = false;
+    adSession.finished = true;
+    adSession.remainingSeconds = 0;
+    adSession.ad = getAdForVideo(video);
+    return;
+  }
+
+  if (adSession.videoId !== video.id) {
+    startAdSession(video);
+    return;
+  }
+
+  if (!adSession.active && !adSession.finished) {
+    startAdSession(video);
+  }
+}
+
+function renderAdOverlay(video) {
+  const needsAd = videoNeedsAd(video);
+  const isVisible = needsAd && adSession.active && adSession.videoId === video.id;
+  const progress = adSession.totalSeconds
+    ? ((adSession.totalSeconds - adSession.remainingSeconds) / adSession.totalSeconds) * 100
+    : 100;
+  const canSkip = adSession.remainingSeconds <= adConfig.skipAfterSeconds;
+
+  elements.videoPlayer.controls = !isVisible;
+
+  if (isVisible) {
+    elements.videoPlayer.pause();
+    elements.adOverlay.classList.remove("hidden");
+    elements.adTitle.textContent = adSession.ad.headline || adSession.ad.sponsor;
+    elements.adCopy.textContent =
+      adSession.ad.headline && adSession.ad.sponsor !== adSession.ad.headline
+        ? `${adSession.ad.copy} Sponsored by ${adSession.ad.sponsor}.`
+        : adSession.ad.copy;
+    elements.adCountdownLabel.textContent = `${adSession.remainingSeconds}s`;
+    elements.adHelperText.textContent = canSkip
+      ? "You can skip this ad now."
+      : `Skip available in ${Math.max(1, adSession.remainingSeconds - adConfig.skipAfterSeconds)}s`;
+    elements.adProgressFill.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+    elements.skipAdButton.disabled = !canSkip;
+    return;
+  }
+
+  elements.adOverlay.classList.add("hidden");
+  elements.adProgressFill.style.width = "100%";
+  elements.skipAdButton.disabled = false;
+  elements.adCountdownLabel.textContent = "0s";
+  elements.adHelperText.textContent = hasAdFreePlayback()
+    ? "Your plan removes ads on playback."
+    : needsAd
+      ? "Ad complete. Your video is ready."
+      : "This video is short enough to play without ads.";
+}
+
+function getAllVideos() {
+  return [...seededVideos, ...state.uploads].map((video) => {
+    const bonusViews = Number(state.viewBoosts[video.id] || 0);
+    return {
+      ...video,
+      resolvedSrc: resolveVideoSrc(video),
+      views: Number(video.views || 0) + bonusViews,
+      comments: Array.isArray(video.comments) ? video.comments : []
+    };
+  });
+}
+
+function getCurrentVideo() {
+  const videos = getAllVideos();
+  return videos.find((video) => video.id === state.currentVideoId) || videos[0];
+}
+
+function getChannelStats() {
+  const stats = new Map();
+
+  getAllVideos().forEach((video) => {
+    if (!stats.has(video.channel)) {
+      stats.set(video.channel, {
+        name: video.channel,
+        views: 0,
+        videos: 0,
+        subscribers: Number(video.subscribers || 0)
+      });
+    }
+
+    const channel = stats.get(video.channel);
+    channel.views += Number(video.views || 0);
+    channel.videos += 1;
+    channel.subscribers = Math.max(channel.subscribers, Number(video.subscribers || 0));
+  });
+
+  return [...stats.values()].sort((left, right) => right.views - left.views);
+}
+
+function getUserChannel() {
+  if (!state.user) {
+    return null;
+  }
+
+  return getChannelStats().find((channel) => channel.name === state.user.name) || null;
+}
+
+function showToast(message) {
+  elements.toast.textContent = message;
+  elements.toast.classList.remove("hidden");
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => {
+    elements.toast.classList.add("hidden");
+  }, 2600);
+}
+
+function openAuthModal() {
+  elements.authModal.classList.remove("hidden");
+}
+
+function closeAuthModal() {
+  elements.authModal.classList.add("hidden");
+}
+
+function scrollToSection(targetId) {
+  document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  elements.navButtons.forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.target === targetId);
+  });
+}
+
+function watchVideo(videoId, options = {}) {
+  const video = getAllVideos().find((item) => item.id === videoId);
+  if (!video) {
+    return;
+  }
+
+  if (!options.skipViewBoost) {
+    state.viewBoosts[video.id] = Number(state.viewBoosts[video.id] || 0) + 1;
+  }
+
+  if (videoNeedsAd(video)) {
+    startAdSession(video);
+  } else {
+    syncAdSession(video);
+  }
+  state.currentVideoId = video.id;
+  saveState();
+  render();
+
+  if (options.scrollIntoView) {
+    elements.playerShell.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+}
+
+function renderWatchPanel() {
+  const video = getCurrentVideo();
+  if (!video) {
+    return;
+  }
+
+  syncAdSession(video);
+  elements.videoPlayer.src = video.resolvedSrc || video.src || sampleSource;
+  elements.videoPlayer.load();
+  elements.playerShell.style.setProperty("--player-gradient", video.gradient);
+  elements.watchTitle.textContent = video.title;
+  elements.watchCategory.textContent = `${video.category} feature`;
+  elements.watchMeta.textContent = `${formatNumber(video.views)} views - ${video.uploadedAt}`;
+  elements.watchLength.textContent = video.length;
+  elements.watchDescription.textContent = video.description;
+  elements.watchChannelButton.textContent = `Open ${video.channel}`;
+  elements.channelHighlight.innerHTML = `
+    <p class="eyebrow">Channel spotlight</p>
+    <h3>${video.channel}</h3>
+    <p>${formatNumber(video.subscribers || 0)} subscribers - ${formatNumber(video.views)} total views on this upload</p>
+  `;
+
+  elements.commentCount.textContent = `${video.comments.length} comments`;
+  elements.commentList.innerHTML = video.comments
+    .map(
+      (comment) => `
+        <article class="comment-card">
+          <strong>${comment.author}</strong>
+          <p>${comment.text}</p>
+        </article>
+      `
+    )
+    .join("");
+
+  renderAdOverlay(video);
+}
+
+function renderChannels() {
+  const channels = getChannelStats();
+  elements.channelList.innerHTML = channels
+    .map(
+      (channel) => `
+        <button class="channel-entry ${state.activeChannel === channel.name ? "active" : ""}" type="button" data-channel="${channel.name}">
+          <strong>${channel.name}</strong>
+          <p>${formatNumber(channel.views)} channel views</p>
+          <p>${formatNumber(channel.subscribers)} subscribers - ${channel.videos} videos</p>
+        </button>
+      `
+    )
+    .join("");
+
+  elements.heroChannelCount.textContent = channels.length;
+}
+
+function renderVideoGrid() {
+  const query = state.searchQuery.trim().toLowerCase();
+  const filteredVideos = getAllVideos().filter((video) => {
+    const matchesCategory = state.selectedCategory === "All" || video.category === state.selectedCategory;
+    const matchesChannel = state.activeChannel === "All" || video.channel === state.activeChannel;
+    const haystack = `${video.title} ${video.channel} ${video.category} ${video.description}`.toLowerCase();
+    const matchesQuery = !query || haystack.includes(query);
+    return matchesCategory && matchesChannel && matchesQuery;
+  });
+
+  elements.videoGrid.innerHTML = filteredVideos
+    .map(
+      (video) => `
+        <button class="video-card" type="button" data-video-id="${video.id}">
+          <div class="thumbnail" style="--thumb-gradient:${video.gradient}">
+            <span>${video.category}</span>
+            <span>${video.length}</span>
+          </div>
+          <div class="video-copy">
+            <h4>${video.title}</h4>
+            <p>${video.channel}</p>
+            <div class="video-meta">
+              <span>${formatNumber(video.views)} views</span>
+              <span>${video.uploadedAt}</span>
+            </div>
+          </div>
+        </button>
+      `
+    )
+    .join("");
+
+  if (!filteredVideos.length) {
+    elements.videoGrid.innerHTML = `
+      <article class="video-card">
+        <div class="video-copy">
+          <h4>No videos match yet</h4>
+          <p>Try a new search term, switch categories, or click a different channel.</p>
+        </div>
+      </article>
+    `;
+  }
+
+  elements.heroVideoCount.textContent = getAllVideos().length;
+}
+
+function renderCreatorAds() {
+  const userAds = getUserAds();
+
+  if (!userAds.length) {
+    elements.creatorAdList.innerHTML = `
+      <article class="creator-ad-card">
+        <strong>No ad campaigns yet</strong>
+        <p>Create a campaign here and it will rotate before 1 minute+ videos for ad-supported viewers.</p>
+      </article>
+    `;
+    return;
+  }
+
+  elements.creatorAdList.innerHTML = userAds
+    .map(
+      (ad) => `
+        <article class="creator-ad-card">
+          <strong>${ad.headline}</strong>
+          <p>${ad.copy}</p>
+          <p>Sponsored by ${ad.sponsor}</p>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function renderCreatorVideos() {
+  const userVideos = getUserUploads();
+
+  if (!userVideos.length) {
+    elements.creatorVideoList.innerHTML = `
+      <article class="creator-video-card">
+        <strong>No uploads yet</strong>
+        <p>Publish a video from a URL or a local file, then manage it here.</p>
+      </article>
+    `;
+    return;
+  }
+
+  elements.creatorVideoList.innerHTML = userVideos
+    .map((video) => {
+      const sourceLabel = video.sourceType === "file" ? "Local file upload" : "Video URL";
+      return `
+        <article class="creator-video-card">
+          <strong>${video.title}</strong>
+          <div class="creator-video-meta">
+            <span>${video.category}</span>
+            <span>${video.length}</span>
+            <span>${sourceLabel}</span>
+            <span>${formatNumber(Number(video.views || 0) + Number(state.viewBoosts[video.id] || 0))} views</span>
+          </div>
+          <p>${video.description}</p>
+          <button class="ghost-button small-button danger-button" type="button" data-delete-video-id="${video.id}">
+            Delete this video
+          </button>
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function renderPlanStatus() {
+  const userName = state.user?.name || "Guest";
+  const signedInLabel = state.user
+    ? `Signed in as ${userName}.`
+    : "Watching as a guest viewer. No sign-in needed.";
+  const userUploads = getUserUploads();
+  const userAds = getUserAds();
+  elements.planBadge.textContent = `${state.plan} mode`;
+  elements.userStatus.textContent = signedInLabel;
+  elements.heroPlanName.textContent = state.plan;
+  elements.authButton.textContent = state.user ? `${userName}` : "Sign in to create";
+  elements.summaryAccount.textContent = userName;
+  elements.summaryPlan.textContent = state.plan;
+  elements.summaryUploads.textContent = userUploads.length;
+  elements.summaryAds.textContent = userAds.length;
+
+  const userChannel = getUserChannel();
+  elements.summaryViews.textContent = formatNumber(userChannel?.views || 0);
+
+  if (!state.user) {
+    elements.studioMessage.textContent = "Guest viewers can watch freely. Sign in if you want Creator, Pro, or Premium.";
+    elements.adMessage.textContent = "Sign in to unlock creator ads and paid plans.";
+  } else if (state.plan === "Creator") {
+    elements.studioMessage.textContent = "Creator unlocked. You can publish videos and run ads, but long videos still show ads while you watch.";
+    elements.adMessage.textContent = "Creator ad builder unlocked. Launch a campaign to join the ad rotation.";
+  } else if (state.plan === "Pro") {
+    elements.studioMessage.textContent = "Pro unlocked. You watch without ads, but publishing videos and ads stays locked.";
+    elements.adMessage.textContent = "Pro is ad-free watch mode only. Switch to Creator or Premium to run ads.";
+  } else if (state.plan === "Premium") {
+    elements.studioMessage.textContent = "Premium unlocked. You can publish videos, launch ads, and watch everything ad-free.";
+    elements.adMessage.textContent = "Premium ad builder unlocked. Your campaigns will run for ad-supported viewers.";
+  } else {
+    elements.studioMessage.textContent = "Viewer mode is active. Watching is open, and creator tools stay locked.";
+    elements.adMessage.textContent = "Viewer mode does not create ads.";
+  }
+
+  elements.publishButton.disabled = !canCreate();
+  elements.createAdButton.disabled = !canCreateAds();
+}
+
+function render() {
+  ensureUploadSources();
+  renderWatchPanel();
+  renderChannels();
+  renderVideoGrid();
+  renderCreatorAds();
+  renderCreatorVideos();
+  renderPlanStatus();
+  elements.categoryChips.forEach((chip) => {
+    chip.classList.toggle("is-active", chip.dataset.category === state.selectedCategory);
+  });
+  saveState();
+}
+
+function applyPlan(plan) {
+  if (plan === "Viewer") {
+    state.plan = "Viewer";
+    elements.planMessage.textContent = "Viewer mode is active. You can watch and explore without signing in.";
+    saveState();
+    render();
+    return;
+  }
+
+  if (!state.user) {
+    elements.planMessage.textContent = "Sign in to unlock creator plans.";
+    openAuthModal();
+    return;
+  }
+
+  state.plan = plan;
+  if (plan === "Creator") {
+    elements.planMessage.textContent = `Creator plan active for ${state.user.name}. You can publish videos and create ads.`;
+  } else if (plan === "Pro") {
+    elements.planMessage.textContent = `Pro plan active for ${state.user.name}. Watching is now ad-free, but creation tools stay locked.`;
+  } else if (plan === "Premium") {
+    elements.planMessage.textContent = `Premium plan active for ${state.user.name}. You can create videos, build ads, and watch ad-free.`;
+  }
+  saveState();
+  render();
+  showToast(`${plan} plan activated.`);
+}
+
+function applyPromoCode() {
+  const code = elements.promoCodeInput.value.trim().toUpperCase();
+  state.promoCode = code;
+
+  if (!state.user) {
+    elements.planMessage.textContent = "Sign in first so a free plan code can be applied to your account.";
+    saveState();
+    openAuthModal();
+    return;
+  }
+
+  if (promoCodeCatalog[code]) {
+    state.plan = promoCodeCatalog[code].plan;
+    elements.planMessage.textContent = promoCodeCatalog[code].message;
+    saveState();
+    render();
+    showToast(`${code} activated. ${state.plan} unlocked.`);
+    return;
+  }
+
+  elements.planMessage.textContent =
+    "That promo code was not recognized. Try AWESOMECREATORFREE, AWESOMEPROFREE, or AWESOMEPREMIUMFREE.";
+  saveState();
+}
+
+async function publishVideo(formData) {
+  if (!state.user) {
+    openAuthModal();
+    elements.studioMessage.textContent = "Sign in first to publish.";
+    return;
+  }
+
+  if (!canCreate()) {
+    elements.studioMessage.textContent = "Choose Creator or Premium before publishing.";
+    scrollToSection("plansSection");
+    return;
+  }
+
+  const now = new Date();
+  const title = formData.get("title")?.toString().trim();
+  const description = formData.get("description")?.toString().trim();
+  const category = formData.get("category")?.toString().trim() || "Tech";
+  const src = formData.get("src")?.toString().trim() || "";
+  const videoFile = elements.videoFileInput.files?.[0] || null;
+
+  const gradientMap = {
+    Gaming: "linear-gradient(145deg, #2b3678, #0d73a7 55%, #38d2d1)",
+    Music: "linear-gradient(145deg, #65254d, #c14d7c 56%, #ffbd59)",
+    Design: "linear-gradient(145deg, #13665b, #24a385 54%, #ffd86c)",
+    Lifestyle: "linear-gradient(145deg, #6e451a, #c47a35 54%, #ffe08f)",
+    Education: "linear-gradient(145deg, #214c6a, #2a7da3 56%, #ff9548)",
+    Tech: "linear-gradient(145deg, #1d2754, #3857d0 54%, #54dbd1)"
+  };
+
+  if (!videoFile && !src) {
+    elements.studioMessage.textContent = "Add a video URL or pick a video file before publishing.";
+    return;
+  }
+
+  let length = "06:00";
+  let sourceType = "url";
+  let finalSrc = src;
+  let fileKey = "";
+  let publishNote = "";
+
+  if (videoFile) {
+    sourceType = "file";
+    fileKey = `video-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    length = await getVideoFileDurationLabel(videoFile);
+    revokeStoredVideoUrl(fileKey);
+    mediaRuntime.fileUrls.set(fileKey, URL.createObjectURL(videoFile));
+
+    try {
+      await putStoredVideoFile(fileKey, videoFile);
+      publishNote = `Published "${title}" from your local files.`;
+    } catch {
+      publishNote = `Published "${title}" from your local files, but this browser could not save the file for future reloads.`;
+    }
+  }
+
+  const newVideo = {
+    id: `upload-${Date.now()}`,
+    title,
+    channel: state.user.name,
+    category,
+    length,
+    views: 0,
+    subscribers: 1200,
+    uploadedAt: now.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    description,
+    src: finalSrc,
+    sourceType,
+    fileKey,
+    gradient: gradientMap[category] || gradientMap.Tech,
+    comments: [
+      { author: "Viders Team", text: "Fresh upload. Share your new channel link with your audience." },
+      { author: "First Viewer", text: "Nice launch. Keep posting." }
+    ]
+  };
+
+  state.uploads = [newVideo, ...state.uploads];
+  state.currentVideoId = newVideo.id;
+  elements.studioMessage.textContent = publishNote || `Published "${title}" to the Viders feed.`;
+  saveState();
+  render();
+  elements.uploadForm.reset();
+  showToast("Video published to Viders.");
+  scrollToSection("heroSection");
+}
+
+async function deleteVideo(videoId) {
+  const video = state.uploads.find((item) => item.id === videoId);
+  if (!video || !state.user || video.channel !== state.user.name) {
+    return;
+  }
+
+  if (video.fileKey) {
+    try {
+      await deleteStoredVideoFile(video.fileKey);
+    } catch {
+      // Remove the upload metadata even if the stored blob is already missing.
+    }
+    revokeStoredVideoUrl(video.fileKey);
+  }
+
+  state.uploads = state.uploads.filter((item) => item.id !== videoId);
+  delete state.viewBoosts[videoId];
+
+  if (state.currentVideoId === videoId) {
+    state.currentVideoId = getAllVideos().find((item) => item.id !== videoId)?.id || seededVideos[0].id;
+  }
+
+  saveState();
+  render();
+  showToast(`Deleted "${video.title}".`);
+}
+
+function publishAd(formData) {
+  if (!state.user) {
+    openAuthModal();
+    elements.adMessage.textContent = "Sign in first to launch an ad campaign.";
+    return;
+  }
+
+  if (!canCreateAds()) {
+    elements.adMessage.textContent = "Choose Creator or Premium before launching ads.";
+    scrollToSection("plansSection");
+    return;
+  }
+
+  const sponsor = formData.get("sponsor")?.toString().trim();
+  const headline = formData.get("headline")?.toString().trim();
+  const copy = formData.get("copy")?.toString().trim();
+
+  const newAd = {
+    id: `ad-${Date.now()}`,
+    owner: state.user.name,
+    sponsor,
+    headline,
+    copy
+  };
+
+  state.ads = [newAd, ...state.ads];
+  elements.adMessage.textContent = `Launched "${headline}" into the Viders ad rotation.`;
+  saveState();
+  render();
+  elements.adForm.reset();
+  showToast("Creator ad campaign launched.");
+}
+
+elements.searchInput.addEventListener("input", (event) => {
+  state.searchQuery = event.target.value;
+  renderVideoGrid();
+  saveState();
+});
+
+elements.categoryChips.forEach((chip) => {
+  chip.addEventListener("click", () => {
+    state.selectedCategory = chip.dataset.category;
+    renderVideoGrid();
+    saveState();
+  });
+});
+
+elements.navButtons.forEach((button) => {
+  button.addEventListener("click", () => scrollToSection(button.dataset.target));
+});
+
+elements.heroWatchButton.addEventListener("click", () => watchVideo(seededVideos[0].id, { scrollIntoView: true }));
+elements.heroStudioButton.addEventListener("click", () => scrollToSection("studioSection"));
+elements.watchChannelButton.addEventListener("click", () => {
+  const currentVideo = getCurrentVideo();
+  state.activeChannel = currentVideo.channel;
+  render();
+  scrollToSection("channelsSection");
+});
+
+elements.videoGrid.addEventListener("click", (event) => {
+  const card = event.target.closest("[data-video-id]");
+  if (!card) {
+    return;
+  }
+  watchVideo(card.dataset.videoId, { scrollIntoView: true });
+});
+
+elements.channelList.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-channel]");
+  if (!button) {
+    return;
+  }
+
+  state.activeChannel = state.activeChannel === button.dataset.channel ? "All" : button.dataset.channel;
+  render();
+  scrollToSection("librarySection");
+});
+
+elements.authButton.addEventListener("click", () => {
+  if (!state.user) {
+    openAuthModal();
+    return;
+  }
+
+  state.user = null;
+  state.plan = "Viewer";
+  state.activeChannel = "All";
+  saveState();
+  render();
+  showToast("Signed out. Guest viewer mode is still ready.");
+});
+
+elements.plansButton.addEventListener("click", () => scrollToSection("plansSection"));
+elements.closeAuthModal.addEventListener("click", closeAuthModal);
+elements.authModal.addEventListener("click", (event) => {
+  if (event.target === elements.authModal) {
+    closeAuthModal();
+  }
+});
+
+elements.authForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const formData = new FormData(event.currentTarget);
+  state.user = {
+    name: formData.get("name")?.toString().trim() || "Viders Creator",
+    email: formData.get("email")?.toString().trim() || ""
+  };
+  saveState();
+  render();
+  closeAuthModal();
+  showToast(`Welcome to Viders, ${state.user.name}.`);
+});
+
+elements.planButtons.forEach((button) => {
+  button.addEventListener("click", () => applyPlan(button.dataset.plan));
+});
+
+elements.promoCodeList.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-code]");
+  if (!button) {
+    return;
+  }
+
+  elements.promoCodeInput.value = button.dataset.code;
+  elements.planMessage.textContent = `${button.dataset.code} loaded into the promo field.`;
+});
+
+elements.applyPromoButton.addEventListener("click", applyPromoCode);
+elements.skipAdButton.addEventListener("click", () => {
+  if (elements.skipAdButton.disabled) {
+    return;
+  }
+
+  finishAdSession();
+});
+
+elements.uploadForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  await publishVideo(new FormData(event.currentTarget));
+});
+
+elements.adForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  publishAd(new FormData(event.currentTarget));
+});
+
+elements.creatorVideoList.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-delete-video-id]");
+  if (!button) {
+    return;
+  }
+
+  await deleteVideo(button.dataset.deleteVideoId);
+});
+
+render();
+
+</script>
+  </body>
+</html>
+

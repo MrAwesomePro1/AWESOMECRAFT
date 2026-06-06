@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#ff8c42" />
+    <meta name="author" content="Awesome Delvelement" />
+    <meta name="publisher" content="Awesome Delvelement" />
+    <title>Viders News Update Trailer</title>
+    <link rel="icon" type="image/svg+xml" href="viders-logo-angled.svg" />
+    <link rel="stylesheet" href="styles.css?v=20260509d" />
+  </head>
+  <body>
+    <div class="app-shell trailer-app">
+      <header class="topbar">
+        <div class="brand-lockup">
+          <img class="brand-mark" src="viders-logo-angled.svg" alt="Viders logo" />
+          <div>
+            <p class="eyebrow">Breaking update</p>
+            <h1>Viders News</h1>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <a class="ghost-button" href="./parents.html">Parent Controls</a>
+          <a class="primary-button" href="./index.html">Open Viders</a>
+        </div>
+      </header>
+
+      <main class="layout">
+        <aside class="sidebar card">
+          <a class="nav-button is-active" href="#trailerStage">News trailer</a>
+          <a class="nav-button" href="./parents.html">Parents</a>
+          <a class="nav-button" href="./index.html">Viders</a>
+
+          <div class="sidebar-note">
+            <p class="eyebrow">Viders News live</p>
+            <strong>Special report</strong>
+            <p>Parent Controls now connects more than one child account, with sound and broadcast scenes.</p>
+          </div>
+        </aside>
+
+        <div class="content-column">
+          <section class="trailer-stage card" id="trailerStage">
+            <div class="trailer-copy">
+              <p class="eyebrow">Viders News special report</p>
+              <h2>Breaking: Parent Controls gets a family-sized upgrade.</h2>
+              <p>
+                Watch the update like a news broadcast, with live captions, ticker headlines, and sound.
+              </p>
+            </div>
+
+            <div class="trailer-screen" id="trailerScreen">
+              <div class="trailer-glow"></div>
+              <div class="news-live-bar">
+                <strong>LIVE</strong>
+                <span>Viders News Network</span>
+                <span>Family Tech Desk</span>
+              </div>
+              <div class="trailer-frame news-frame">
+                <div class="news-topline">
+                  <span class="trailer-badge" id="trailerSceneBadge">Breaking</span>
+                  <span class="news-time" id="newsTimeLabel">Special report</span>
+                </div>
+                <h3 id="trailerSceneTitle">Viders Parents just got bigger</h3>
+                <p id="trailerSceneCopy">
+                  Connect more than one child account from the same parent controls website.
+                </p>
+                <div class="news-anchor-row">
+                  <span>Anchor: Viders Bot</span>
+                  <span>Studio: Viders Parents</span>
+                </div>
+                <div class="news-lower-third">
+                  <strong id="newsLowerTitle">Multiple child accounts</strong>
+                  <span id="newsLowerCopy">Parents can connect every child account in one protected hub.</span>
+                </div>
+                <div class="trailer-visual">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+              <div class="news-ticker">
+                <span>BREAKING</span>
+                <p id="newsTickerText">Viders Parents update adds multi-child account support.</p>
+              </div>
+            </div>
+
+            <div class="trailer-controls">
+              <button class="primary-button" id="playTrailerButton" type="button">Play news trailer with sound</button>
+              <button class="ghost-button" id="restartTrailerButton" type="button">Restart</button>
+              <button class="ghost-button" id="muteTrailerButton" type="button">Sound on</button>
+              <button class="ghost-button" id="exportTrailerButton" type="button">Download YouTube video</button>
+              <div class="trailer-progress" aria-label="Trailer progress">
+                <div id="trailerProgressFill"></div>
+              </div>
+            </div>
+            <p class="status-line trailer-export-status" id="trailerExportStatus">
+              YouTube export creates a 1920x1080 WebM video file with broadcast-style sound.
+            </p>
+            <a class="ghost-button hidden" id="downloadTrailerLink" href="#" download="viders-parent-controls-update-trailer.webm">
+              Save trailer file
+            </a>
+            <canvas class="trailer-export-canvas" id="youtubeTrailerCanvas" width="1920" height="1080" aria-label="YouTube trailer export preview"></canvas>
+          </section>
+
+          <section class="trailer-scenes card">
+            <div class="section-heading">
+              <h3>Trailer scenes</h3>
+              <span>Tap a scene to jump through the update.</span>
+            </div>
+
+            <div class="trailer-scene-grid" id="trailerSceneGrid">
+              <button class="trailer-scene-card is-active" type="button" data-scene="0">
+                <span>01</span>
+                <strong>Separate parent website</strong>
+                <p>Parents live outside the main watching app.</p>
+              </button>
+              <button class="trailer-scene-card" type="button" data-scene="1">
+                <span>02</span>
+                <strong>Multiple children</strong>
+                <p>Add every child account in one protected place.</p>
+              </button>
+              <button class="trailer-scene-card" type="button" data-scene="2">
+                <span>03</span>
+                <strong>Fast edits</strong>
+                <p>Remove one child or clear the list when needed.</p>
+              </button>
+              <button class="trailer-scene-card" type="button" data-scene="3">
+                <span>04</span>
+                <strong>Viders stays open</strong>
+                <p>Watching and sign-in stay clean on the main app.</p>
+              </button>
+            </div>
+          </section>
+
+          <section class="trailer-script card">
+            <p class="eyebrow">Trailer line</p>
+            <h3>Viders Parents Update</h3>
+            <p>
+              "A safer parent hub, built for every kid in the family. Connect accounts, manage settings,
+              and jump back to Viders when it is time to watch."
+            </p>
+            <div class="youtube-metadata">
+              <article>
+                <span class="stat-label">YouTube title</span>
+                <strong>Viders Parents Update Trailer - Multiple Child Accounts</strong>
+              </article>
+              <article>
+                <span class="stat-label">Tags</span>
+                <strong>Viders, Parent Controls, app update, family settings</strong>
+              </article>
+              <article>
+                <span class="stat-label">Publisher</span>
+                <strong>Awesome Delvelement</strong>
+              </article>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script defer src="viders-bot.js?v=20260509d"></script>
+    <script defer src="trailer.js?v=20260509d"></script>
+  </body>
+</html>

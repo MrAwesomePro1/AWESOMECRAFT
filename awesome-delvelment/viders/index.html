@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta id="themeColorMeta" name="theme-color" content="#ff8c42" />
+    <meta name="application-name" content="Viders" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Viders" />
+    <meta name="author" content="Awesome Delvelement" />
+    <meta name="publisher" content="Awesome Delvelement" />
+    <title>Viders</title>
+    <link rel="icon" type="image/svg+xml" href="viders-logo-angled.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="viders-icon-angled-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="viders-icon-angled-512.png" />
+    <link rel="apple-touch-icon" sizes="120x120" href="viders-apple-touch-angled-120.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="viders-apple-touch-angled-152.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="viders-apple-touch-angled-167.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="viders-apple-touch-angled-180.png" />
+    <link rel="manifest" href="manifest.webmanifest?v=20260509d" />
+    <link rel="stylesheet" href="styles.css?v=20260509d" />
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand-lockup">
+          <img class="brand-mark" src="viders-logo-angled.svg" alt="Viders logo" />
+          <div>
+            <p class="eyebrow">Stream louder</p>
+            <h1>Viders</h1>
+          </div>
+        </div>
+
+        <label class="search-wrap" for="searchInput">
+          <span>Search videos, channels, vibes</span>
+          <input
+            id="searchInput"
+            type="search"
+            placeholder="Try: gaming, beats, skyline..."
+            autocomplete="off"
+          />
+        </label>
+
+        <div class="topbar-actions">
+          <label class="season-picker" for="seasonThemeSelect">
+            <span>Background mode</span>
+            <select id="seasonThemeSelect">
+              <option value="auto">Auto seasons</option>
+              <option value="winter">Winter Frost</option>
+              <option value="spring">Spring Bloom</option>
+              <option value="summer">Summer Glow</option>
+              <option value="autumn">Autumn Ember</option>
+              <option value="holiday">Holiday Lights</option>
+              <option value="halloween-saja">Halloween - Saja Night</option>
+            </select>
+          </label>
+          <button class="ghost-button icon-button hidden" id="installButton" type="button" aria-label="Install Viders">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M12 4.5v9m0 0 3.2-3.2M12 13.5 8.8 10.3M5.5 16.5v1A2.5 2.5 0 0 0 8 20h8a2.5 2.5 0 0 0 2.5-2.5v-1"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.8"
+              />
+            </svg>
+            <span>Install app</span>
+          </button>
+          <button class="ghost-button icon-button hidden" id="removeButton" type="button" aria-label="Remove Viders app">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M8 6.5h8m-6.8 0 .4-1.2A1.8 1.8 0 0 1 11.3 4h1.4a1.8 1.8 0 0 1 1.7 1.3l.4 1.2m-8.3 0h10.8m-9.8 0 .7 10.1A2 2 0 0 0 10.2 18h3.6a2 2 0 0 0 2-1.4l.7-10.1M10 10.2v4.5m4-4.5v4.5"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.8"
+              />
+            </svg>
+            <span>Remove app</span>
+          </button>
+          <button class="ghost-button icon-button hidden" id="vaultButton" type="button" aria-label="Open My Viders">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M4.5 5.5A2.5 2.5 0 0 1 7 3h10a2.5 2.5 0 0 1 2.5 2.5v11A2.5 2.5 0 0 1 17 19H7a2.5 2.5 0 0 1-2.5-2.5zM9 8v6l5-3zM6 7h12"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.8"
+              />
+            </svg>
+            <span>My Viders</span>
+          </button>
+          <button class="ghost-button" id="plansButton" type="button">Plans</button>
+          <a class="ghost-button" href="./merch.html">Merch</a>
+          <a class="ghost-button" href="./trailer.html">Update trailer</a>
+          <button class="primary-button" id="authButton" type="button">Sign in to create</button>
+        </div>
+      </header>
+
+      <main class="layout">
+        <aside class="sidebar card">
+          <button class="nav-button is-active" type="button" data-target="heroSection">Home</button>
+          <button class="nav-button" type="button" data-target="librarySection">Videos</button>
+          <button class="nav-button" type="button" data-target="plansSection">Plans</button>
+          <button class="nav-button" type="button" data-target="studioSection">Studio</button>
+          <a class="nav-button" href="./merch.html">Merch</a>
+
+          <div class="sidebar-note">
+            <p class="eyebrow">Built for creators</p>
+            <strong id="planBadge">Viewer mode</strong>
+            <p id="userStatus">Watching as a guest viewer. No sign-in needed.</p>
+            <p class="season-status" id="seasonModeSummary">Season mode is automatic.</p>
+          </div>
+        </aside>
+
+        <div class="content-column">
+          <section class="hero card" id="heroSection">
+            <div class="hero-copy">
+              <div class="hero-tags">
+                <p class="eyebrow">Video platform concept</p>
+                <span class="season-pill" id="seasonModeBadge">Auto seasons</span>
+              </div>
+              <h2>Welcome to Viders</h2>
+              <p>
+                Browse other people's channels and watch featured uploads right away. Sign in only
+                if you want creator plans and content tools of your own.
+              </p>
+              <div class="hero-actions">
+                <button class="primary-button" id="heroWatchButton" type="button">Watch trending</button>
+                <button class="ghost-button" id="heroStudioButton" type="button">Open studio</button>
+              </div>
+            </div>
+
+            <div class="hero-stats">
+              <article>
+                <span class="stat-label">Featured videos</span>
+                <strong id="heroVideoCount">0</strong>
+              </article>
+              <article>
+                <span class="stat-label">Top channels</span>
+                <strong id="heroChannelCount">0</strong>
+              </article>
+              <article>
+                <span class="stat-label">Your plan</span>
+                <strong id="heroPlanName">Viewer</strong>
+              </article>
+            </div>
+          </section>
+
+          <section class="vault card hidden" id="vaultSection">
+            <div class="section-heading">
+              <h3>My Viders</h3>
+              <span id="vaultSummary">Viders, Creator, Pro, Premium, and Ultimate keep your watched and made videos together here.</span>
+            </div>
+
+            <div class="vault-grid">
+              <article class="vault-column">
+                <div class="section-heading">
+                  <h4>Watched videos</h4>
+                  <span id="watchHistoryCount">0 watched</span>
+                </div>
+                <div class="vault-list" id="watchHistoryList"></div>
+              </article>
+
+              <article class="vault-column">
+                <div class="section-heading">
+                  <h4>Made videos</h4>
+                  <span id="madeVideosCount">0 made</span>
+                </div>
+                <div class="vault-list" id="madeVideosList"></div>
+              </article>
+            </div>
+          </section>
+
+          <section class="watch-grid">
+            <article class="watch-panel card">
+              <div class="player-shell" id="playerShell">
+                <video id="videoPlayer" controls playsinline></video>
+                <div class="ad-overlay hidden" id="adOverlay">
+                  <div class="ad-card">
+                    <div class="ad-topline">
+                      <span class="ad-badge">Ad</span>
+                      <span id="adCountdownLabel">5s</span>
+                    </div>
+                    <p class="eyebrow">Sponsored message</p>
+                    <h3 id="adTitle">Viders Pro</h3>
+                    <p class="ad-copy" id="adCopy">
+                      Creator tools, featured placements, and analytics for channels that want to grow.
+                    </p>
+                    <div class="ad-progress">
+                      <div class="ad-progress-fill" id="adProgressFill"></div>
+                    </div>
+                    <div class="ad-actions">
+                      <span class="ad-helper" id="adHelperText">Skip available in 3s</span>
+                      <button class="ghost-button small-button" id="skipAdButton" type="button" disabled>
+                        Skip ad
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="watch-info">
+                <div>
+                  <p class="eyebrow" id="watchCategory">Featured</p>
+                  <h3 id="watchTitle">Loading video...</h3>
+                </div>
+                <button class="ghost-button small-button" id="watchChannelButton" type="button">
+                  Open channel
+                </button>
+              </div>
+
+              <div class="meta-row">
+                <span id="watchMeta">0 views</span>
+                <span id="watchLength">00:00</span>
+              </div>
+
+              <p class="watch-description" id="watchDescription"></p>
+              <div class="channel-highlight" id="channelHighlight"></div>
+
+              <div class="comment-block">
+                <div class="section-heading">
+                  <h3>What people are saying</h3>
+                  <span id="commentCount">0 comments</span>
+                </div>
+                <div class="comment-list" id="commentList"></div>
+              </div>
+            </article>
+
+            <article class="channels-panel card" id="channelsSection">
+              <div class="section-heading">
+                <h3>Channel views</h3>
+                <span>Tap a channel to filter the feed</span>
+              </div>
+              <div class="channel-list" id="channelList"></div>
+            </article>
+          </section>
+
+          <section class="plans card" id="plansSection">
+            <div class="section-heading">
+              <h3>Plans</h3>
+              <span>Viders posts videos. Creator adds ads. Pro removes ads. Premium posts ad-free. Ultimate does it all. Use the discount center below to unlock one.</span>
+            </div>
+
+            <div class="plan-grid">
+              <article class="plan-card">
+                <p class="eyebrow">Viewer</p>
+                <h4>Free</h4>
+                <p>Watch videos and explore channels instantly as a guest, with no sign-in required.</p>
+              </article>
+
+              <article class="plan-card">
+                <p class="eyebrow">Viders</p>
+                <h4>Post videos</h4>
+                <p>Publish your videos to the shared Viders channel with simple posting tools. Ads still play while you watch.</p>
+              </article>
+
+              <article class="plan-card accent-plan">
+                <p class="eyebrow">Creator</p>
+                <h4>Create videos</h4>
+                <p>Upload videos, build your channel, and create your own pre-roll ads. Ads still play while you watch.</p>
+              </article>
+
+              <article class="plan-card">
+                <p class="eyebrow">Pro</p>
+                <h4>Ad-free viewing</h4>
+                <p>Watch ad-free across Viders, but this plan is view-only and does not publish videos or ads.</p>
+              </article>
+
+              <article class="plan-card premium-plan">
+                <p class="eyebrow">Premium</p>
+                <h4>Post ad-free</h4>
+                <p>Publish videos and watch Viders without ads, while the ad builder stays locked.</p>
+              </article>
+
+              <article class="plan-card ultimate-plan">
+                <p class="eyebrow">Ultimate</p>
+                <h4>Everything</h4>
+                <p>Get posting, ad creation, ad-free watching, and the full set of Viders creator tools together.</p>
+              </article>
+            </div>
+
+            <div class="discount-panel">
+              <div>
+                <p class="eyebrow">Private discount</p>
+                <h4>Have a Viders code?</h4>
+                <p>Enter your private discount code to unlock any Viders plan on your account.</p>
+              </div>
+
+              <div class="discount-actions">
+                <label class="promo-input" for="promoCodeInput">
+                  <span>Discount code</span>
+                  <input id="promoCodeInput" type="text" placeholder="Enter private code" autocomplete="off" />
+                </label>
+                <button class="ghost-button small-button" type="button" id="applyPromoButton">
+                  Apply discount
+                </button>
+              </div>
+            </div>
+
+            <p class="status-line" id="planMessage"></p>
+          </section>
+
+          <section class="studio card" id="studioSection">
+            <div class="section-heading">
+              <h3>Creator studio</h3>
+              <span>Viders, Creator, Premium, and Ultimate can publish. Creator and Ultimate can build ads.</span>
+            </div>
+
+            <div class="studio-grid">
+              <article class="studio-summary">
+                <div class="summary-card">
+                  <span class="stat-label">Account</span>
+                  <strong id="summaryAccount">Guest</strong>
+                </div>
+                <div class="summary-card">
+                  <span class="stat-label">Active plan</span>
+                  <strong id="summaryPlan">Viewer</strong>
+                </div>
+                <div class="summary-card">
+                  <span class="stat-label">Uploads</span>
+                  <strong id="summaryUploads">0</strong>
+                </div>
+                <div class="summary-card">
+                  <span class="stat-label">Your views</span>
+                  <strong id="summaryViews">0</strong>
+                </div>
+                <div class="summary-card">
+                  <span class="stat-label">Campaign ads</span>
+                  <strong id="summaryAds">0</strong>
+                </div>
+              </article>
+
+              <div class="studio-stack">
+                <form class="upload-form" id="uploadForm">
+                  <div class="form-heading full-width">
+                    <p class="eyebrow">Video upload</p>
+                    <h4>Publish to Viders</h4>
+                    <p class="field-note">
+                      Upload a direct video URL or pick a video file from this device. Public file uploads are shared through this live site and work best with smaller clips.
+                    </p>
+                  </div>
+
+                  <label>
+                    <span>Video title</span>
+                    <input name="title" type="text" placeholder="My first Viders upload" required />
+                  </label>
+
+                  <label>
+                    <span>Category</span>
+                    <select name="category">
+                      <option>Gaming</option>
+                      <option>Music</option>
+                      <option>Design</option>
+                      <option>Lifestyle</option>
+                      <option>Education</option>
+                      <option>Tech</option>
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>Video URL</span>
+                    <input
+                      name="src"
+                      type="url"
+                      placeholder="https://example.com/video.mp4"
+                      inputmode="url"
+                    />
+                  </label>
+
+                  <label>
+                    <span>Video file</span>
+                    <input id="videoFileInput" name="videoFile" type="file" accept="video/*" />
+                  </label>
+
+                  <label class="full-width">
+                    <span>Description</span>
+                    <textarea
+                      name="description"
+                      rows="4"
+                      placeholder="Tell people what your video is about..."
+                      required
+                    ></textarea>
+                  </label>
+
+                  <button class="primary-button" id="publishButton" type="submit">Publish to Viders</button>
+                  <p class="status-line" id="studioMessage"></p>
+                </form>
+
+                <form class="upload-form ad-form" id="adForm">
+                  <div class="form-heading full-width">
+                    <p class="eyebrow">Ad builder</p>
+                    <h4>Create a pre-roll ad</h4>
+                  </div>
+
+                  <label>
+                    <span>Sponsor name</span>
+                    <input name="sponsor" type="text" placeholder="Awesome Energy" required />
+                  </label>
+
+                  <label>
+                    <span>Headline</span>
+                    <input name="headline" type="text" placeholder="Charge your next upload" required />
+                  </label>
+
+                  <label class="full-width">
+                    <span>Ad copy</span>
+                    <textarea
+                      name="copy"
+                      rows="3"
+                      placeholder="Tell viewers why they should care about your brand..."
+                      required
+                    ></textarea>
+                  </label>
+
+                  <button class="primary-button" id="createAdButton" type="submit">Launch ad campaign</button>
+                  <p class="status-line" id="adMessage"></p>
+                </form>
+
+                <div class="studio-ads">
+                  <div class="section-heading">
+                    <h4>Your creator ads</h4>
+                    <span>These rotate before 1 minute+ videos for ad-supported viewers</span>
+                  </div>
+                  <div class="creator-ad-list" id="creatorAdList"></div>
+                </div>
+
+                <div class="studio-videos">
+                  <div class="section-heading">
+                    <h4>Your videos</h4>
+                    <span>Delete videos you uploaded from your own Viders account</span>
+                  </div>
+                  <div class="creator-video-list" id="creatorVideoList"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="library card" id="librarySection">
+            <div class="section-heading">
+              <h3>Videos</h3>
+              <span id="librarySummary">All videos made on Viders show here. Tap a channel to filter, or use Videos to reset back to everything.</span>
+            </div>
+
+            <div class="chip-row">
+              <button class="chip is-active" type="button" data-category="All">All</button>
+              <button class="chip" type="button" data-category="Gaming">Gaming</button>
+              <button class="chip" type="button" data-category="Music">Music</button>
+              <button class="chip" type="button" data-category="Design">Design</button>
+              <button class="chip" type="button" data-category="Lifestyle">Lifestyle</button>
+              <button class="chip" type="button" data-category="Education">Education</button>
+              <button class="chip" type="button" data-category="Tech">Tech</button>
+            </div>
+
+            <div class="video-grid" id="videoGrid"></div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <div class="modal-backdrop hidden" id="authModal">
+      <div class="modal card">
+        <button class="modal-close" id="closeAuthModal" type="button" aria-label="Close sign in">
+          x
+        </button>
+        <p class="eyebrow">Optional sign in</p>
+        <h3>Join Viders</h3>
+        <p>Viewers can keep watching as guests. Sign in to unlock Viders, Creator, Pro, Premium, or Ultimate features.</p>
+
+        <form id="authForm" class="auth-form">
+          <label>
+            <span>Display name</span>
+            <input name="name" type="text" placeholder="Viders Creator" required />
+          </label>
+          <label>
+            <span>Email</span>
+            <input name="email" type="email" placeholder="creator@example.com" required />
+          </label>
+          <button class="primary-button" type="submit">Continue</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal-backdrop hidden" id="installModal">
+      <div class="modal card install-modal">
+        <button class="modal-close" id="closeInstallModal" type="button" aria-label="Close install help">
+          x
+        </button>
+        <p class="eyebrow">Install Viders</p>
+        <h3 id="installTitle">Save Viders to your phone</h3>
+        <p class="install-copy" id="installCopy">
+          Follow these steps to add Viders to your home screen like an app.
+        </p>
+        <ol class="install-steps" id="installSteps"></ol>
+        <p class="install-note" id="installNote"></p>
+        <div class="install-actions">
+          <button class="ghost-button small-button" id="copyInstallLinkButton" type="button">
+            Copy link
+          </button>
+          <button class="primary-button small-button" id="closeInstallAction" type="button">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop hidden" id="removeModal">
+      <div class="modal card install-modal">
+        <button class="modal-close" id="closeRemoveModal" type="button" aria-label="Close remove help">
+          x
+        </button>
+        <p class="eyebrow">Remove Viders</p>
+        <h3 id="removeTitle">Remove Viders from this device</h3>
+        <p class="install-copy" id="removeCopy">
+          Browsers do not let Viders uninstall itself directly, but these steps remove the app or taskbar shortcut quickly.
+        </p>
+        <ol class="install-steps" id="removeSteps"></ol>
+        <p class="install-note" id="removeNote"></p>
+        <div class="install-actions">
+          <button class="ghost-button small-button" id="logBackInButton" type="button">
+            Log back in
+          </button>
+          <button class="primary-button small-button" id="closeRemoveAction" type="button">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast hidden" id="toast"></div>
+
+    <script defer src="viders-bot.js?v=20260509d"></script>
+    <script defer src="app.js?v=20260509d"></script>
+  </body>
+</html>

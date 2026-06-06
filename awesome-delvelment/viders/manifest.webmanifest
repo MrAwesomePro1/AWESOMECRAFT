@@ -1,0 +1,36 @@
+{
+  "name": "Viders",
+  "short_name": "Viders",
+  "description": "Watch videos, follow channels, and create content with Viders.",
+  "publisher": "Awesome Delvelement",
+  "id": "./?source=pwa",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "background_color": "#050914",
+  "theme_color": "#ff8c42",
+  "orientation": "any",
+  "categories": ["entertainment", "video", "social"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "viders-icon-angled-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "viders-icon-angled-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "viders-icon-angled-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ]
+}
