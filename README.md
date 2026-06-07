@@ -25,12 +25,14 @@ Open [index.html](./index.html) in a browser, or serve the folder with any stati
 
 Keyboard controls:
 
-- `WASD` or arrow keys: move
+- `WASD` or arrow keys: move in Classic view
+- First Person mode: `W/S` walk, `A/D` or left/right arrows turn, drag on the play screen to look around
 - `Q`: break block
 - `R`: place selected block
 - `Space`: attack
 - `E`: open inventory and crafting
 - `F`: use portals and computers
+- `V`: toggle Classic view and First Person mode
 - `P`: pause menu
 
 ## Install On Home Screen
@@ -49,3 +51,9 @@ Touch controls are shown on screen automatically.
 To jump into the hidden creative realm, use the `Secret World` button on the `New World` screen. It starts a saved world slot named `Secret World`, so it also shows up later under `Load World`.
 
 Use the `Make Your Player` area in the Player panel to customize your builder. Your look is saved with each world.
+
+Use the `Turn On First Person` button or press `V` any time in-game to switch between the overhead Classic view and the turnable first-person play mode.
+
+## Steam Release Prep
+
+The `steam-release` folder contains a Steam submission starter pack with the latest bundled game, a Windows launch script, SteamPipe VDF templates, and a store-page draft. You still need a Steamworks partner account, an AppID, a DepotID, and Valve review before it can go public on Steam.

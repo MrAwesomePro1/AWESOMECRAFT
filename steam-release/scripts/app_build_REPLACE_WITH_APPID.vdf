@@ -1,0 +1,11 @@
+"AppBuild"
+{
+  "AppID" "REPLACE_WITH_APPID"
+  "Desc" "AWESOMECRAFT Steam build"
+  "ContentRoot" "..\content\"
+  "BuildOutput" "..\output\"
+  "Depots"
+  {
+    "REPLACE_WITH_DEPOTID" "depot_build_REPLACE_WITH_DEPOTID.vdf"
+  }
+}

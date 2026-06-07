@@ -26,6 +26,7 @@
     summonBossBtn: document.getElementById("summonBossBtn"),
     healBtn: document.getElementById("healBtn"),
     openInventoryBtn: document.getElementById("openInventoryBtn"),
+    toggleViewBtn: document.getElementById("toggleViewBtn"),
     saveWorldBtn: document.getElementById("saveWorldBtn"),
     breakBtn: document.getElementById("breakBtn"),
     placeBtn: document.getElementById("placeBtn"),
@@ -67,6 +68,7 @@
     targetInfo: document.getElementById("targetInfo"),
     toolInfo: document.getElementById("toolInfo"),
     timeBadge: document.getElementById("timeBadge"),
+    viewModeBadge: document.getElementById("viewModeBadge"),
     buildTubeHint: document.getElementById("buildTubeHint"),
     eventLog: document.getElementById("eventLog"),
     bossBanner: document.getElementById("bossBanner"),
@@ -99,6 +101,7 @@
   var ISO_H = 21;
   var BLOCK_H = 18;
   var PLAYER_SPEED = 4;
+  var TURN_SPEED = 2.9;
   var HOTBAR_SIZE = 9;
   var VIEW_DISTANCE = 18;
   var CAMERA_EYE_HEIGHT = 1.7;
@@ -208,6 +211,7 @@
   };
 
   var input = { up: false, down: false, left: false, right: false };
+  var lookDrag = { active: false, lastX: 0 };
   var deferredInstallPrompt = null;
 
   var state = {
@@ -227,6 +231,7 @@
     startMenuTab: "new",
     pendingWorldMode: "survival",
     pendingConnection: false,
+    viewMode: "classic",
     dimension: "overworld",
     dayClock: 0.3,
     night: false,
@@ -234,7 +239,7 @@
     modeMenuOpen: false,
     pauseMenuOpen: false,
     worlds: { overworld: null, nether: null, end: null },
-    player: { x: 0, y: 0, hp: 20, maxHp: 20, facing: "down", attackCooldown: 0 },
+    player: { x: 0, y: 0, hp: 20, maxHp: 20, facing: "down", yaw: 0, attackCooldown: 0 },
     boss: { kind: "slime", name: "Giga Slime", dimension: "overworld", x: 0, y: 0, hp: 100, maxHp: 100, awake: false, defeated: false, color: colors.slime, speed: 2.1, damage: 6, orbit: 0 },
     monsters: { overworld: [], nether: [], end: [] },
     inventory: [],
@@ -262,6 +267,117 @@
     input.down = false;
     input.left = false;
     input.right = false;
+    lookDrag.active = false;
+  }
+
+  function isFirstPersonView() {
+    return state.viewMode === "firstperson";
+  }
+
+  function normalizeAngle(angle) {
+    while (angle <= -Math.PI) {
+      angle += Math.PI * 2;
+    }
+    while (angle > Math.PI) {
+      angle -= Math.PI * 2;
+    }
+    return angle;
+  }
+
+  function yawFromFacing(facing) {
+    if (facing === "right") {
+      return Math.PI * 0.5;
+    }
+    if (facing === "up") {
+      return Math.PI;
+    }
+    if (facing === "left") {
+      return Math.PI * -0.5;
+    }
+    return 0;
+  }
+
+  function facingFromYaw(yaw) {
+    var angle = normalizeAngle(yaw);
+    if (angle > Math.PI * 0.25 && angle <= Math.PI * 0.75) {
+      return "right";
+    }
+    if (angle < -Math.PI * 0.25 && angle >= -Math.PI * 0.75) {
+      return "left";
+    }
+    if (Math.abs(angle) > Math.PI * 0.75) {
+      return "up";
+    }
+    return "down";
+  }
+
+  function normalizePlayerDirection() {
+    if (typeof state.player.yaw !== "number") {
+      state.player.yaw = yawFromFacing(state.player.facing);
+    }
+    state.player.yaw = normalizeAngle(state.player.yaw);
+    state.player.facing = facingFromYaw(state.player.yaw);
+  }
+
+  function turnPlayer(amount) {
+    state.player.yaw = normalizeAngle(state.player.yaw + amount);
+    state.player.facing = facingFromYaw(state.player.yaw);
+    state.targetTile = null;
+  }
+
+  function viewModeLabel(mode) {
+    return mode === "firstperson" ? "First Person" : "Classic";
+  }
+
+  function updateViewModeUI() {
+    if (ui.viewModeBadge) {
+      ui.viewModeBadge.textContent = viewModeLabel(state.viewMode);
+    }
+    if (ui.toggleViewBtn) {
+      ui.toggleViewBtn.textContent = isFirstPersonView() ? "Turn Off First Person" : "Turn On First Person";
+    }
+    updateMoveButtonLabels();
+  }
+
+  function updateMoveButtonLabels() {
+    var labels = isFirstPersonView() ? {
+      up: "Forward",
+      down: "Back",
+      left: "Turn Left",
+      right: "Turn Right"
+    } : {
+      up: "Up",
+      down: "Down",
+      left: "Left",
+      right: "Right"
+    };
+    var key;
+    var button;
+    for (key in labels) {
+      if (Object.prototype.hasOwnProperty.call(labels, key)) {
+        button = document.querySelector('[data-move="' + key + '"]');
+        if (button) {
+          button.textContent = labels[key];
+        }
+      }
+    }
+  }
+
+  function setViewMode(mode, silent) {
+    state.viewMode = mode === "firstperson" ? "firstperson" : "classic";
+    normalizePlayerDirection();
+    state.targetTile = null;
+    updateViewModeUI();
+    if (state.currentWorldId) {
+      saveGame(true);
+    }
+    if (!silent) {
+      notify(isFirstPersonView() ? "First Person mode is on." : "First Person mode is off.");
+    }
+  }
+
+  function toggleViewMode(silent) {
+    setViewMode(isFirstPersonView() ? "classic" : "firstperson", silent);
   }
 
   function isStandaloneMode() {
@@ -583,6 +699,7 @@
       gameMode: state.gameMode,
       connected: state.connected,
       realmCode: state.realmCode,
+      viewMode: state.viewMode,
       dimension: state.dimension,
       dayClock: state.dayClock,
       worlds: state.worlds,
@@ -603,12 +720,14 @@
     state.gameMode = payload.gameMode || "survival";
     state.connected = !!payload.connected;
     state.realmCode = payload.realmCode || "";
+    state.viewMode = payload.viewMode === "firstperson" ? "firstperson" : "classic";
     state.dimension = payload.dimension || state.dimension;
     state.dayClock = typeof payload.dayClock === "number" ? payload.dayClock : state.dayClock;
     state.worlds = payload.worlds || state.worlds;
     state.monsters = payload.monsters || state.monsters;
     state.boss = payload.boss || state.boss;
     state.player = payload.player || state.player;
+    normalizePlayerDirection();
     state.inventory = payload.inventory || state.inventory;
     if (!state.boss.kind) {
       setupBoss("slime");
@@ -621,6 +740,7 @@
     if (!state.monsters.end) {
       state.monsters.end = [];
     }
+    updateViewModeUI();
     updateCamera();
   }
 
@@ -780,6 +900,7 @@
     state.player.y = gridToPixel(12);
     state.player.hp = state.player.maxHp;
     state.player.facing = "down";
+    state.player.yaw = 0;
     setupBoss("slime");
     state.boss.awake = false;
     state.boss.defeated = false;
@@ -1215,6 +1336,7 @@
     ui.timeValue.textContent = state.dimension === "end" ? "Void" : (state.dimension === "nether" ? "Inferno" : (state.night ? "Night" : "Day"));
     ui.dimensionValue.textContent = dimensionLabel(state.dimension);
     ui.timeBadge.textContent = state.dimension === "end" ? "Dragon sky" : (state.dimension === "nether" ? "Nether fire" : (state.night ? "Night monsters rising" : "Day"));
+    ui.viewModeBadge.textContent = viewModeLabel(state.viewMode);
     ui.toolInfo.textContent = hotbarItem ? itemLabel(hotbarItem.id) + " x" + hotbarItem.count : "Empty Slot";
     ui.activePackSummary.textContent = "Everything unlocked";
     ui.buildTubeHint.textContent = nearestObject("computer") ? "Computer in reach" : "Find a computer";
@@ -1223,6 +1345,9 @@
     ui.bossHealthFill.style.width = ((state.boss.hp / state.boss.maxHp) * 100) + "%";
     ui.bossHealthText.textContent = Math.max(0, Math.ceil(state.boss.hp)) + " / " + state.boss.maxHp;
     ui.bossBanner.className = "boss-banner" + (state.boss.kind === "dragon" ? " dragon" : "") + (bossIsVisible() ? "" : " hidden");
+    if (ui.toggleViewBtn) {
+      ui.toggleViewBtn.textContent = isFirstPersonView() ? "Turn Off First Person" : "Turn On First Person";
+    }
   }
 
   function isNight() {
@@ -1281,6 +1406,15 @@
   }
 
   function facingBasis() {
+    if (isFirstPersonView()) {
+      var yaw = typeof state.player.yaw === "number" ? state.player.yaw : yawFromFacing(state.player.facing);
+      return {
+        fx: Math.sin(yaw),
+        fy: Math.cos(yaw),
+        rx: -Math.cos(yaw),
+        ry: Math.sin(yaw)
+      };
+    }
     if (state.player.facing === "up") {
       return { fx: 0, fy: -1, rx: 1, ry: 0 };
     }
@@ -1806,6 +1940,8 @@
     var x = canvas.width - cardWidth - 18;
     var y = 18;
     var fontSize = Math.max(12, Math.round(cardHeight * 0.28));
+    var viewHint = isFirstPersonView() ? "Press V for Classic View" : "Press V for First Person";
+    var moveHint = isFirstPersonView() ? "W/S walk, A/D turn" : "Move with W, A, S and D";
     ctx.fillStyle = "rgba(242,242,242,0.97)";
     ctx.fillRect(x, y, cardWidth, cardHeight);
     ctx.fillStyle = "#252525";
@@ -1829,9 +1965,9 @@
     ctx.font = "700 " + fontSize + "px Courier New";
     ctx.textBaseline = "middle";
     ctx.fillStyle = "#4f0a65";
-    ctx.fillText("Move with W, A, S and D", x + 88, y + cardHeight * 0.33);
+    ctx.fillText(moveHint, x + 88, y + cardHeight * 0.33);
     ctx.fillStyle = "#111111";
-    ctx.fillText("Attack with Space", x + 88, y + cardHeight * 0.7);
+    ctx.fillText(viewHint, x + 88, y + cardHeight * 0.7);
   }
 
   function drawStatusHud() {
@@ -1907,7 +2043,7 @@
     ctx.fillRect(canvas.width - 80, canvas.height - 94, 22, 20);
   }
 
-  function renderWorld() {
+  function renderFirstPersonWorld() {
     var world = currentWorld();
     var playerPos = playerTilePosition();
     var startX = Math.max(0, Math.floor(playerPos.x) - VIEW_DISTANCE - 3);
@@ -1955,6 +2091,227 @@
     drawInstructionCard();
     drawStatusHud();
     drawHandOverlay();
+  }
+
+  function classicViewMetrics() {
+    var playerPos = playerTilePosition();
+    var tileSize = Math.max(24, Math.min(58, Math.floor(Math.min(canvas.width / 15.5, canvas.height / 11.5))));
+    return {
+      tileSize: tileSize,
+      offsetX: canvas.width * 0.5 - playerPos.x * tileSize,
+      offsetY: canvas.height * 0.54 - playerPos.y * tileSize,
+      startX: Math.max(0, Math.floor(playerPos.x - canvas.width / tileSize / 2) - 2),
+      startY: Math.max(0, Math.floor(playerPos.y - canvas.height / tileSize / 2) - 2),
+      endX: Math.min(WORLD_W, Math.ceil(playerPos.x + canvas.width / tileSize / 2) + 3),
+      endY: Math.min(WORLD_H, Math.ceil(playerPos.y + canvas.height / tileSize / 2) + 3)
+    };
+  }
+
+  function classicScreenPoint(metrics, worldX, worldY) {
+    return {
+      x: Math.round(metrics.offsetX + worldX * metrics.tileSize),
+      y: Math.round(metrics.offsetY + worldY * metrics.tileSize)
+    };
+  }
+
+  function drawClassicBackdrop() {
+    var gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    var bottomColor = "#1c2d1f";
+    if (state.dimension === "nether") {
+      gradient.addColorStop(0, "#431814");
+      gradient.addColorStop(1, "#220a08");
+      bottomColor = "#3d1d16";
+    } else if (state.dimension === "end") {
+      gradient.addColorStop(0, "#25153d");
+      gradient.addColorStop(1, "#120a1f");
+      bottomColor = "#2a2236";
+    } else if (state.night) {
+      gradient.addColorStop(0, "#1c2950");
+      gradient.addColorStop(1, "#09121f");
+      bottomColor = "#1a2618";
+    } else {
+      gradient.addColorStop(0, "#8db1f7");
+      gradient.addColorStop(1, "#b7d3ff");
+      bottomColor = "#385d30";
+    }
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = bottomColor;
+    ctx.fillRect(0, Math.round(canvas.height * 0.63), canvas.width, Math.round(canvas.height * 0.37));
+  }
+
+  function drawClassicObject(rect, tile) {
+    var inset = Math.max(3, Math.round(rect.size * 0.16));
+    var innerSize = Math.max(8, rect.size - inset * 2);
+    var x = rect.x + inset;
+    var y = rect.y + inset;
+    if (!tile.object) {
+      return;
+    }
+    if (tile.object === "wood") {
+      ctx.fillStyle = "#77502f";
+      ctx.fillRect(x + Math.round(innerSize * 0.3), y + Math.round(innerSize * 0.18), Math.max(4, Math.round(innerSize * 0.4)), Math.max(8, Math.round(innerSize * 0.72)));
+      ctx.fillStyle = "#3f8d38";
+      ctx.fillRect(x, y, innerSize, Math.max(8, Math.round(innerSize * 0.5)));
+      return;
+    }
+    if (tile.object === "leaves") {
+      ctx.fillStyle = "#317f32";
+      ctx.fillRect(x, y, innerSize, innerSize);
+      return;
+    }
+    if (tile.object === "stone") {
+      ctx.fillStyle = "#7e8793";
+      ctx.fillRect(x, y, innerSize, innerSize);
+      ctx.strokeStyle = "#aab3be";
+      ctx.strokeRect(x, y, innerSize, innerSize);
+      return;
+    }
+    if (tile.object === "crystal") {
+      fillPolygon([
+        { x: x + Math.round(innerSize * 0.5), y: y },
+        { x: x + innerSize, y: y + Math.round(innerSize * 0.45) },
+        { x: x + Math.round(innerSize * 0.5), y: y + innerSize },
+        { x: x, y: y + Math.round(innerSize * 0.45) }
+      ], "#7ed6ff", "#dff8ff");
+      return;
+    }
+    if (tile.object === "computer") {
+      ctx.fillStyle = "#6a7392";
+      ctx.fillRect(x, y, innerSize, innerSize);
+      ctx.fillStyle = "#d8f7ff";
+      ctx.fillRect(x + Math.round(innerSize * 0.18), y + Math.round(innerSize * 0.18), Math.max(6, Math.round(innerSize * 0.64)), Math.max(6, Math.round(innerSize * 0.46)));
+      ctx.fillStyle = "#1a2930";
+      ctx.fillRect(x + Math.round(innerSize * 0.38), y + Math.round(innerSize * 0.74), Math.max(5, Math.round(innerSize * 0.24)), Math.max(3, Math.round(innerSize * 0.1)));
+      return;
+    }
+    if (tile.object === "portal" || tile.object === "endportal") {
+      ctx.fillStyle = tile.object === "portal" ? "#5b2f92" : "#1d7592";
+      ctx.fillRect(x, y, innerSize, innerSize);
+      ctx.fillStyle = tile.object === "portal" ? "#c48bff" : "#9cf2ff";
+      ctx.fillRect(x + Math.max(3, Math.round(innerSize * 0.16)), y + Math.max(3, Math.round(innerSize * 0.16)), Math.max(6, Math.round(innerSize * 0.68)), Math.max(6, Math.round(innerSize * 0.68)));
+      return;
+    }
+    if (tile.object === "slime") {
+      ctx.fillStyle = "#8ae652";
+      ctx.fillRect(x, y, innerSize, innerSize);
+      ctx.fillStyle = "#3c7b2e";
+      ctx.fillRect(x + Math.round(innerSize * 0.2), y + Math.round(innerSize * 0.26), Math.max(3, Math.round(innerSize * 0.14)), Math.max(3, Math.round(innerSize * 0.14)));
+      ctx.fillRect(x + Math.round(innerSize * 0.66), y + Math.round(innerSize * 0.26), Math.max(3, Math.round(innerSize * 0.14)), Math.max(3, Math.round(innerSize * 0.14)));
+      return;
+    }
+    if (tile.object === "altar" || tile.object === "dragonaltar") {
+      ctx.fillStyle = tile.object === "dragonaltar" ? "#4c3b69" : "#7e8e95";
+      ctx.fillRect(x, y + Math.round(innerSize * 0.2), innerSize, Math.max(6, Math.round(innerSize * 0.56)));
+      ctx.fillStyle = tile.object === "dragonaltar" ? "#d5b1ff" : "#9cffea";
+      ctx.fillRect(x + Math.round(innerSize * 0.28), y, Math.max(5, Math.round(innerSize * 0.44)), Math.max(5, Math.round(innerSize * 0.3)));
+      return;
+    }
+    ctx.fillStyle = colors[tile.object] || "#e6f0f3";
+    ctx.fillRect(x, y, innerSize, innerSize);
+  }
+
+  function drawClassicEntity(metrics, entityX, entityY, fillColor, outlineColor, scale) {
+    var center = classicScreenPoint(metrics, entityX / TILE, entityY / TILE);
+    var size = Math.max(8, Math.round(metrics.tileSize * (scale || 0.44)));
+    ctx.fillStyle = fillColor;
+    ctx.fillRect(center.x - Math.round(size * 0.5), center.y - Math.round(size * 0.5), size, size);
+    ctx.strokeStyle = outlineColor || tint(fillColor, -48);
+    ctx.lineWidth = Math.max(1, Math.round(size * 0.08));
+    ctx.strokeRect(center.x - Math.round(size * 0.5), center.y - Math.round(size * 0.5), size, size);
+  }
+
+  function drawClassicPlayer(metrics) {
+    var center = classicScreenPoint(metrics, state.player.x / TILE, state.player.y / TILE);
+    var bodySize = Math.max(12, Math.round(metrics.tileSize * 0.52));
+    var arrow = Math.max(10, Math.round(metrics.tileSize * 0.26));
+    var arrowPoints;
+    ctx.fillStyle = playerLookOption("shirt", state.playerStyle.shirt).color;
+    ctx.fillRect(center.x - Math.round(bodySize * 0.5), center.y - Math.round(bodySize * 0.5), bodySize, bodySize);
+    ctx.strokeStyle = tint(playerLookOption("shirt", state.playerStyle.shirt).color, -42);
+    ctx.lineWidth = 2;
+    ctx.strokeRect(center.x - Math.round(bodySize * 0.5), center.y - Math.round(bodySize * 0.5), bodySize, bodySize);
+    if (state.player.facing === "up") {
+      arrowPoints = [
+        { x: center.x, y: center.y - bodySize },
+        { x: center.x - arrow, y: center.y - Math.round(bodySize * 0.4) },
+        { x: center.x + arrow, y: center.y - Math.round(bodySize * 0.4) }
+      ];
+    } else if (state.player.facing === "down") {
+      arrowPoints = [
+        { x: center.x, y: center.y + bodySize },
+        { x: center.x - arrow, y: center.y + Math.round(bodySize * 0.4) },
+        { x: center.x + arrow, y: center.y + Math.round(bodySize * 0.4) }
+      ];
+    } else if (state.player.facing === "left") {
+      arrowPoints = [
+        { x: center.x - bodySize, y: center.y },
+        { x: center.x - Math.round(bodySize * 0.4), y: center.y - arrow },
+        { x: center.x - Math.round(bodySize * 0.4), y: center.y + arrow }
+      ];
+    } else {
+      arrowPoints = [
+        { x: center.x + bodySize, y: center.y },
+        { x: center.x + Math.round(bodySize * 0.4), y: center.y - arrow },
+        { x: center.x + Math.round(bodySize * 0.4), y: center.y + arrow }
+      ];
+    }
+    fillPolygon(arrowPoints, "#f7fbff", "#1c2531");
+  }
+
+  function renderClassicWorld() {
+    var world = currentWorld();
+    var metrics = classicViewMetrics();
+    var target = selectedTile();
+    var x;
+    var y;
+    var tile;
+    var rect;
+    var shade;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawClassicBackdrop();
+    for (y = metrics.startY; y < metrics.endY; y += 1) {
+      for (x = metrics.startX; x < metrics.endX; x += 1) {
+        tile = world[y][x];
+        rect = classicScreenPoint(metrics, x, y);
+        shade = ((x + y) % 2 === 0 ? 8 : -10) + ((state.dimension === "overworld" && state.night) ? -16 : 0);
+        ctx.fillStyle = tint(colors[tile.floor] || "#66757f", shade);
+        ctx.fillRect(rect.x, rect.y, Math.ceil(metrics.tileSize) + 1, Math.ceil(metrics.tileSize) + 1);
+        ctx.strokeStyle = "rgba(10,16,20,0.18)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(rect.x, rect.y, Math.ceil(metrics.tileSize) + 1, Math.ceil(metrics.tileSize) + 1);
+      }
+    }
+    for (y = metrics.startY; y < metrics.endY; y += 1) {
+      for (x = metrics.startX; x < metrics.endX; x += 1) {
+        tile = world[y][x];
+        rect = classicScreenPoint(metrics, x, y);
+        drawClassicObject({ x: rect.x, y: rect.y, size: Math.ceil(metrics.tileSize) }, tile);
+      }
+    }
+    for (x = 0; x < state.monsters[state.dimension].length; x += 1) {
+      drawClassicEntity(metrics, state.monsters[state.dimension][x].x, state.monsters[state.dimension][x].y, state.monsters[state.dimension][x].color, "#1a1f22", 0.42);
+    }
+    if (bossIsVisible()) {
+      drawClassicEntity(metrics, state.boss.x, state.boss.y, state.boss.color, "#0f1717", state.boss.kind === "dragon" ? 0.8 : 0.62);
+    }
+    if (target) {
+      rect = classicScreenPoint(metrics, target.x, target.y);
+      ctx.strokeStyle = "rgba(255,255,255,0.96)";
+      ctx.lineWidth = Math.max(2, Math.round(metrics.tileSize * 0.08));
+      ctx.strokeRect(rect.x + 2, rect.y + 2, Math.max(8, Math.ceil(metrics.tileSize) - 4), Math.max(8, Math.ceil(metrics.tileSize) - 4));
+    }
+    drawClassicPlayer(metrics);
+    drawInstructionCard();
+    drawStatusHud();
+  }
+
+  function renderWorld() {
+    if (isFirstPersonView()) {
+      renderFirstPersonWorld();
+      return;
+    }
+    renderClassicWorld();
   }
 
   function spawnMonster(type) {
@@ -2120,17 +2477,42 @@
     if (state.inventoryOpen || state.modeMenuOpen || state.pauseMenuOpen) {
       return;
     }
-    var moveX = (input.right ? 1 : 0) - (input.left ? 1 : 0);
-    var moveY = (input.down ? 1 : 0) - (input.up ? 1 : 0);
-    var magnitude = Math.sqrt(moveX * moveX + moveY * moveY) || 1;
-    var nextX = state.player.x + (moveX / magnitude) * PLAYER_SPEED * TILE * dt;
-    var nextY = state.player.y + (moveY / magnitude) * PLAYER_SPEED * TILE * dt;
+    var moveX;
+    var moveY;
+    var magnitude;
+    var nextX;
+    var nextY;
+    if (isFirstPersonView()) {
+      var basis = facingBasis();
+      var turnInput = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+      var walkInput = (input.up ? 1 : 0) - (input.down ? 1 : 0);
+      if (turnInput) {
+        turnPlayer(turnInput * TURN_SPEED * dt);
+        basis = facingBasis();
+      }
+      nextX = state.player.x + basis.fx * PLAYER_SPEED * TILE * dt * walkInput;
+      nextY = state.player.y + basis.fy * PLAYER_SPEED * TILE * dt * walkInput;
+      if (walkInput && !tileBlocked(state.dimension, pixelToGrid(nextX), pixelToGrid(state.player.y))) {
+        state.player.x = nextX;
+      }
+      if (walkInput && !tileBlocked(state.dimension, pixelToGrid(state.player.x), pixelToGrid(nextY))) {
+        state.player.y = nextY;
+      }
+      updateCamera();
+      return;
+    }
+    moveX = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+    moveY = (input.down ? 1 : 0) - (input.up ? 1 : 0);
+    magnitude = Math.sqrt(moveX * moveX + moveY * moveY) || 1;
+    nextX = state.player.x + (moveX / magnitude) * PLAYER_SPEED * TILE * dt;
+    nextY = state.player.y + (moveY / magnitude) * PLAYER_SPEED * TILE * dt;
     if (moveX || moveY) {
       if (Math.abs(moveX) > Math.abs(moveY)) {
         state.player.facing = moveX > 0 ? "right" : "left";
       } else {
         state.player.facing = moveY > 0 ? "down" : "up";
       }
+      state.player.yaw = yawFromFacing(state.player.facing);
     }
     if (!tileBlocked(state.dimension, pixelToGrid(nextX), pixelToGrid(state.player.y))) {
       state.player.x = nextX;
@@ -2144,6 +2526,9 @@
   function facingTile() {
     var px = pixelToGrid(state.player.x);
     var py = pixelToGrid(state.player.y);
+    if (isFirstPersonView()) {
+      state.player.facing = facingFromYaw(state.player.yaw);
+    }
     if (state.player.facing === "up") {
       return { x: px, y: py - 1 };
     }
@@ -2157,6 +2542,9 @@
   }
 
   function selectedTile() {
+    if (isFirstPersonView()) {
+      return facingTile();
+    }
     if (state.targetTile) {
       return state.targetTile;
     }
@@ -2332,9 +2720,11 @@
     state.gameMode = "survival";
     state.pendingWorldMode = "survival";
     state.pendingConnection = false;
+    state.viewMode = "classic";
     state.startMenuTab = "new";
     seedInventory();
     resetWorlds();
+    updateViewModeUI();
   }
 
   function setRealm(active) {
@@ -2346,7 +2736,38 @@
   }
 
   function handlePointer(clientX, clientY) {
+    if (isFirstPersonView()) {
+      state.targetTile = null;
+      return;
+    }
     state.targetTile = facingTile();
+  }
+
+  function beginLookDrag(clientX) {
+    if (!isFirstPersonView()) {
+      return false;
+    }
+    lookDrag.active = true;
+    lookDrag.lastX = clientX;
+    state.targetTile = null;
+    return true;
+  }
+
+  function moveLookDrag(clientX) {
+    var deltaX;
+    if (!lookDrag.active || !isFirstPersonView()) {
+      return false;
+    }
+    deltaX = clientX - lookDrag.lastX;
+    lookDrag.lastX = clientX;
+    if (deltaX) {
+      turnPlayer(deltaX * 0.006);
+    }
+    return true;
+  }
+
+  function endLookDrag() {
+    lookDrag.active = false;
   }
 
   function resizeCanvas() {
@@ -2455,6 +2876,10 @@
       if (key === "f") {
         interact();
       }
+      if (key === "v") {
+        event.preventDefault();
+        toggleViewMode();
+      }
       if (key === "q") {
         breakTile();
       }
@@ -2537,6 +2962,9 @@
       notify("Health restored.");
     };
     ui.openInventoryBtn.onclick = openInventory;
+    ui.toggleViewBtn.onclick = function () {
+      toggleViewMode();
+    };
     ui.inventoryBtn.onclick = openInventory;
     ui.saveWorldBtn.onclick = saveGame;
     ui.breakBtn.onclick = breakTile;
@@ -2558,12 +2986,27 @@
     ui.craftOutputBtn.onclick = craftItem;
 
     canvas.addEventListener("pointerdown", function (event) {
+      if (beginLookDrag(event.clientX)) {
+        if (canvas.setPointerCapture) {
+          canvas.setPointerCapture(event.pointerId);
+        }
+        return;
+      }
       handlePointer(event.clientX, event.clientY);
     });
     canvas.addEventListener("pointermove", function (event) {
       if (event.buttons) {
+        if (moveLookDrag(event.clientX)) {
+          return;
+        }
         handlePointer(event.clientX, event.clientY);
       }
+    });
+    canvas.addEventListener("pointerup", function () {
+      endLookDrag();
+    });
+    canvas.addEventListener("pointerleave", function () {
+      endLookDrag();
     });
 
     bindTouchButtons();
@@ -2604,10 +3047,12 @@
     renderFriends();
     renderLogs();
     addLog("Gameplay loaded. Press E for inventory and F to use portals or computers.");
+    addLog("Press V to switch between Classic view and First Person mode.");
     addLog("Press P to open the pause menu.");
     addLog("Night brings monsters, and the Nether plus End portals are active.");
     bindEvents();
     resizeCanvas();
+    updateViewModeUI();
     updateHUD();
     registerInstallSupport();
     openModeMenu();
@@ -2624,4 +3069,5 @@
   }
 
   init();
+  window.__awesomeBooted = true;
 }());

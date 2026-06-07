@@ -51,7 +51,7 @@
 
   window.addEventListener("load", function () {
     show("Loading AWESOMECRAFT...");
-    loadScript("./app.js");
+    loadScript("./lite.js");
     setTimeout(function () {
       if (window.__awesomeBooted) {
         hide();
