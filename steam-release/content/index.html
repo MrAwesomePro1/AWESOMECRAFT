@@ -155,6 +155,26 @@ input {
   width: 100%;
 }
 
+.development-link {
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 213, 79, 0.7);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ffd54f, #ff9f1c);
+  color: #142027;
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: 0 8px 22px rgba(255, 159, 28, 0.18);
+}
+
+.development-link:hover,
+.development-link:focus-visible {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
 .install-hint {
   margin: 0;
 }
@@ -1153,6 +1173,7 @@ input {
         <p class="subtitle">Build, battle, stream, and jump into friend-only realms.</p>
         <div class="install-stack">
           <button id="installAppBtn" class="primary install-button">Add to Home Screen</button>
+          <a class="development-link" href="./awesome-delvelment/index.html">Open Awesome Development</a>
           <p id="installHint" class="small-copy install-hint">Install AWESOMECRAFT on your home screen for quick launch.</p>
         </div>
       </div>

@@ -1,4 +1,4 @@
-var CACHE_NAME = "awesomecraft-shell-v2";
+var CACHE_NAME = "awesomecraft-shell-v3";
 var ASSETS = [
   "./",
   "./index.html",
