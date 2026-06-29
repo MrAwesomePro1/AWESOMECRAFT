@@ -2,6 +2,8 @@
 
 AWESOMECRAFT is an original browser-based sandbox prototype inspired by block-building survival games. It includes:
 
+- a 7 ADC Awesome Development Coin purchase that unlocks the game for the signed-in account
+
 - multiplayer realm syncing across browser tabs through local storage plus `BroadcastChannel`
 - touch-friendly controls for iPad and desktop keyboard controls
 - a startup world menu with `New World` and `Load World`

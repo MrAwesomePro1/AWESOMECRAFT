@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -11,25 +11,24 @@
   <div class="shell">
     <header class="topbar" aria-label="Awesome Delvelment">
       <a class="brand" href="index.html" aria-label="Awesome Delvelment home">
-        <span class="brand-mark">AD</span>
-        <span>
-          <strong>Awesome Delvelment</strong>
-          <small>App launcher</small>
-        </span>
+        <img class="brand-logo" src="assets/awesome-development-logo-nav.png" alt="Awesome Development">
       </a>
 
       <nav class="quick-links" aria-label="Featured apps">
+        <a href="rewards.html">Rewards</a>
         <a href="staff-messages/index.html">Staff Messages</a>
         <a href="../">AwesomeCraft</a>
         <a href="viders/">Viders</a>
         <a href="https://www.youtube.com/@Pro-one-short-master-youtube" target="_blank" rel="noopener">Channel</a>
-        <a href="bank-rupt-street/">Bank Rupt Street</a>
+        <a href="../BankRuptStreet/index.html">Bank Rupt Street</a>
+        <button class="account-trigger" type="button" data-account-trigger>Log in</button>
       </nav>
     </header>
 
     <main>
       <section class="launcher-head" aria-labelledby="page-title">
         <div class="headline">
+          <img class="hero-logo" src="assets/awesome-development-logo-banner.png" alt="Awesome Development - Exploring the intersection of innovation, creativity, and technology">
           <p class="eyebrow">Created by James</p>
           <h1 id="page-title">Pick an app and jump in.</h1>
           <p class="subhead">Games, videos, experiments, and new projects all in one clean place.</p>
@@ -43,7 +42,31 @@
             </svg>
             <input id="app-search" type="search" autocomplete="off" placeholder="Search games, video, tools">
           </div>
+          <a class="home-wallet-summary" href="rewards.html" aria-label="View Awesome Development Coin rewards">
+            <span>
+              <small>Your Awesome Development Coins</small>
+              <strong data-home-coin-balance>0 ADC</strong>
+            </span>
+            <b>View rewards</b>
+          </a>
         </form>
+      </section>
+
+      <p class="redeem-notice" data-redeem-notice hidden aria-live="assertive"></p>
+
+      <section class="account-folder" data-account-folder hidden aria-live="polite">
+        <div class="account-folder-head">
+          <span class="folder-mark" aria-hidden="true"></span>
+          <div class="account-folder-title">
+            <p class="eyebrow">Account folder</p>
+            <h2>Your Awesome Development Folder</h2>
+            <p data-folder-email></p>
+          </div>
+          <span class="folder-status">Active</span>
+          <button class="secondary-action folder-signout" type="button" data-sign-out>Sign out</button>
+        </div>
+        <div class="folder-shortcuts" data-folder-items></div>
+        <p class="folder-empty" data-folder-empty>Your folder is active. Add apps from below.</p>
       </section>
 
       <section class="controls" aria-label="App filters">
@@ -55,25 +78,26 @@
       </section>
 
       <section class="featured-grid" aria-label="Main apps">
-        <article class="app-card featured" data-tags="game craft survival awesomecraft">
+        <article class="app-card featured membership-locked" data-tags="game craft survival awesomecraft 7 adc paid" data-paid-app="awesomecraft" data-paid-cost="7">
           <div class="card-media image-media color-lime">
             <img src="../icon-512.png" alt="" loading="lazy">
           </div>
           <div class="card-body">
             <div class="card-title-row">
               <h2>AwesomeCraft</h2>
-              <span class="status ready">Ready</span>
+              <span class="status membership" data-paid-status>7 ADC</span>
             </div>
-            <p>Build, explore, and play inside your biggest craft game.</p>
+            <p data-paid-copy>Build, explore, and play inside your biggest craft game. Unlock it for 7 ADC.</p>
             <div class="actions">
-              <a class="primary-action" href="../">Open</a>
+              <a class="primary-action" data-paid-launch data-app-href="../index.html" href="rewards.html">Buy for 7 ADC</a>
+              <a class="secondary-action" href="../snake.html">Snake</a>
             </div>
           </div>
         </article>
 
         <article class="app-card featured" data-tags="video viders upload parents trailer">
           <div class="card-media image-media color-cyan">
-            <img src="viders/viders-logo-1024x576-v-wordmark.svg" alt="" loading="lazy">
+            <img src="../Viders/viders-logo-1024x576-v-wordmark.svg" alt="" loading="lazy">
           </div>
           <div class="card-body">
             <div class="card-title-row">
@@ -82,14 +106,68 @@
             </div>
             <p>Your video app, trailer, and parent controls in one place.</p>
             <div class="actions">
-              <a class="primary-action" href="viders/">Open</a>
-              <a class="secondary-action" href="viders/trailer.html">Trailer</a>
+              <a class="primary-action" href="../Viders/index.html">Open</a>
+              <a class="secondary-action" href="../Viders/trailer.html">Trailer</a>
             </div>
           </div>
         </article>
       </section>
 
       <section class="app-grid" aria-label="All apps">
+        <article class="app-card" data-tags="tool rewards reward pass coins adc awesome development delvelopment billion">
+          <div class="card-media reward-scene" aria-hidden="true">
+            <span class="reward-ticket"></span>
+            <span class="reward-coin one">A</span>
+            <span class="reward-coin two">D</span>
+            <span class="reward-coin three">C</span>
+          </div>
+          <div class="card-body">
+            <div class="card-title-row">
+              <h2>Rewards Pass</h2>
+              <span class="status ready">Ready</span>
+            </div>
+            <p>Earn Awesome Development Coins from 1 million all the way up to infinity.</p>
+            <div class="actions">
+              <a class="primary-action" href="rewards.html">Open</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="app-card membership-locked" data-tags="game demons social deduction party membership pass locked 2b adc two billion" data-membership-app>
+          <div class="card-media demons-scene" aria-hidden="true">
+            <span class="demons-mask"></span>
+            <span class="demons-candle one"></span>
+            <span class="demons-candle two"></span>
+            <span class="membership-lock"></span>
+          </div>
+          <div class="card-body">
+            <div class="card-title-row">
+              <h2>THE DEMONS</h2>
+              <span class="status membership" data-membership-status>2B ADC</span>
+            </div>
+            <p data-membership-copy>Costs 2 billion ADC and requires an active Membership Pass.</p>
+            <div class="actions">
+              <a class="primary-action" data-membership-launch data-app-href="../THE%20DEMONS/index.html" href="rewards.html">Buy for 2B ADC</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="app-card" data-tags="game snake awesomecraft progect project">
+          <div class="card-media snake-scene" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <div class="card-body">
+            <div class="card-title-row">
+              <h2>Snake Progect</h2>
+              <span class="status ready">Ready</span>
+            </div>
+            <p>A fast snake game from the AwesomeCraft collection.</p>
+            <div class="actions">
+              <a class="primary-action" href="../AWESOMECRAFT/snake.html">Open</a>
+            </div>
+          </div>
+        </article>
+
         <article class="app-card" data-tags="game bank rupt street bankrupt board money">
           <div class="card-media street-scene" aria-hidden="true">
             <span class="road"></span>
@@ -112,7 +190,7 @@
 
         <article class="app-card" data-tags="tool ai council chat voices">
           <div class="card-media image-media color-gold">
-            <img src="ai-council/icon-512.png" alt="" loading="lazy">
+            <img src="../New%20project/icon-512.png" alt="" loading="lazy">
           </div>
           <div class="card-body">
             <div class="card-title-row">
@@ -121,7 +199,7 @@
             </div>
             <p>A chat app with different AI voices gathered together.</p>
             <div class="actions">
-              <a class="primary-action" href="ai-council/">Open</a>
+              <a class="primary-action" href="../New%20project/index.html">Open</a>
             </div>
           </div>
         </article>
@@ -150,7 +228,7 @@
 
         <article class="app-card" data-tags="video viders parents controls">
           <div class="card-media image-media color-rose">
-            <img src="viders/viders-icon-512.png" alt="" loading="lazy">
+            <img src="../Viders/viders-icon-512.png" alt="" loading="lazy">
           </div>
           <div class="card-body">
             <div class="card-title-row">
@@ -159,7 +237,7 @@
             </div>
             <p>Parent controls and settings for the Viders app.</p>
             <div class="actions">
-              <a class="primary-action" href="viders/parents.html">Open</a>
+              <a class="primary-action" href="../Viders/parents.html">Open</a>
             </div>
           </div>
         </article>
@@ -189,7 +267,37 @@
     </main>
   </div>
 
+  <dialog class="account-dialog" data-account-dialog aria-labelledby="account-dialog-title">
+    <div class="account-dialog-panel">
+      <header class="account-dialog-head">
+        <div>
+          <p class="eyebrow">Awesome Development Account</p>
+          <h2 id="account-dialog-title" data-account-title>Log in</h2>
+        </div>
+        <button class="dialog-close" type="button" data-account-close aria-label="Close account window">&times;</button>
+      </header>
+
+      <div class="account-modes" role="tablist" aria-label="Account mode">
+        <button class="is-active" type="button" role="tab" aria-selected="true" data-account-mode="login">Log in</button>
+        <button type="button" role="tab" aria-selected="false" data-account-mode="create">Create account</button>
+      </div>
+
+      <form class="account-form" data-account-form novalidate>
+        <label for="account-email">Email</label>
+        <input id="account-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
+
+        <label for="account-password">Password</label>
+        <input id="account-password" name="password" type="password" autocomplete="current-password" minlength="6" required placeholder="At least 6 characters">
+
+        <button class="primary-action account-submit" type="submit" data-account-submit>Log in</button>
+        <p class="account-message" data-account-message aria-live="polite"></p>
+      </form>
+
+      <p class="account-local-note">This account and its folder are saved only on this device.</p>
+    </div>
+  </dialog>
+
   <script src="app.js"></script>
+  <script src="rewards.js"></script>
 </body>
 </html>
-

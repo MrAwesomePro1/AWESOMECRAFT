@@ -33,6 +33,11 @@
     attackBtn: document.getElementById("attackBtn"),
     interactBtn: document.getElementById("interactBtn"),
     inventoryBtn: document.getElementById("inventoryBtn"),
+    purchaseGate: document.getElementById("purchaseGate"),
+    purchaseGateMessage: document.getElementById("purchaseGateMessage"),
+    purchaseBalance: document.getElementById("purchaseBalance"),
+    buyGameBtn: document.getElementById("buyGameBtn"),
+    earnAdcLink: document.getElementById("earnAdcLink"),
     modeMenu: document.getElementById("modeMenu"),
     newWorldTabBtn: document.getElementById("newWorldTabBtn"),
     loadWorldTabBtn: document.getElementById("loadWorldTabBtn"),
@@ -109,6 +114,22 @@
   var SAVE_KEY = "awesomecraft.lite.v4";
   var WORLD_INDEX_KEY = "awesomecraft.worldIndex.v1";
   var WORLD_SAVE_PREFIX = "awesomecraft.world.";
+  var ADC_PRICE = 7;
+  var ADC_REWARDS_KEY = "awesomeDelvelmentRewards";
+  var ADC_ACCOUNTS_KEY = "awesomeDelvelmentAccountsV1";
+  var ADC_SESSION_KEY = "awesomeDelvelmentSessionV1";
+  var ADC_APP_ID = "awesomecraft";
+  var ADC_REWARD_VALUES = {
+    five: 5,
+    nineteen: 19,
+    pass: 100,
+    "one-million": 1000000,
+    "hundred-million": 100000000,
+    billion: 1000000000,
+    "hundred-billion": 100000000000,
+    "one-trillion": 1000000000000,
+    "hundred-trillion": 100000000000000
+  };
   var portalPoints = {
     overworld: { x: 36, y: 28, target: "nether", spawnX: 24, spawnY: 24 },
     nether: { x: 24, y: 24, target: "overworld", spawnX: 37, spawnY: 29 },
@@ -236,6 +257,7 @@
     dayClock: 0.3,
     night: false,
     inventoryOpen: false,
+    purchaseGateOpen: true,
     modeMenuOpen: false,
     pauseMenuOpen: false,
     worlds: { overworld: null, nether: null, end: null },
@@ -378,6 +400,127 @@
 
   function toggleViewMode(silent) {
     setViewMode(isFirstPersonView() ? "classic" : "firstperson", silent);
+  }
+
+  function readStoredObject(key) {
+    try {
+      var value = JSON.parse(localStorage.getItem(key) || "null");
+      return value && typeof value === "object" ? value : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function adcPageUrl(pageName) {
+    return "./awesome-delvelment/" + pageName;
+  }
+
+  function signedInAdcAccount() {
+    var email = (localStorage.getItem(ADC_SESSION_KEY) || "").replace(/^\s+|\s+$/g, "").toLowerCase();
+    var accounts;
+    if (!email) {
+      return null;
+    }
+    accounts = readStoredObject(ADC_ACCOUNTS_KEY);
+    if (!accounts[email]) {
+      return null;
+    }
+    return { email: email, account: accounts[email], accounts: accounts };
+  }
+
+  function adcWalletBalance(rewards) {
+    var claimed = rewards.claimed && typeof rewards.claimed === "object" ? rewards.claimed : {};
+    var gross = Math.max(0, Number(rewards.bonusWalletCredit) || 0);
+    var rewardId;
+    if (rewards.infiniteWalletActive || claimed.infinite) {
+      return Number.POSITIVE_INFINITY;
+    }
+    for (rewardId in ADC_REWARD_VALUES) {
+      if (Object.prototype.hasOwnProperty.call(ADC_REWARD_VALUES, rewardId) && claimed[rewardId]) {
+        gross += ADC_REWARD_VALUES[rewardId];
+      }
+    }
+    gross = Math.max(0, gross - Math.max(0, Number(rewards.walletResetCredit) || 0));
+    return Math.max(0, gross - Math.max(0, Number(rewards.walletSpent) || 0));
+  }
+
+  function formatAdc(amount) {
+    if (!Number.isFinite(amount)) {
+      return "Unlimited ADC";
+    }
+    return Math.max(0, Math.floor(amount)).toLocaleString() + " ADC";
+  }
+
+  function refreshPurchaseGate() {
+    var accountInfo = signedInAdcAccount();
+    var rewards = readStoredObject(ADC_REWARDS_KEY);
+    var balance = accountInfo ? adcWalletBalance(rewards) : 0;
+    var unlockedApps = accountInfo && Array.isArray(accountInfo.account.unlockedApps) ? accountInfo.account.unlockedApps : [];
+    var owned = unlockedApps.indexOf(ADC_APP_ID) !== -1;
+    state.purchaseGateOpen = !owned;
+    ui.purchaseGate.style.display = owned ? "none" : "flex";
+    ui.purchaseBalance.textContent = formatAdc(balance);
+    ui.earnAdcLink.href = adcPageUrl("rewards.html");
+
+    if (owned) {
+      return true;
+    }
+    if (!accountInfo) {
+      ui.purchaseGateMessage.textContent = "Log in to Awesome Development before buying AWESOMECRAFT.";
+      ui.buyGameBtn.textContent = "Open Awesome Development";
+      return false;
+    }
+    if (balance < ADC_PRICE) {
+      ui.purchaseGateMessage.textContent = "You need " + (ADC_PRICE - balance) + " more ADC to unlock the game.";
+      ui.buyGameBtn.textContent = "Earn ADC";
+      return false;
+    }
+    ui.purchaseGateMessage.textContent = "Your account has enough Awesome Development Coins.";
+    ui.buyGameBtn.textContent = "Buy for 7 ADC";
+    return false;
+  }
+
+  function purchaseAwesomecraft() {
+    var accountInfo = signedInAdcAccount();
+    var rewards = readStoredObject(ADC_REWARDS_KEY);
+    var balance = accountInfo ? adcWalletBalance(rewards) : 0;
+    var unlockedApps;
+    var folderItems;
+    if (!accountInfo) {
+      window.location.href = adcPageUrl("index.html");
+      return;
+    }
+    if (balance < ADC_PRICE) {
+      window.location.href = adcPageUrl("rewards.html");
+      return;
+    }
+
+    rewards.walletSpent = Math.max(0, Number(rewards.walletSpent) || 0) + ADC_PRICE;
+    rewards.walletHistory = Array.isArray(rewards.walletHistory) ? rewards.walletHistory : [];
+    rewards.walletHistory.unshift({
+      amount: ADC_PRICE,
+      date: Date.now(),
+      label: "7 ADC AwesomeCraft purchase"
+    });
+    rewards.walletHistory = rewards.walletHistory.slice(0, 8);
+    localStorage.setItem(ADC_REWARDS_KEY, JSON.stringify(rewards));
+
+    unlockedApps = Array.isArray(accountInfo.account.unlockedApps) ? accountInfo.account.unlockedApps.slice() : [];
+    folderItems = Array.isArray(accountInfo.account.folderItems) ? accountInfo.account.folderItems.slice() : [];
+    if (unlockedApps.indexOf(ADC_APP_ID) === -1) {
+      unlockedApps.push(ADC_APP_ID);
+    }
+    if (folderItems.indexOf(ADC_APP_ID) === -1) {
+      folderItems.push(ADC_APP_ID);
+    }
+    accountInfo.account.unlockedApps = unlockedApps;
+    accountInfo.account.folderItems = folderItems;
+    accountInfo.accounts[accountInfo.email] = accountInfo.account;
+    localStorage.setItem(ADC_ACCOUNTS_KEY, JSON.stringify(accountInfo.accounts));
+
+    refreshPurchaseGate();
+    openModeMenu();
+    notify("AWESOMECRAFT unlocked for 7 ADC.");
   }
 
   function isStandaloneMode() {
@@ -1155,7 +1298,7 @@
   }
 
   function openPauseMenu() {
-    if (state.modeMenuOpen || state.pauseMenuOpen) {
+    if (state.purchaseGateOpen || state.modeMenuOpen || state.pauseMenuOpen) {
       return;
     }
     closeInventory();
@@ -1199,6 +1342,9 @@
   }
 
   function openModeMenu() {
+    if (state.purchaseGateOpen) {
+      return;
+    }
     state.modeMenuOpen = true;
     if (ui.modeMenu) {
       ui.modeMenu.style.display = "flex";
@@ -2474,7 +2620,7 @@
   }
 
   function updatePlayer(dt) {
-    if (state.inventoryOpen || state.modeMenuOpen || state.pauseMenuOpen) {
+    if (state.purchaseGateOpen || state.inventoryOpen || state.modeMenuOpen || state.pauseMenuOpen) {
       return;
     }
     var moveX;
@@ -2836,6 +2982,9 @@
     window.addEventListener("resize", resizeCanvas);
     window.addEventListener("keydown", function (event) {
       var key = (event.key || "").toLowerCase();
+      if (state.purchaseGateOpen) {
+        return;
+      }
       if (state.modeMenuOpen) {
         if (key === "escape") {
           event.preventDefault();
@@ -2962,6 +3111,7 @@
       notify("Health restored.");
     };
     ui.openInventoryBtn.onclick = openInventory;
+    ui.buyGameBtn.onclick = purchaseAwesomecraft;
     ui.toggleViewBtn.onclick = function () {
       toggleViewMode();
     };
@@ -3009,6 +3159,19 @@
       endLookDrag();
     });
 
+    window.addEventListener("pageshow", function () {
+      var wasLocked = state.purchaseGateOpen;
+      if (refreshPurchaseGate() && wasLocked) {
+        openModeMenu();
+      }
+    });
+    window.addEventListener("storage", function () {
+      var wasLocked = state.purchaseGateOpen;
+      if (refreshPurchaseGate() && wasLocked) {
+        openModeMenu();
+      }
+    });
+
     bindTouchButtons();
     wireClicks();
   }
@@ -3016,7 +3179,7 @@
   function step(timestamp) {
     var dt = Math.min(0.034, (timestamp - state.lastTick) / 1000 || 0.016);
     state.lastTick = timestamp;
-    if (state.modeMenuOpen || state.pauseMenuOpen) {
+    if (state.purchaseGateOpen || state.modeMenuOpen || state.pauseMenuOpen) {
       renderWorld();
       updateHUD();
       window.requestAnimationFrame(step);
@@ -3055,7 +3218,11 @@
     updateViewModeUI();
     updateHUD();
     registerInstallSupport();
-    openModeMenu();
+    if (refreshPurchaseGate()) {
+      openModeMenu();
+    } else {
+      closeModeMenu();
+    }
     if (window.requestAnimationFrame) {
       window.requestAnimationFrame(function (ts) {
         state.lastTick = ts;

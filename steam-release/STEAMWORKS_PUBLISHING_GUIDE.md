@@ -2,6 +2,8 @@
 
 This folder is a Steam submission starter pack for AWESOMECRAFT.
 
+AWESOMECRAFT also has an in-game Awesome Development price of 7 ADC. Steam itself still requires a real-money store price configured in Steamworks; ADC is handled by the bundled Awesome Development wallet after launch.
+
 ## What Is Ready
 
 - `content/index.html` is the current bundled game build.

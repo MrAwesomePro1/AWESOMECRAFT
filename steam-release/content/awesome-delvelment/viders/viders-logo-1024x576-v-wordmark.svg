@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="576" viewBox="0 0 1024 576" role="img" aria-labelledby="title desc">
+  <title id="title">Viders wide wordmark logo</title>
+  <desc id="desc">A 1024 by 576 Viders logo with the orange V mark and a large Viders wordmark.</desc>
+  <defs>
+    <linearGradient id="bg" x1="88" y1="70" x2="928" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#050914" />
+      <stop offset="0.55" stop-color="#111833" />
+      <stop offset="1" stop-color="#0e1430" />
+    </linearGradient>
+    <radialGradient id="orange-glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(212 138) scale(240 180)">
+      <stop offset="0" stop-color="#ff8c42" stop-opacity="0.48" />
+      <stop offset="1" stop-color="#ff8c42" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="cyan-glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(840 430) scale(260 210)">
+      <stop offset="0" stop-color="#43d2d1" stop-opacity="0.2" />
+      <stop offset="1" stop-color="#43d2d1" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="mark-fill" x1="170" y1="132" x2="392" y2="410" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff6e33" />
+      <stop offset="0.56" stop-color="#ff944b" />
+      <stop offset="1" stop-color="#ffc86f" />
+    </linearGradient>
+    <linearGradient id="mark-gloss" x1="194" y1="154" x2="340" y2="276" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.4" />
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="20" stdDeviation="18" flood-color="#000000" flood-opacity="0.34" />
+    </filter>
+  </defs>
+
+  <rect width="1024" height="576" rx="36" fill="url(#bg)" />
+  <rect width="1024" height="576" rx="36" fill="url(#orange-glow)" />
+  <rect width="1024" height="576" rx="36" fill="url(#cyan-glow)" />
+
+  <g opacity="0.05">
+    <path d="M0 96H1024" stroke="#ffffff" />
+    <path d="M0 192H1024" stroke="#ffffff" />
+    <path d="M0 288H1024" stroke="#ffffff" />
+    <path d="M0 384H1024" stroke="#ffffff" />
+    <path d="M0 480H1024" stroke="#ffffff" />
+    <path d="M128 0V576" stroke="#ffffff" />
+    <path d="M256 0V576" stroke="#ffffff" />
+    <path d="M384 0V576" stroke="#ffffff" />
+    <path d="M512 0V576" stroke="#ffffff" />
+    <path d="M640 0V576" stroke="#ffffff" />
+    <path d="M768 0V576" stroke="#ffffff" />
+    <path d="M896 0V576" stroke="#ffffff" />
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="118" y="128" width="300" height="300" rx="86" fill="url(#mark-fill)" />
+    <path
+      d="M165 170c28-34 74-52 123-52 30 0 59 7 84 22 23 13 40 31 51 54-31-24-73-38-120-38-53 0-97 16-138 50z"
+      fill="url(#mark-gloss)"
+    />
+    <path
+      d="M29 26h11.8L48.2 58.5 55.7 26H67l-13 44H42.4z"
+      transform="translate(164 151) scale(4.22)"
+      fill="#18223d"
+    />
+  </g>
+
+  <g>
+    <text
+      x="470"
+      y="216"
+      fill="#ffb465"
+      font-family="Trebuchet MS, Avenir Next, Segoe UI, sans-serif"
+      font-size="26"
+      font-weight="700"
+      letter-spacing="8"
+    >
+      STREAM LOUDER
+    </text>
+    <text
+      x="462"
+      y="318"
+      fill="#f7f5ef"
+      font-family="Trebuchet MS, Avenir Next, Segoe UI, sans-serif"
+      font-size="146"
+      font-weight="700"
+      letter-spacing="-6"
+    >
+      Viders
+    </text>
+    <text
+      x="470"
+      y="382"
+      fill="#b7bfd9"
+      font-family="Gill Sans, Segoe UI, sans-serif"
+      font-size="34"
+      font-weight="600"
+      letter-spacing="1"
+    >
+      Watch. Create. Share.
+    </text>
+  </g>
+</svg>

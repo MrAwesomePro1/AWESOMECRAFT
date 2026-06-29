@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="AI Council icon">
+  <rect width="512" height="512" rx="96" fill="#101214"/>
+  <rect x="32" y="32" width="448" height="448" rx="78" fill="#182026" stroke="#3fc8b4" stroke-width="10"/>
+  <circle cx="154" cy="166" r="48" fill="#6ee7c7"/>
+  <circle cx="256" cy="126" r="48" fill="#f1b84b"/>
+  <circle cx="358" cy="166" r="48" fill="#ef6b7b"/>
+  <circle cx="190" cy="292" r="48" fill="#70a7ff"/>
+  <circle cx="322" cy="292" r="48" fill="#a7d36f"/>
+  <path d="M152 382h208" stroke="#8bd5ff" stroke-width="26" stroke-linecap="round"/>
+  <text x="256" y="274" text-anchor="middle" font-family="Arial, sans-serif" font-size="118" font-weight="900" fill="#ffffff">AC</text>
+</svg>

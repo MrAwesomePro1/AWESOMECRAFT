@@ -734,6 +734,7 @@ input {
   color: var(--text-soft);
 }
 
+.purchase-gate,
 .mode-menu,
 .pause-menu {
   position: fixed;
@@ -745,6 +746,77 @@ input {
   padding: 20px;
   background: rgba(3, 10, 14, 0.72);
   backdrop-filter: blur(10px);
+}
+
+.purchase-gate {
+  z-index: 10000;
+}
+
+.purchase-card {
+  width: min(480px, calc(100vw - 24px));
+  padding: 28px;
+  border: 1px solid rgba(255, 215, 106, 0.48);
+  border-radius: var(--radius-lg);
+  background: #0b2029;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.purchase-card h2 {
+  margin: 8px 0;
+  font-family: "Rockwell", "Georgia", serif;
+}
+
+.adc-price {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--gold);
+}
+
+.adc-price strong {
+  font-family: "Rockwell", "Georgia", serif;
+  font-size: 4rem;
+  line-height: 1;
+}
+
+.adc-price span {
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.purchase-balance {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 20px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(5, 16, 22, 0.8);
+  color: var(--text-soft);
+}
+
+.purchase-balance strong {
+  color: var(--text-main);
+}
+
+.purchase-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.purchase-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text-main);
+  background: rgba(16, 38, 52, 0.92);
+  text-decoration: none;
 }
 
 .pause-menu {

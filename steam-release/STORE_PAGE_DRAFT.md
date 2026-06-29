@@ -4,6 +4,8 @@
 
 AWESOMECRAFT is a playful block-building survival sandbox where you create worlds, craft gear, explore portals, and battle bosses from classic or first-person view.
 
+Awesome Development access price: 7 ADC.
+
 ## About This Game
 
 Build your own world, survive the night, jump between dimensions, and face big boss fights in AWESOMECRAFT. Start a new survival or creative world, customize your player, gather blocks, craft with a 3x3 menu, and discover computers with the BuildTube app.

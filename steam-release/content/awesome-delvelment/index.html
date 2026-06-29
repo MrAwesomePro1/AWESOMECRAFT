@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Awesome Delvelment</title>
+  <meta name="description" content="A launcher for games, apps, and videos created by Awesome Delvelment.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar" aria-label="Awesome Delvelment">
+      <a class="brand" href="index.html" aria-label="Awesome Delvelment home">
+        <img class="brand-logo" src="assets/awesome-development-logo-nav.png" alt="Awesome Development">
+      </a>
+
+      <nav class="quick-links" aria-label="Featured apps">
+        <a href="rewards.html">Rewards</a>
+        <a href="staff-messages/index.html">Staff Messages</a>
+        <a href="staff-time/index.html">StaffTime</a>
+        <a href="../AWESOMECRAFT/index.html">AwesomeCraft</a>
+        <a href="../Viders/index.html">Viders</a>
+        <a href="https://www.youtube.com/@Pro-one-short-master-youtube" target="_blank" rel="noopener">Channel</a>
+        <a href="../BankRuptStreet/index.html">Bank Rupt Street</a>
+        <button class="account-trigger" type="button" data-account-trigger>Log in</button>
+      </nav>
+    </header>
+
+    <main>
+      <section class="launcher-head" aria-labelledby="page-title">
+        <div class="headline">
+          <img class="hero-logo" src="assets/awesome-development-logo-banner.png" alt="Awesome Development - Exploring the intersection of innovation, creativity, and technology">
+          <p class="eyebrow">Created by James</p>
+          <h1 id="page-title">Pick an app and jump in.</h1>
+          <p class="subhead">Games, videos, experiments, and new projects all in one clean place.</p>
+        </div>
+
+        <form class="search-panel" role="search">
+          <label for="app-search">Find an app</label>
+          <div class="search-box">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="m21 21-4.35-4.35m1.35-5.15a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0Z"/>
+            </svg>
+            <input id="app-search" type="search" autocomplete="off" placeholder="Search games, video, tools">
+          </div>
+          <a class="home-wallet-summary" href="rewards.html" aria-label="View Awesome Development Coin rewards">
+            <span>
+              <small>Your Awesome Development Coins</small>
+              <strong data-home-coin-balance>0 ADC</strong>
+            </span>
+            <b>View rewards</b>
+          </a>
+        </form>
+      </section>
+
+      <p class="redeem-notice" data-redeem-notice hidden aria-live="assertive"></p>
+
+      <section class="account-folder" data-account-folder hidden aria-live="polite">
+        <div class="account-folder-head">
+          <span class="folder-mark" aria-hidden="true"></span>
+          <div class="account-folder-title">
+            <p class="eyebrow">Account folder</p>
+            <h2>Your Awesome Development Folder</h2>
+            <p data-folder-email></p>
+          </div>
+          <span class="folder-status">Active</span>
+          <button class="secondary-action folder-signout" type="button" data-sign-out>Sign out</button>
+        </div>
+        <div class="folder-shortcuts" data-folder-items></div>
+        <p class="folder-empty" data-folder-empty>Your folder is active. Add apps from below.</p>
+      </section>
+
+      <section class="controls" aria-label="App filters">
+        <button class="chip is-active" type="button" data-filter="all">All</button>
+        <button class="chip" type="button" data-filter="game">Games</button>
+        <button class="chip" type="button" data-filter="video">Video</button>
+        <button class="chip" type="button" data-filter="tool">Tools</button>
+        <button class="chip" type="button" data-filter="soon">Coming soon</button>
+      </section>
+
+      <section class="featured-grid" aria-label="Main apps">
+        <article class="app-card featured membership-locked" data-tags="game craft survival awesomecraft 7 adc paid" data-paid-app="awesomecraft" data-paid-cost="7">
+          <div class="card-media image-media color-lime">
+            <img src="../icon-512.png" alt="" loading="lazy">
+          </div>
+          <div class="card-body">
+            <div class="card-title-row">
+              <h2>AwesomeCraft</h2>
+              <span class="status membership" data-paid-status>7 ADC</span>
+            </div>
+            <p data-paid-copy>Build, explore, and play inside your biggest craft game. Unlock it for 7 ADC.</p>
+            <div class="actions">
+              <a class="primary-action" data-paid-launch data-app-href="../index.html" href="rewards.html">Buy for 7 ADC</a>
+              <a class="secondary-action" href="../snake.html">Snake</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="app-card featured" data-tags="video viders upload parents trailer">
+          <div class="card-media image-media color-cyan">
+            <img src="../Viders/viders-logo-1024x576-v-wordmark.svg" alt="" loading="lazy">
+          </div>
+          <div class="card-body">
+            <div class="card-title-row">
+              <h2>Viders</h2>
+              <span class="status ready">Ready</span>
+            </div>
+            <p>Your video app, trailer, and parent controls in one place.</p>
+            <div class="actions">
+              <a class="primary-action" href="../Viders/index.html">Open</a>
+              <a class="secondary-action" href="../Viders/trailer.html">Trailer</a>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="app-grid" aria-label="All apps">
+        <article class="app-card" data-tags="tool rewards reward pass coins adc awesome development delvelopment billion">
+          <div class="card-media reward-scene" aria-hidden="true">
+            <span class="reward-ticket"></span>
+            <span class="reward-coin one">A</span>
+            <span class="reward-coin two">D</span>
+            <span class="reward-coin three">C</span>
+          </div>
+          <div class="card-body">
+            <div class="card-title-row">
+              <h2>Rewards Pass</h2>
+              <span class="status ready">Ready</span>
+            </div>
+            <p>Earn Awesome Development Coins from 1 million all the way up to infinity.</p>
+            <div class="actions">
+              <a class="primary-action" href="rewards.html">Open</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="app-card membership-locked" data-tags="game demons social deduction party membership pass locked 2b adc two billion" data-membership-app>
+          <div class="card-media demons-scene" aria-hidden="true">
+            <span class="demons-mask"></span>
+            <span class="demons-candle one"></span>
+            <span class="demons-candle two"></span>
+            <span class="membership-lock"></span>
+          </div>
+          <div class="card-body">
+            <div class="card-title-row">
+              <h2>THE DEMONS</h2>
+              <span class="status membership" data-membership-status>2B ADC</span>
+            </div>
+            <p data-membership-copy>Costs 2 billion ADC and requires an active Membership Pass.</p>
+            <div class="actions">
+              <a class="primary-action" data-membership-launch data-app-href="../THE%20DEMONS/index.html" href="rewards.html">Buy for 2B ADC</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="app-card" data-tags="game snake awesomecraft progect project">
+          <div class="card-media snake-scene" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <div class="card-body">
+            <div class="card-title-row">
+              <h2>Snake Progect</h2>
+              <span class="status ready">Ready</span>
+            </div>
+            <p>A fast snake game from the AwesomeCraft collection.</p>
+            <div class="actions">
+              <a class="primary-action" href="../AWESOMECRAFT/snake.html">Open</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="app-card" data-tags="game bank rupt street bankrupt board money">
+          <div class="card-media street-scene" aria-hidden="true">
+            <span class="road"></span>
+            <span class="block one"></span>
+            <span class="block two"></span>
+            <span class="block three"></span>
+          </div>
+          <div class="card-body">
+            <div class="card-title-row">
+              <h2>Bank Rupt Street</h2>
+              <span class="status ready">Ready</span>
+            </div>
+            <p>A board-game style money showdown on a risky street.</p>
+            <div class="actions">
+              <a class="primary-action" href="../BankRuptStreet/index.html">Open</a>
+              <a class="secondary-action" href="../BankRuptStreet/print-kit.html">Print Kit</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="app-card" data-tags="tool ai council chat voices">
+          <div class="card-media image-media color-gold">
+            <img src="../New%20project/icon-512.png" alt="" loading="lazy">
+          </div>
+          <div class="card-body">
+            <div class="card-title-row">
+              <h2>AI Council</h2>
+              <span class="status ready">Ready</span>
+            </div>
+            <p>A chat app with different AI voices gathered together.</p>
+            <div class="actions">
+              <a class="primary-action" href="../New%20project/index.html">Open</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="app-card" data-tags="tool staff messages chat team internal">
+          <div class="card-media staff-message-scene" aria-hidden="true">
+            <span class="message-window">
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
+            <span class="message-bubble one"></span>
+            <span class="message-bubble two"></span>
+          </div>
+          <div class="card-body">
+            <div class="card-title-row">
+              <h2>Staff Messages</h2>
+              <span class="status ready">Ready</span>
+            </div>
+            <p>A private-style staff chat for Awesome Delvelment planning and updates.</p>
+            <div class="actions">
+              <a class="primary-action" href="staff-messages/index.html">Open</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="app-card" data-tags="tool staff call video meeting facetime team internal">
+          <div class="card-media staff-time-scene" aria-hidden="true">
+            <span class="call-window">
+              <span class="call-tile main"></span>
+              <span class="call-tile one"></span>
+              <span class="call-tile two"></span>
+              <span class="call-tile three"></span>
+              <span class="call-controls"></span>
+            </span>
+          </div>
+          <div class="card-body">
+            <div class="card-title-row">
+              <h2>Awesome StaffTime</h2>
+              <span class="status ready">Ready</span>
+            </div>
+            <p>A staff video-call room for meetings, quick check-ins, and project reviews.</p>
+            <div class="actions">
+              <a class="primary-action" href="staff-time/index.html">Open</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="app-card" data-tags="game starfall jester arcade">
+          <div class="card-media jester-scene" aria-hidden="true">
+            <span class="star one"></span>
+            <span class="star two"></span>
+            <span class="star three"></span>
+            <span class="jester-face"></span>
+          </div>
+          <div class="card-body">
+            <div class="card-title-row">
+              <h2>Starfall Jester</h2>
+              <span class="status ready">Ready</span>
+            </div>
+            <p>An arcade game with falling stars and tricky timing.</p>
+            <div class="actions">
+              <a class="primary-action" href="../StarfallJester/index.html">Open</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="app-card" data-tags="video viders parents controls">
+          <div class="card-media image-media color-rose">
+            <img src="../Viders/viders-icon-512.png" alt="" loading="lazy">
+          </div>
+          <div class="card-body">
+            <div class="card-title-row">
+              <h2>Viders Parents</h2>
+              <span class="status ready">Ready</span>
+            </div>
+            <p>Parent controls and settings for the Viders app.</p>
+            <div class="actions">
+              <a class="primary-action" href="../Viders/parents.html">Open</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="app-card" data-tags="video channel shorts creator pro one master">
+          <div class="card-media channel-scene" aria-hidden="true">
+            <span class="play-button"></span>
+            <span class="channel-line one"></span>
+            <span class="channel-line two"></span>
+            <span class="channel-line three"></span>
+          </div>
+          <div class="card-body">
+            <div class="card-title-row">
+              <h2>Pro One Short Master</h2>
+              <span class="status ready">Ready</span>
+            </div>
+            <p>Your video channel for shorts, updates, and new creations.</p>
+            <div class="actions">
+              <a class="primary-action" href="https://www.youtube.com/@Pro-one-short-master-youtube" target="_blank" rel="noopener">Open Channel</a>
+            </div>
+          </div>
+        </article>
+
+      </section>
+
+      <p class="empty-state" hidden>No apps match that search.</p>
+    </main>
+  </div>
+
+  <dialog class="account-dialog" data-account-dialog aria-labelledby="account-dialog-title">
+    <div class="account-dialog-panel">
+      <header class="account-dialog-head">
+        <div>
+          <p class="eyebrow">Awesome Development Account</p>
+          <h2 id="account-dialog-title" data-account-title>Log in</h2>
+        </div>
+        <button class="dialog-close" type="button" data-account-close aria-label="Close account window">&times;</button>
+      </header>
+
+      <div class="account-modes" role="tablist" aria-label="Account mode">
+        <button class="is-active" type="button" role="tab" aria-selected="true" data-account-mode="login">Log in</button>
+        <button type="button" role="tab" aria-selected="false" data-account-mode="create">Create account</button>
+      </div>
+
+      <form class="account-form" data-account-form novalidate>
+        <label for="account-email">Email</label>
+        <input id="account-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
+
+        <label for="account-password">Password</label>
+        <input id="account-password" name="password" type="password" autocomplete="current-password" minlength="6" required placeholder="At least 6 characters">
+
+        <button class="primary-action account-submit" type="submit" data-account-submit>Log in</button>
+        <p class="account-message" data-account-message aria-live="polite"></p>
+      </form>
+
+      <p class="account-local-note">This account and its folder are saved only on this device.</p>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+  <script src="rewards.js"></script>
+</body>
+</html>
