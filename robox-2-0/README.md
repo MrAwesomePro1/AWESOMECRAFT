@@ -14,6 +14,10 @@ The original prebuilt experiences have been removed. Players can create their ow
 
 Owned worlds are also kept in a separate per-account recovery library. Signing in merges the account copy, its recovery copy, and any published games owned by that username, while respecting confirmed deletions. Guest mode now tells players to sign in when saved worlds exist instead of incorrectly showing a clean slate.
 
+World owners can open Invite Players on any creation, invite an exact username, and grant either play-only or build access. Permissions can be changed or removed later. Invited builders can place and wreck blocks in the published world; other visitors cannot enter Build mode.
+
+The Updates tab provides a browsable release history. Players can choose an update directly or move through update notes with Previous and Next controls.
+
 ## Publishing games
 
 New worlds begin as private drafts. Creators can publish a draft as a game in the shared Published Games list, then use Update Live to push later block changes. Deleting a world removes its draft and published copy permanently; deletion records prevent it from returning after the next login.

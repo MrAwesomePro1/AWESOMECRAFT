@@ -202,6 +202,34 @@
   }
   $$('[data-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 
+  const updateNotes = [
+    { version:'UPDATE 4 • LATEST', badge:'UPDATE 4', title:'Invites & Permissions', summary:'World owners can invite players by username and decide who gets build access.', features:['Invite exact player usernames','Choose play-only or Can Build','Change permissions or remove invites'] },
+    { version:'UPDATE 3', badge:'UPDATE 3', title:'Expandable Worlds', summary:'Creators can grow their platform and share a finished game with everyone.', features:['Expand platforms up to 32 × 32','Publish and update live games','Right-click to place and left-click to wreck'] },
+    { version:'UPDATE 2', badge:'UPDATE 2', title:'World Creator', summary:'Every experience begins with a world made by a player.', features:['Create named worlds with four environments','Save block changes automatically','Delete drafts and their published copy'] },
+    { version:'UPDATE 1', badge:'UPDATE 1', title:'Accounts & Friends', summary:'Player profiles start clean and stay saved on the device.', features:['Age verification for accounts','Add and unfriend by username','Start daily rewards at Day 1'] }
+  ];
+  let activeUpdateIndex = 0;
+  function renderUpdate(index) {
+    activeUpdateIndex = Math.max(0, Math.min(updateNotes.length - 1, index));
+    const note = updateNotes[activeUpdateIndex];
+    $('#updateVersion').textContent = note.badge;
+    $('#updateKicker').textContent = note.version;
+    $('#updateTitle').textContent = note.title;
+    $('#updateSummary').textContent = note.summary;
+    $('#updateFeatures').innerHTML = note.features.map(feature => `<li>${escapeHTML(feature)}</li>`).join('');
+    $('#updatePosition').textContent = `${activeUpdateIndex + 1} / ${updateNotes.length}`;
+    $('#previousUpdate').disabled = activeUpdateIndex === 0;
+    $('#nextUpdate').disabled = activeUpdateIndex === updateNotes.length - 1;
+    $$('#updatesList [data-update-index]').forEach(button => button.classList.toggle('active', Number(button.dataset.updateIndex) === activeUpdateIndex));
+  }
+  $('#updatesList').addEventListener('click', event => {
+    const button = event.target.closest('[data-update-index]');
+    if (button) renderUpdate(Number(button.dataset.updateIndex));
+  });
+  $('#previousUpdate').addEventListener('click', () => renderUpdate(activeUpdateIndex - 1));
+  $('#nextUpdate').addEventListener('click', () => renderUpdate(activeUpdateIndex + 1));
+  renderUpdate(0);
+
   $('#soundToggle').addEventListener('click', event => {
     audioEnabled = !audioEnabled;
     event.currentTarget.classList.toggle('muted', !audioEnabled);
@@ -299,6 +327,14 @@
       const publishLabel = world.published ? 'UPDATE LIVE' : 'PUBLISH GAME';
       return `<article class="game-card user-world-card" data-title="${name.toLowerCase()}"><div class="game-art user-world-art ${world.theme || 'grass'}"><span class="world-owner">CREATED BY YOU</span><span class="world-status ${world.published ? 'live' : 'draft'}">${status}</span></div><div class="game-info"><h4>${name}</h4><p>${description}</p><div><span>${theme.icon} ${theme.label}</span><span>◆ ${world.visits || 0} plays</span></div></div><button class="world-publish-btn" data-world-publish="${world.id}">${publishLabel}</button><button class="world-delete-btn" data-world-delete="${world.id}" aria-label="Delete ${name}">DELETE</button><button class="card-play" data-world-id="${world.id}" aria-label="Play ${name}">▶</button></article>`;
     }).join('');
+    $$('.user-world-card', grid).forEach((card, index) => {
+      const world = createdWorlds[index];
+      const accessButton = document.createElement('button');
+      accessButton.className = 'world-access-btn';
+      accessButton.dataset.worldAccess = world.id;
+      accessButton.textContent = 'INVITE PLAYERS';
+      card.append(accessButton);
+    });
   }
 
   function renderPublishedGames() {
@@ -316,13 +352,63 @@
       const description = escapeHTML(world.description || 'A player-created game.');
       return `<article class="game-card user-world-card published-game-card" data-title="${name.toLowerCase()} ${owner.toLowerCase()}"><div class="game-art user-world-art ${world.theme || 'grass'}"><span class="world-owner">BY ${owner}</span><span class="world-status live">LIVE</span></div><div class="game-info"><h4>${name}</h4><p>${description}</p><div><span>${theme.icon} ${theme.label}</span><span>◆ ${world.plays || 0} plays</span></div></div><button class="card-play" data-published-world-id="${world.id}" aria-label="Play published game ${name}">▶</button></article>`;
     }).join('');
+    $$('.published-game-card', grid).forEach((card, index) => {
+      const invites = Array.isArray(games[index].invites) ? games[index].invites : [];
+      const invite = invites.find(item => String(item.username || '').toLowerCase() === profile.name.toLowerCase());
+      if (!invite) return;
+      const badge = document.createElement('span');
+      badge.className = `invite-access-badge ${invite.canBuild ? 'builder' : 'player'}`;
+      badge.textContent = invite.canBuild ? 'BUILD ACCESS' : 'INVITED';
+      $('.game-art', card).append(badge);
+    });
   }
 
   const createWorldModal = $('#createWorldModal');
   const deleteWorldModal = $('#deleteWorldModal');
   const publishWorldModal = $('#publishWorldModal');
+  const worldAccessModal = $('#worldAccessModal');
   let pendingDeleteWorldId = null;
   let pendingPublishWorldId = null;
+  let accessWorldId = null;
+  function getAccessWorld() { return profile.worlds.find(world => world.id === accessWorldId); }
+  function syncWorldInvites(world) {
+    if (!world.published) return;
+    const published = readPublishedGames();
+    const liveWorld = published.find(item => item.id === world.id);
+    if (liveWorld) {
+      liveWorld.invites = world.invites.map(invite => ({ ...invite }));
+      writePublishedGames(published);
+      renderPublishedGames();
+    }
+  }
+  function renderInvitedPlayers() {
+    const world = getAccessWorld();
+    const list = $('#invitedPlayersList');
+    if (!world) { list.innerHTML = ''; return; }
+    if (!Array.isArray(world.invites)) world.invites = [];
+    if (!world.invites.length) {
+      list.innerHTML = '<div class="access-empty"><b>No players invited yet</b><small>Invite someone by their exact username.</small></div>';
+      return;
+    }
+    list.innerHTML = world.invites.map(invite => `<div class="access-player" data-invite-user="${invite.username.toLowerCase()}"><span class="access-avatar">${escapeHTML(invite.username.charAt(0).toUpperCase())}</span><div><b>${escapeHTML(invite.username)}</b><small>Invited player</small></div><label class="permission-toggle"><input type="checkbox" data-invite-build ${invite.canBuild ? 'checked' : ''}><span>Can build</span></label><button data-remove-invite>REMOVE</button></div>`).join('');
+  }
+  function openWorldAccess(worldId) {
+    const world = profile.worlds.find(item => item.id === worldId);
+    if (!world) return;
+    accessWorldId = worldId;
+    if (!Array.isArray(world.invites)) world.invites = [];
+    $('#accessWorldName').textContent = world.name;
+    $('#inviteUsernameInput').value = '';
+    $('#inviteCanBuild').checked = false;
+    $('#invitePlayerMessage').textContent = '';
+    renderInvitedPlayers();
+    worldAccessModal.classList.add('show');
+    $('#inviteUsernameInput').focus();
+  }
+  function closeWorldAccess() {
+    accessWorldId = null;
+    worldAccessModal.classList.remove('show');
+  }
   function closeWorldCreator() {
     createWorldModal.classList.remove('show');
     $('#createWorldForm').reset();
@@ -341,10 +427,12 @@
     const description = $('#worldDescriptionInput').value.trim();
     const theme = $('input[name="worldTheme"]:checked').value;
     if (name.length < 3) { $('#worldCreateMessage').textContent = 'World names need at least 3 characters.'; return; }
-    profile.worlds.push({ id:`world-${Date.now().toString(36)}`, name, description, theme, visits:0, blocks:null, size:12, published:false, createdAt:new Date().toISOString() });
+    profile.worlds.push({ id:`world-${Date.now().toString(36)}`, name, description, theme, visits:0, blocks:null, size:12, invites:[], published:false, createdAt:new Date().toISOString() });
     saveProfile(); closeWorldCreator(); switchView('discover'); beep(920, .15);
   });
   $('#gameGrid').addEventListener('click', event => {
+    const accessButton = event.target.closest('[data-world-access]');
+    if (accessButton) { openWorldAccess(accessButton.dataset.worldAccess); return; }
     const publishButton = event.target.closest('[data-world-publish]');
     if (publishButton) {
       pendingPublishWorldId = publishButton.dataset.worldPublish;
@@ -365,6 +453,55 @@
     }
     const playButton = event.target.closest('[data-world-id]');
     if (playButton) launchGame(playButton.dataset.worldId);
+  });
+  $$('[data-close-world-access]').forEach(button => button.addEventListener('click', closeWorldAccess));
+  worldAccessModal.addEventListener('click', event => { if (event.target === worldAccessModal) closeWorldAccess(); });
+  $('#invitePlayerForm').addEventListener('submit', event => {
+    event.preventDefault();
+    const world = getAccessWorld();
+    const username = $('#inviteUsernameInput').value.trim();
+    const message = $('#invitePlayerMessage');
+    message.classList.remove('success');
+    if (!world) return;
+    if (!/^[A-Za-z0-9_]{3,16}$/.test(username)) { message.textContent = 'Use 3-16 letters, numbers, or underscores.'; return; }
+    if (username.toLowerCase() === profile.name.toLowerCase()) { message.textContent = 'You already own this world.'; return; }
+    if (!Array.isArray(world.invites)) world.invites = [];
+    const existing = world.invites.find(invite => invite.username.toLowerCase() === username.toLowerCase());
+    if (existing) {
+      existing.canBuild = $('#inviteCanBuild').checked;
+      existing.username = username;
+    } else {
+      world.invites.push({ username, canBuild:$('#inviteCanBuild').checked, invitedAt:new Date().toISOString() });
+    }
+    saveProfile(); syncWorldInvites(world); renderInvitedPlayers();
+    message.textContent = world.published ? `Invite sent to ${username}.` : `${username} is invited. Publish the game to deliver access.`;
+    message.classList.add('success');
+    $('#inviteUsernameInput').value = '';
+    $('#inviteCanBuild').checked = false;
+    beep(880, .12);
+  });
+  $('#invitedPlayersList').addEventListener('change', event => {
+    const checkbox = event.target.closest('[data-invite-build]');
+    if (!checkbox) return;
+    const world = getAccessWorld();
+    const row = checkbox.closest('[data-invite-user]');
+    const invite = world?.invites.find(item => item.username.toLowerCase() === row.dataset.inviteUser);
+    if (!invite) return;
+    invite.canBuild = checkbox.checked;
+    saveProfile(); syncWorldInvites(world);
+    $('#invitePlayerMessage').textContent = checkbox.checked ? `${invite.username} can now build.` : `${invite.username} now has play-only access.`;
+    $('#invitePlayerMessage').classList.add('success');
+  });
+  $('#invitedPlayersList').addEventListener('click', event => {
+    const button = event.target.closest('[data-remove-invite]');
+    if (!button) return;
+    const world = getAccessWorld();
+    const row = button.closest('[data-invite-user]');
+    if (!world || !row) return;
+    const removed = world.invites.find(item => item.username.toLowerCase() === row.dataset.inviteUser);
+    world.invites = world.invites.filter(item => item.username.toLowerCase() !== row.dataset.inviteUser);
+    saveProfile(); syncWorldInvites(world); renderInvitedPlayers();
+    $('#invitePlayerMessage').textContent = `${removed?.username || 'Player'} was removed from this world.`;
   });
   $('#publishedGamesGrid').addEventListener('click', event => {
     const playButton = event.target.closest('[data-published-world-id]');
@@ -467,7 +604,7 @@
   const canvas = $('#gameCanvas');
   const ctx = canvas.getContext('2d');
   const game = {
-    active: false, paused: false, world: null, userWorldId: null, loadedBlocks: null, worldSize: 12, last: 0, time: 0, keys: {}, buildMode: false, selectedBlock: 1,
+    active: false, paused: false, world: null, userWorldId: null, publishedWorldId: null, canBuild: false, isWorldOwner: false, loadedBlocks: null, worldSize: 12, last: 0, time: 0, keys: {}, buildMode: false, selectedBlock: 1,
     player: { x: 5, y: 5, z: 0, vz: 0, angle: 0 }, camera: { x: 0, y: 0 }, collected: 0,
     coins: [], blocks: [], particles: [], npc: { x: 7.5, y: 5.5, name: 'Nova' }
   };
@@ -504,12 +641,15 @@
     const worldRecord = publishedLaunch ? publishedWorld : ownedWorld;
     const selectedWorld = worldRecord ? worldConfigFromRecord(worldRecord) : worlds[key];
     if (!selectedWorld) return;
-    game.world = selectedWorld; game.userWorldId = !publishedLaunch && ownedWorld ? ownedWorld.id : null; game.loadedBlocks = Array.isArray(worldRecord.blocks) ? worldRecord.blocks.map(block => ({ ...block })) : null; game.worldSize = Math.max(12, Math.min(32, Number(worldRecord.size) || 12)); game.active = true; game.paused = false; game.buildMode = false; game.time = 0;
+    const signedInPlayer = sessionMode === 'account';
+    const isWorldOwner = (!!ownedWorld && !publishedLaunch) || (signedInPlayer && String(worldRecord.owner || '').toLowerCase() === profile.name.toLowerCase());
+    const invite = (Array.isArray(worldRecord.invites) ? worldRecord.invites : []).find(item => String(item.username || '').toLowerCase() === profile.name.toLowerCase());
+    game.world = selectedWorld; game.userWorldId = !publishedLaunch && ownedWorld ? ownedWorld.id : null; game.publishedWorldId = publishedLaunch && publishedWorld ? publishedWorld.id : null; game.isWorldOwner = isWorldOwner; game.canBuild = isWorldOwner || signedInPlayer && !!invite?.canBuild; game.loadedBlocks = Array.isArray(worldRecord.blocks) ? worldRecord.blocks.map(block => ({ ...block })) : null; game.worldSize = Math.max(12, Math.min(32, Number(worldRecord.size) || 12)); game.active = true; game.paused = false; game.buildMode = false; game.time = 0;
     if (publishedLaunch && publishedWorld) { publishedWorld.plays = (publishedWorld.plays || 0) + 1; writePublishedGames(publishedGames); renderPublishedGames(); }
     else if (ownedWorld) { ownedWorld.visits = (ownedWorld.visits || 0) + 1; saveProfile(); }
-    $('#worldName').textContent = game.world.name; $('#worldIcon').textContent = game.world.icon;
+    $('#worldName').textContent = game.world.name; $('#worldIcon').textContent = game.world.icon; $('#serverName').textContent = game.canBuild ? (game.isWorldOwner ? 'Owner build access' : 'Builder permission granted') : 'Play-only access';
     $('#questTitle').textContent = game.world.quest; $('#questText').textContent = game.world.text;
-    $('#gameScreen').classList.add('active'); $('#pausePanel').classList.remove('show'); $('#buildToolbar').classList.remove('show'); $('#mobileBuild').classList.remove('active');
+    $('#gameScreen').classList.add('active'); $('#pausePanel').classList.remove('show'); $('#buildToolbar').classList.remove('show'); $('#mobileBuild').classList.remove('active'); $('#mobileBuild').classList.toggle('locked', !game.canBuild); $('#mobileBuild').textContent = game.canBuild ? 'BUILD' : 'VIEW';
     document.body.style.overflow = 'hidden'; generateWorld(); resize(); beep(330, .08); setTimeout(() => beep(660, .12), 100);
     game.last = performance.now(); requestAnimationFrame(loop);
   }
@@ -529,6 +669,7 @@
   $('#resetPlayer').addEventListener('click', () => { game.player = { x: 5, y: 5, z: 0, vz: 0, angle: 0 }; togglePause(false); showToast('Character reset', 'Back at spawn'); });
 
   function setBuildMode(enabled) {
+    if (enabled && !game.canBuild) { showToast('Build permission required', 'The world owner has not allowed you to build'); beep(260, .1); return; }
     game.buildMode = enabled;
     $('#buildToolbar').classList.toggle('show', enabled);
     $('#mobileBuild').classList.toggle('active', enabled);
@@ -573,15 +714,27 @@
     return { x: Math.round(sy/tileH + sx/tileW), y: Math.round(sy/tileH - sx/tileW) };
   }
   function saveWorldBlocks() {
-    if (!game.userWorldId) return;
-    const record = profile.worlds.find(world => world.id === game.userWorldId);
-    if (!record) return;
-    record.blocks = game.blocks.map(block => ({ x:block.x, y:block.y, h:block.h, type:block.type }));
-    saveProfile();
+    const savedBlocks = game.blocks.map(block => ({ x:block.x, y:block.y, h:block.h, type:block.type }));
+    if (game.userWorldId) {
+      const record = profile.worlds.find(world => world.id === game.userWorldId);
+      if (!record) return;
+      record.blocks = savedBlocks;
+      saveProfile();
+      return;
+    }
+    if (game.publishedWorldId && game.canBuild) {
+      const published = readPublishedGames();
+      const liveWorld = published.find(world => world.id === game.publishedWorldId);
+      if (!liveWorld) return;
+      liveWorld.blocks = savedBlocks;
+      liveWorld.lastBuiltBy = profile.name;
+      liveWorld.updatedAt = new Date().toISOString();
+      writePublishedGames(published);
+    }
   }
   canvas.addEventListener('contextmenu', event => event.preventDefault());
   canvas.addEventListener('pointerdown', event => {
-    if (!game.buildMode || game.paused) return;
+    if (!game.buildMode || game.paused || !game.canBuild) return;
     const tile = screenToTile(event.clientX, event.clientY);
     if (tile.x < 0 || tile.y < 0 || tile.x >= game.worldSize || tile.y >= game.worldSize) return;
     const index = game.blocks.findIndex(block => block.x === tile.x && block.y === tile.y);

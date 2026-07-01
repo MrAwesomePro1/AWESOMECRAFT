@@ -101,6 +101,7 @@
         <button class="nav-item active" data-view="discover"><span>⌂</span><b>Discover</b></button>
         <button class="nav-item" data-view="avatar"><span>♙</span><b>Avatar</b></button>
         <button class="nav-item" data-view="friends"><span>♧</span><b>Friends</b><i id="friendCount" hidden>0</i></button>
+        <button class="nav-item" data-view="updates"><span>↻</span><b>Updates</b></button>
       </nav>
       <div class="daily-card">
         <span class="daily-icon">✦</span>
@@ -163,6 +164,25 @@
             <h3>No friends yet</h3>
             <p>When you add players, they will appear here so you can see when they are online and join their worlds.</p>
           </div>
+        </div>
+      </section>
+
+      <section class="view" id="updatesView">
+        <div class="page-heading"><div><p class="eyebrow">WHAT'S NEW</p><h2>Robox Updates</h2><p>Move through earlier releases and see what changed.</p></div><span class="update-version" id="updateVersion">UPDATE 4</span></div>
+        <div class="updates-layout">
+          <div class="updates-list" id="updatesList">
+            <button class="active" data-update-index="0"><span>NEW</span><b>Invites & Permissions</b><small>Invite players and choose who can build.</small></button>
+            <button data-update-index="1"><span>3</span><b>Expandable Worlds</b><small>Grow platforms and publish games.</small></button>
+            <button data-update-index="2"><span>2</span><b>World Creator</b><small>Create, save, and delete your own worlds.</small></button>
+            <button data-update-index="3"><span>1</span><b>Accounts & Friends</b><small>Age checks, friends, and daily Day 1.</small></button>
+          </div>
+          <article class="update-detail" id="updateDetail">
+            <p class="eyebrow" id="updateKicker">UPDATE 4 • LATEST</p>
+            <h3 id="updateTitle">Invites & Permissions</h3>
+            <p id="updateSummary">World owners can invite players by username and decide who gets build access.</p>
+            <ul id="updateFeatures"><li>Invite exact player usernames</li><li>Choose play-only or Can Build</li><li>Change permissions or remove invites</li></ul>
+            <div class="update-navigation"><button id="previousUpdate" disabled>← PREVIOUS</button><span id="updatePosition">1 / 4</span><button id="nextUpdate">NEXT →</button></div>
+          </article>
         </div>
       </section>
     </main>
@@ -248,6 +268,22 @@
       <p><b id="publishWorldName">This world</b> will become playable in Published Games. Your current blocks and environment will be copied to the live version.</p>
       <div class="publish-summary"><span>◇ Public listing</span><span>♙ Created by you</span><span>↻ Update anytime</span></div>
       <div class="confirm-actions"><button data-cancel-world-publish>KEEP DRAFT</button><button id="confirmPublishWorld">PUBLISH GAME</button></div>
+    </div>
+  </div>
+
+  <div class="modal" id="worldAccessModal" role="dialog" aria-modal="true" aria-labelledby="worldAccessTitle">
+    <div class="modal-card world-access-card">
+      <button class="modal-close" data-close-world-access aria-label="Close world access">×</button>
+      <p class="eyebrow">WORLD ACCESS</p><h2 id="worldAccessTitle">Invite players</h2>
+      <p class="access-world-copy">Manage who can join <b id="accessWorldName">this world</b> and who is allowed to build.</p>
+      <form id="invitePlayerForm">
+        <label class="creator-label" for="inviteUsernameInput">Player username</label>
+        <input class="creator-input" id="inviteUsernameInput" maxlength="16" placeholder="Enter exact username" autocomplete="off" required>
+        <label class="access-build-choice"><input id="inviteCanBuild" type="checkbox"><span><b>Allow building</b><small>They can place and wreck blocks in the published world.</small></span></label>
+        <button class="create-world-submit" type="submit">SEND INVITE <span>→</span></button>
+        <p class="world-create-message" id="invitePlayerMessage" aria-live="polite"></p>
+      </form>
+      <div class="invited-players" id="invitedPlayersList"></div>
     </div>
   </div>
 
