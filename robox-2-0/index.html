@@ -168,20 +168,21 @@
       </section>
 
       <section class="view" id="updatesView">
-        <div class="page-heading"><div><p class="eyebrow">WHAT'S NEW</p><h2>Robox Updates</h2><p>Move through earlier releases and see what changed.</p></div><span class="update-version" id="updateVersion">UPDATE 4</span></div>
+        <div class="page-heading"><div><p class="eyebrow">WHAT'S NEW</p><h2>Robox Updates</h2><p>Move through earlier releases and see what changed.</p></div><span class="update-version" id="updateVersion">UPDATE 5</span></div>
         <div class="updates-layout">
           <div class="updates-list" id="updatesList">
-            <button class="active" data-update-index="0"><span>NEW</span><b>Invites & Permissions</b><small>Invite players and choose who can build.</small></button>
-            <button data-update-index="1"><span>3</span><b>Expandable Worlds</b><small>Grow platforms and publish games.</small></button>
-            <button data-update-index="2"><span>2</span><b>World Creator</b><small>Create, save, and delete your own worlds.</small></button>
-            <button data-update-index="3"><span>1</span><b>Accounts & Friends</b><small>Age checks, friends, and daily Day 1.</small></button>
+            <button class="active" data-update-index="0"><span>NEW</span><b>Multiple Accounts</b><small>Switch between saved player profiles.</small></button>
+            <button data-update-index="1"><span>4</span><b>Invites & Permissions</b><small>Invite players and choose who can build.</small></button>
+            <button data-update-index="2"><span>3</span><b>Expandable Worlds</b><small>Grow platforms and publish games.</small></button>
+            <button data-update-index="3"><span>2</span><b>World Creator</b><small>Create, save, and delete your own worlds.</small></button>
+            <button data-update-index="4"><span>1</span><b>Accounts & Friends</b><small>Age checks, friends, and daily Day 1.</small></button>
           </div>
           <article class="update-detail" id="updateDetail">
-            <p class="eyebrow" id="updateKicker">UPDATE 4 • LATEST</p>
-            <h3 id="updateTitle">Invites & Permissions</h3>
-            <p id="updateSummary">World owners can invite players by username and decide who gets build access.</p>
-            <ul id="updateFeatures"><li>Invite exact player usernames</li><li>Choose play-only or Can Build</li><li>Change permissions or remove invites</li></ul>
-            <div class="update-navigation"><button id="previousUpdate" disabled>← PREVIOUS</button><span id="updatePosition">1 / 4</span><button id="nextUpdate">NEXT →</button></div>
+            <p class="eyebrow" id="updateKicker">UPDATE 5 • LATEST</p>
+            <h3 id="updateTitle">Multiple Accounts</h3>
+            <p id="updateSummary">Save several player accounts on one device and switch without losing progress.</p>
+            <ul id="updateFeatures"><li>Switch accounts from Settings</li><li>Keep each profile's worlds and friends separate</li><li>Migrate existing accounts automatically</li></ul>
+            <div class="update-navigation"><button id="previousUpdate" disabled>← PREVIOUS</button><span id="updatePosition">1 / 5</span><button id="nextUpdate">NEXT →</button></div>
           </article>
         </div>
       </section>
@@ -214,7 +215,17 @@
   </section>
 
   <div class="modal" id="settingsModal">
-    <div class="modal-card"><button class="modal-close" data-close>×</button><p class="eyebrow">PREFERENCES</p><h2>Settings</h2><label>Music <input id="musicRange" type="range" min="0" max="100" value="45"></label><label>World detail <select id="detailSelect"><option>High</option><option>Medium</option><option>Low</option></select></label><label class="toggle-row">Camera shake <input id="shakeToggle" type="checkbox" checked><span></span></label><button class="save-settings" data-close>SAVE SETTINGS</button><button class="sign-out-button" id="signOutButton">SIGN OUT</button></div>
+    <div class="modal-card settings-card"><button class="modal-close" data-close>×</button><p class="eyebrow">PREFERENCES</p><h2>Settings</h2><label>Music <input id="musicRange" type="range" min="0" max="100" value="45"></label><label>World detail <select id="detailSelect"><option>High</option><option>Medium</option><option>Low</option></select></label><label class="toggle-row">Camera shake <input id="shakeToggle" type="checkbox" checked><span></span></label><button class="save-settings" data-close>SAVE SETTINGS</button><button class="switch-account-button" id="switchAccountButton">SWITCH ACCOUNT</button><button class="sign-out-button" id="signOutButton">SIGN OUT</button></div>
+  </div>
+
+  <div class="modal" id="accountSwitcherModal" role="dialog" aria-modal="true" aria-labelledby="accountSwitcherTitle">
+    <div class="modal-card account-switcher-card">
+      <button class="modal-close" data-close-account-switch aria-label="Close account switcher">×</button>
+      <p class="eyebrow">PLAYER PROFILES</p><h2 id="accountSwitcherTitle">Switch account</h2>
+      <p class="account-switch-copy">Choose a saved player. Each account keeps its own worlds, friends, avatar, and rewards.</p>
+      <div class="saved-accounts-list" id="savedAccountsList"></div>
+      <button class="add-account-button" id="addAnotherAccount">＋ ADD ANOTHER ACCOUNT</button>
+    </div>
   </div>
 
   <div class="modal" id="addFriendModal" role="dialog" aria-modal="true" aria-labelledby="addFriendTitle">

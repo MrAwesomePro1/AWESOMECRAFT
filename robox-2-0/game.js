@@ -25,6 +25,28 @@
     try { return JSON.parse(localStorage.getItem('robox-account') || 'null'); }
     catch (_) { return null; }
   };
+  const readAccounts = () => {
+    let accounts = {};
+    try {
+      const stored = JSON.parse(localStorage.getItem('robox-accounts') || '{}');
+      if (stored && typeof stored === 'object' && !Array.isArray(stored)) accounts = stored;
+    } catch (_) { accounts = {}; }
+    const current = readSavedAccount();
+    if (current?.username && current.profile) {
+      const key = current.username.toLowerCase();
+      accounts[key] = current;
+      localStorage.setItem('robox-accounts', JSON.stringify(accounts));
+    }
+    return accounts;
+  };
+  const writeAccounts = accounts => localStorage.setItem('robox-accounts', JSON.stringify(accounts));
+  const rememberAccount = account => {
+    const accounts = readAccounts();
+    accounts[account.username.toLowerCase()] = account;
+    writeAccounts(accounts);
+    localStorage.setItem('robox-account', JSON.stringify(account));
+  };
+  const savedAccountList = () => Object.values(readAccounts()).filter(account => account?.username && account.profile);
   const readPublishedGames = () => {
     try {
       const games = JSON.parse(localStorage.getItem('robox-published-games') || '[]');
@@ -44,7 +66,7 @@
 
   const saveProfile = () => {
     if (sessionMode === 'account') {
-      localStorage.setItem('robox-account', JSON.stringify({ username: profile.name, profile }));
+      rememberAccount({ username: profile.name, profile });
       const library = readWorldLibrary();
       library[profile.name.toLowerCase()] = {
         worlds: profile.worlds.map(world => ({ ...world })),
@@ -100,9 +122,16 @@
     return { ageGroup: age < 13 ? 'under-13' : '13-plus' };
   }
   function updateSignInAgeGate() {
-    const saved = readSavedAccount();
+    const typedUsername = $('#signInUsername')?.value.trim().toLowerCase();
+    const saved = typedUsername ? readAccounts()[typedUsername] : readSavedAccount();
     const needsVerification = !!saved && !saved.profile?.ageVerified;
     $('#signInAgeVerification').classList.toggle('hidden', !needsVerification);
+  }
+  function updateSavedAccountHint() {
+    const accounts = savedAccountList();
+    const hint = $('#savedAccountHint');
+    if (!accounts.length) { hint.textContent = 'No saved accounts on this device yet.'; return; }
+    hint.textContent = accounts.length === 1 ? `Saved player found: ${accounts[0].username}` : `${accounts.length} saved accounts available. Enter a player name or use Switch Account.`;
   }
   function syncCustomizer() {
     $$('#skinSwatches button').forEach(button => button.classList.toggle('active', button.dataset.color === profile.skin));
@@ -147,35 +176,38 @@
     showAuthMessage('');
   }
   $$('[data-auth-tab]').forEach(button => button.addEventListener('click', () => selectAuthTab(button.dataset.authTab)));
+  $('#signInUsername').addEventListener('input', updateSignInAgeGate);
   $('#createAccountForm').addEventListener('submit', event => {
     event.preventDefault();
     const username = $('#createUsername').value.trim();
+    if (readAccounts()[username.toLowerCase()]) { showAuthMessage('That account already exists on this device. Choose Sign in instead.'); return; }
     if (!/^[A-Za-z0-9_]{3,16}$/.test(username)) { showAuthMessage('Use 3–16 letters, numbers, or underscores.'); return; }
     const ageCheck = verifyAge($('#createBirthdate').value, $('#confirmAge').checked);
     if (ageCheck.error) { showAuthMessage(ageCheck.error); return; }
     const next = defaultProfile(username);
     next.ageVerified = true;
     next.ageGroup = ageCheck.ageGroup;
-    localStorage.setItem('robox-account', JSON.stringify({ username, profile: next }));
+    rememberAccount({ username, profile: next });
     enterSession(next, 'account');
   });
   $('#signInForm').addEventListener('submit', event => {
     event.preventDefault();
-    const saved = readSavedAccount(), username = $('#signInUsername').value.trim();
-    if (!saved) { showAuthMessage('No account is saved on this device yet.'); return; }
-    if (saved.username.toLowerCase() !== username.toLowerCase()) { showAuthMessage('That player name does not match the saved account.'); return; }
+    const username = $('#signInUsername').value.trim();
+    const saved = readAccounts()[username.toLowerCase()];
+    if (!saved) { showAuthMessage('No saved account matches that player name.'); return; }
     if (!saved.profile?.ageVerified) {
       const ageCheck = verifyAge($('#signInBirthdate').value, $('#signInConfirmAge').checked);
       if (ageCheck.error) { showAuthMessage(ageCheck.error); return; }
       saved.profile.ageVerified = true;
       saved.profile.ageGroup = ageCheck.ageGroup;
-      localStorage.setItem('robox-account', JSON.stringify(saved));
     }
+    rememberAccount(saved);
     enterSession(saved.profile, 'account');
   });
   $('#continueGuest').addEventListener('click', () => enterSession(defaultProfile(), 'guest'));
   const savedOnLoad = readSavedAccount();
-  if (savedOnLoad) { $('#signInUsername').value = savedOnLoad.username; $('#savedAccountHint').textContent = `Saved player found: ${savedOnLoad.username}`; selectAuthTab('signin'); }
+  updateSavedAccountHint();
+  if (savedOnLoad) { $('#signInUsername').value = savedOnLoad.username; selectAuthTab('signin'); }
 
   // Tiny synthesized UI sounds; no external audio assets required.
   let audioEnabled = true;
@@ -203,7 +235,8 @@
   $$('[data-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 
   const updateNotes = [
-    { version:'UPDATE 4 • LATEST', badge:'UPDATE 4', title:'Invites & Permissions', summary:'World owners can invite players by username and decide who gets build access.', features:['Invite exact player usernames','Choose play-only or Can Build','Change permissions or remove invites'] },
+    { version:'UPDATE 5 • LATEST', badge:'UPDATE 5', title:'Multiple Accounts', summary:'Save several player accounts on one device and switch without losing progress.', features:['Switch accounts from Settings','Keep each profile\'s worlds and friends separate','Migrate existing accounts automatically'] },
+    { version:'UPDATE 4', badge:'UPDATE 4', title:'Invites & Permissions', summary:'World owners can invite players by username and decide who gets build access.', features:['Invite exact player usernames','Choose play-only or Can Build','Change permissions or remove invites'] },
     { version:'UPDATE 3', badge:'UPDATE 3', title:'Expandable Worlds', summary:'Creators can grow their platform and share a finished game with everyone.', features:['Expand platforms up to 32 × 32','Publish and update live games','Right-click to place and left-click to wreck'] },
     { version:'UPDATE 2', badge:'UPDATE 2', title:'World Creator', summary:'Every experience begins with a world made by a player.', features:['Create named worlds with four environments','Save block changes automatically','Delete drafts and their published copy'] },
     { version:'UPDATE 1', badge:'UPDATE 1', title:'Accounts & Friends', summary:'Player profiles start clean and stay saved on the device.', features:['Age verification for accounts','Add and unfriend by username','Start daily rewards at Day 1'] }
@@ -586,18 +619,58 @@
   });
 
   const settingsModal = $('#settingsModal');
-  $('#settingsBtn').addEventListener('click', () => settingsModal.classList.add('show'));
-  $$('[data-close]').forEach(button => button.addEventListener('click', () => settingsModal.classList.remove('show')));
-  settingsModal.addEventListener('click', e => { if (e.target === settingsModal) settingsModal.classList.remove('show'); });
-  $('#signOutButton').addEventListener('click', () => {
+  const accountSwitcherModal = $('#accountSwitcherModal');
+  function renderSavedAccounts() {
+    const current = readSavedAccount()?.username?.toLowerCase();
+    const accounts = savedAccountList().sort((a, b) => (a.username.toLowerCase() === current ? -1 : b.username.toLowerCase() === current ? 1 : a.username.localeCompare(b.username)));
+    const list = $('#savedAccountsList');
+    if (!accounts.length) { list.innerHTML = '<div class="account-switch-empty">No saved accounts yet.</div>'; return; }
+    list.innerHTML = accounts.map(account => {
+      const isCurrent = account.username.toLowerCase() === current;
+      const worldCount = Array.isArray(account.profile.worlds) ? account.profile.worlds.length : 0;
+      return `<button class="saved-account-row ${isCurrent ? 'current' : ''}" data-switch-account="${account.username.toLowerCase()}" ${isCurrent ? 'disabled' : ''}><span class="saved-account-avatar">${escapeHTML(account.username.charAt(0).toUpperCase())}</span><span><b>${escapeHTML(account.username)}</b><small>Level ${account.profile.level || 1} • ${worldCount} world${worldCount === 1 ? '' : 's'}</small></span><em>${isCurrent ? 'CURRENT' : 'SWITCH'}</em></button>`;
+    }).join('');
+  }
+  function showAccountScreen(mode = 'signin', username = '') {
     if (game.active) leaveGame();
     settingsModal.classList.remove('show');
+    accountSwitcherModal.classList.remove('show');
     sessionMode = 'signed-out'; profile = defaultProfile(); updateProfileUI(); syncCustomizer();
     $('#appShell').setAttribute('inert', '');
     accountScreen.classList.remove('hidden');
-    const saved = readSavedAccount();
     $('#createUsername').value = '';
-    if (saved) { $('#signInUsername').value = saved.username; $('#savedAccountHint').textContent = `Saved player found: ${saved.username}`; selectAuthTab('signin'); }
+    $('#createBirthdate').value = '';
+    $('#confirmAge').checked = false;
+    $('#signInUsername').value = username;
+    updateSavedAccountHint();
+    selectAuthTab(mode);
+  }
+  $('#settingsBtn').addEventListener('click', () => settingsModal.classList.add('show'));
+  $$('[data-close]').forEach(button => button.addEventListener('click', () => settingsModal.classList.remove('show')));
+  settingsModal.addEventListener('click', e => { if (e.target === settingsModal) settingsModal.classList.remove('show'); });
+  $('#switchAccountButton').addEventListener('click', () => {
+    settingsModal.classList.remove('show');
+    renderSavedAccounts();
+    accountSwitcherModal.classList.add('show');
+  });
+  $$('[data-close-account-switch]').forEach(button => button.addEventListener('click', () => accountSwitcherModal.classList.remove('show')));
+  accountSwitcherModal.addEventListener('click', event => { if (event.target === accountSwitcherModal) accountSwitcherModal.classList.remove('show'); });
+  $('#savedAccountsList').addEventListener('click', event => {
+    const button = event.target.closest('[data-switch-account]');
+    if (!button || button.disabled) return;
+    const account = readAccounts()[button.dataset.switchAccount];
+    if (!account) { renderSavedAccounts(); return; }
+    if (!account.profile?.ageVerified) { showAccountScreen('signin', account.username); return; }
+    if (game.active) leaveGame();
+    accountSwitcherModal.classList.remove('show');
+    rememberAccount(account);
+    enterSession(account.profile, 'account');
+    showToast('Account switched', `Now playing as ${account.username}`);
+  });
+  $('#addAnotherAccount').addEventListener('click', () => showAccountScreen('create'));
+  $('#signOutButton').addEventListener('click', () => {
+    const saved = readSavedAccount();
+    showAccountScreen('signin', saved?.username || '');
   });
   const worlds = {};
 

@@ -8,6 +8,8 @@ Open `index.html` in a modern browser, or serve this folder with any static web 
 
 New players begin signed out. Creating a local account includes a date-of-birth age check and confirmation; only the resulting age group is saved, not the birthday itself. Players can also sign into an account already saved on the device or continue as a guest without saving.
 
+Multiple accounts can be saved on one device. Settings includes Switch Account, where players can move between profiles or add another account without mixing worlds, friends, avatars, rewards, or deletion history. Existing single-account saves migrate automatically.
+
 Every new account begins at Day 1 of the daily streak with an empty friends list.
 
 The original prebuilt experiences have been removed. Players can create their own named worlds, choose an environment, launch them, and save block edits to their account. In desktop Build mode, right-click places the selected block and left-click wrecks a block. The Expand control permanently grows a creator's platform by four tiles per side, up to 32 x 32.
