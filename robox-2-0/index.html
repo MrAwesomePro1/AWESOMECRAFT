@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0c1020">
+  <title>Robox 2.0 — Play Beyond</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <section class="maintenance-screen" id="maintenanceScreen" aria-label="Robox update in progress">
+    <div class="maintenance-grid"></div>
+    <div class="maintenance-card">
+      <div class="maintenance-logo"><span class="brand-cube">R</span><b>ROBOX <em>2.0</em></b></div>
+      <div class="maintenance-tools" aria-hidden="true"><span>◆</span><i>⚙</i><b>◆</b></div>
+      <p class="eyebrow">UPDATE IN PROGRESS</p>
+      <h1>We’ll be right back.</h1>
+      <p id="maintenanceMessage">Robox 2.0 is temporarily unavailable while we're making an update. Please check back soon.</p>
+      <div class="maintenance-status"><i></i><span><b>Systems paused</b><small>Your account and creations are safe.</small></span></div>
+    </div>
+  </section>
+  <div class="boot-screen" id="bootScreen" aria-live="polite">
+    <div class="boot-logo"><span>R</span></div>
+    <h1>ROBOX <b>2.0</b></h1>
+    <div class="boot-bar"><i></i></div>
+    <p>Building your universe…</p>
+  </div>
+
+  <section class="account-screen" id="accountScreen" aria-label="Welcome to Robox 2.0">
+    <div class="account-orbit orbit-one"></div><div class="account-orbit orbit-two"></div>
+    <div class="account-blocks" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="account-intro">
+      <div class="account-brand"><span class="brand-cube">R</span><b>ROBOX <em>2.0</em></b></div>
+      <span class="account-kicker">A WHOLE NEW BLOCK WORLD</span>
+      <h1>Your universe<br>starts <strong>here.</strong></h1>
+      <p>Create, explore, and build your way through worlds made for players like you.</p>
+      <div class="account-features"><span><i>◆</i> Build anything</span><span><i>✦</i> Explore together</span><span><i>⚡</i> Level up</span></div>
+    </div>
+    <div class="account-card">
+      <div class="new-player-badge">NEW PLAYER</div>
+      <h2>Welcome to Robox</h2>
+      <p>Choose how you want to enter the universe.</p>
+      <div class="auth-tabs" role="tablist" aria-label="Account options">
+        <button class="active" type="button" data-auth-tab="create" role="tab" aria-selected="true">Create account</button>
+        <button type="button" data-auth-tab="signin" role="tab" aria-selected="false">Sign in</button>
+      </div>
+      <form class="auth-form" id="createAccountForm">
+        <label for="createUsername">Choose a player name</label>
+        <div class="username-field"><span>♙</span><input id="createUsername" maxlength="16" minlength="3" autocomplete="username" placeholder="3–16 characters" required></div>
+        <small>Letters, numbers, and underscores only.</small>
+        <div class="age-verification">
+          <div class="age-heading"><span aria-hidden="true">✓</span><div><b>Age verification</b><small>Your birthday is checked, but is not shown publicly.</small></div></div>
+          <label for="createBirthdate">Date of birth</label>
+          <input id="createBirthdate" type="date" autocomplete="bday" required>
+          <label class="age-confirm"><input id="confirmAge" type="checkbox" required><span>I confirm this date of birth is correct.</span></label>
+        </div>
+        <button class="account-primary" type="submit">CREATE MY ACCOUNT <span>→</span></button>
+      </form>
+      <form class="auth-form hidden" id="signInForm">
+        <label for="signInUsername">Player name</label>
+        <div class="username-field"><span>♙</span><input id="signInUsername" maxlength="16" autocomplete="username" placeholder="Enter your player name" required></div>
+        <small id="savedAccountHint">Sign in to a profile saved on this device.</small>
+        <div class="age-verification hidden" id="signInAgeVerification">
+          <div class="age-heading"><span aria-hidden="true">✓</span><div><b>One-time age verification</b><small>This saved account was created before age checks were added.</small></div></div>
+          <label for="signInBirthdate">Date of birth</label>
+          <input id="signInBirthdate" type="date" autocomplete="bday">
+          <label class="age-confirm"><input id="signInConfirmAge" type="checkbox"><span>I confirm this date of birth is correct.</span></label>
+        </div>
+        <button class="account-primary" type="submit">ENTER ROBOX <span>→</span></button>
+      </form>
+      <p class="auth-message" id="authMessage" aria-live="polite"></p>
+      <div class="account-divider"><span>or</span></div>
+      <button class="guest-button" id="continueGuest" type="button"><span>◎</span><div><b>Continue as guest</b><small>Progress will not be saved</small></div><strong>→</strong></button>
+      <p class="local-note">🔒 Profiles stay safely on this device.</p>
+    </div>
+  </section>
+
+  <div class="app-shell" id="appShell" inert>
+    <header class="topbar">
+      <button class="brand" data-view="discover" aria-label="Robox home">
+        <span class="brand-cube">R</span>
+        <span>ROBOX <b>2.0</b></span>
+      </button>
+      <label class="search-box">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.35-4.35m2.35-5.15A7.5 7.5 0 1 1 4 11.5a7.5 7.5 0 0 1 15 0Z"/></svg>
+        <input id="searchInput" type="search" placeholder="Search experiences" autocomplete="off">
+        <kbd>/</kbd>
+      </label>
+      <div class="top-actions">
+        <button class="icon-btn" id="soundToggle" aria-label="Toggle sounds" title="Sounds"><span>♪</span></button>
+        <div class="coin-pill"><span class="coin">R</span><b id="walletCoins">240</b></div>
+        <button class="profile-chip" data-view="avatar">
+          <span class="mini-avatar" id="miniAvatar"><i></i></span>
+          <span><b id="profileName">Player</b><small>Level <em id="profileLevel">1</em></small></span>
+        </button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Main navigation">
+      <nav>
+        <button class="nav-item active" data-view="discover"><span>⌂</span><b>Discover</b></button>
+        <button class="nav-item" data-view="avatar"><span>♙</span><b>Avatar</b></button>
+        <button class="nav-item" data-view="friends"><span>♧</span><b>Friends</b><i id="friendCount" hidden>0</i></button>
+      </nav>
+      <div class="daily-card">
+        <span class="daily-icon">✦</span>
+        <div><b>Daily streak</b><small id="streakText">Day 1 of 7 — welcome!</small></div>
+        <div class="streak-dots" aria-label="Day 1 of 7"><i class="earned"></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <button id="claimDaily">Claim +25 R</button>
+      </div>
+      <button class="nav-item settings-btn" id="settingsBtn"><span>⚙</span><b>Settings</b></button>
+    </aside>
+
+    <main class="content">
+      <section class="view active" id="discoverView">
+        <div class="welcome-row">
+          <div>
+            <p class="eyebrow">YOUR UNIVERSE IS WAITING</p>
+            <h2>Welcome back, <span id="welcomeName">Player</span></h2>
+            <p>Your world library is empty and ready for whatever comes next.</p>
+          </div>
+        </div>
+
+        <div class="worlds-toolbar"><div><p class="eyebrow">MY CREATIONS</p><h3>Your worlds</h3></div><button id="createWorldBtn">＋ CREATE WORLD</button></div>
+        <div class="user-worlds" id="gameGrid"></div>
+        <div class="worlds-toolbar published-toolbar"><div><p class="eyebrow">LIVE ON ROBOX</p><h3>Published games</h3></div></div>
+        <div class="user-worlds" id="publishedGamesGrid"></div>
+        <p class="empty-search" id="emptySearch">No worlds have been created yet.</p>
+      </section>
+
+      <section class="view" id="avatarView">
+        <div class="page-heading"><div><p class="eyebrow">MAKE IT YOURS</p><h2>Avatar Studio</h2><p>Mix colors and styles. Your look saves automatically.</p></div><div class="coin-pill big"><span class="coin">R</span><b id="avatarCoins">240</b></div></div>
+        <div class="avatar-studio">
+          <div class="avatar-stage">
+            <div class="stage-glow"></div>
+            <div class="studio-avatar" id="studioAvatar"><div class="a-head"><i></i><i></i><b></b></div><div class="a-hair"></div><div class="a-body"><span>R</span></div><div class="a-arm left"></div><div class="a-arm right"></div><div class="a-leg left"></div><div class="a-leg right"></div></div>
+            <div class="turntable"></div>
+            <p>Drag to spin • Your style is saved to your profile</p>
+          </div>
+          <div class="closet">
+            <div class="closet-tabs"><button class="active">Colors</button><button>Outfits</button><button>Extras</button></div>
+            <h3>Body color</h3>
+            <div class="swatches" id="skinSwatches">
+              <button class="active" style="--swatch:#f5b640" data-color="#f5b640" aria-label="Golden"></button><button style="--swatch:#965a38" data-color="#965a38" aria-label="Brown"></button><button style="--swatch:#f1c3a4" data-color="#f1c3a4" aria-label="Light"></button><button style="--swatch:#70412d" data-color="#70412d" aria-label="Deep"></button><button style="--swatch:#6bc7c2" data-color="#6bc7c2" aria-label="Aqua"></button>
+            </div>
+            <h3>Shirt color</h3>
+            <div class="swatches" id="shirtSwatches">
+              <button class="active" style="--swatch:#7557ff" data-color="#7557ff" aria-label="Purple"></button><button style="--swatch:#ff5470" data-color="#ff5470" aria-label="Red"></button><button style="--swatch:#18b98b" data-color="#18b98b" aria-label="Green"></button><button style="--swatch:#2f8cff" data-color="#2f8cff" aria-label="Blue"></button><button style="--swatch:#121827" data-color="#121827" aria-label="Black"></button>
+            </div>
+            <h3>Hair</h3>
+            <div class="style-grid" id="hairStyles"><button class="active" data-hair="spikes"><span class="hair-preview spikes"></span><b>Spikes</b><small>Owned</small></button><button data-hair="cap"><span class="hair-preview cap">▰</span><b>Cap</b><small>Owned</small></button><button data-hair="none"><span class="hair-preview none">—</span><b>None</b><small>Free</small></button></div>
+            <button class="save-look" id="saveLook">✓ LOOK EQUIPPED</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="friendsView">
+        <div class="page-heading"><div><p class="eyebrow">BETTER TOGETHER</p><h2>Friends</h2><p id="friendSummary">You have no friends yet. Find some players and start a crew!</p></div><button class="add-friend" id="addFriendBtn">＋ Add friend</button></div>
+        <div class="friend-list" id="friendList">
+          <div class="friends-empty">
+            <div class="empty-crew-icon"><span>♙</span><span>♙</span><span>♙</span></div>
+            <p class="eyebrow">YOUR CREW AWAITS</p>
+            <h3>No friends yet</h3>
+            <p>When you add players, they will appear here so you can see when they are online and join their worlds.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <section class="game-screen" id="gameScreen" aria-label="Robox game world">
+    <canvas id="gameCanvas"></canvas>
+    <div class="game-vignette"></div>
+    <div class="game-topbar">
+      <button class="square-btn" id="exitGame" aria-label="Exit game">☰</button>
+      <div class="world-name"><span id="worldIcon">◇</span><div><b id="worldName">NO WORLD LOADED</b><small id="serverName">Your world library is empty</small></div></div>
+      <div class="game-stats"><div><span class="coin">R</span><b id="gameCoins">240</b></div><div class="xp-stat"><span>XP</span><b id="xpText">320 / 500</b></div></div>
+    </div>
+    <div class="quest-card" id="questCard"><span class="quest-symbol">✦</span><div><small>CURRENT QUEST</small><b id="questTitle">Welcome to Blockhaven</b><p id="questText">Collect 5 Robox coins</p><div class="quest-progress"><i id="questProgress"></i></div></div><strong id="questCount">0/5</strong></div>
+    <div class="controls-help"><span><kbd>WASD</kbd> MOVE</span><span><kbd>SPACE</kbd> JUMP</span><span><kbd>B</kbd> BUILD</span><span><kbd>E</kbd> INTERACT</span></div>
+    <div class="build-toolbar" id="buildToolbar"><small>BUILD MODE</small><button class="active" data-block="1"><span class="block grass"></span>Grass</button><button data-block="2"><span class="block stone"></span>Stone</button><button data-block="3"><span class="block glow"></span>Glow</button><button data-block="0"><span class="block erase">×</span>Erase</button><button class="expand-platform" id="expandPlatform"><span>↗</span>Expand</button><em>Right-click: place • Left-click: wreck • Touch: choose a tool</em></div>
+    <div class="toast" id="toast"><span>✦</span><div><b>Coin collected!</b><small>+5 R</small></div></div>
+    <div class="interact-prompt" id="interactPrompt"><kbd>E</kbd><span>Talk to Nova</span></div>
+    <div class="crosshair">＋</div>
+    <div class="mobile-controls">
+      <div class="dpad"><button data-key="w">▲</button><button data-key="a">◀</button><button data-key="s">▼</button><button data-key="d">▶</button></div>
+      <button class="mobile-jump" data-key=" ">JUMP</button>
+      <button class="mobile-build" id="mobileBuild">BUILD</button>
+      <button class="mobile-interact" id="mobileInteract">TALK</button>
+    </div>
+    <div class="pause-panel" id="pausePanel">
+      <div><span class="brand-cube">R</span><h2>Paused</h2><p>Your world is waiting.</p><button id="resumeGame">RESUME</button><button id="resetPlayer">RESET CHARACTER</button><button id="leaveGame">LEAVE WORLD</button></div>
+    </div>
+  </section>
+
+  <div class="modal" id="settingsModal">
+    <div class="modal-card"><button class="modal-close" data-close>×</button><p class="eyebrow">PREFERENCES</p><h2>Settings</h2><label>Music <input id="musicRange" type="range" min="0" max="100" value="45"></label><label>World detail <select id="detailSelect"><option>High</option><option>Medium</option><option>Low</option></select></label><label class="toggle-row">Camera shake <input id="shakeToggle" type="checkbox" checked><span></span></label><button class="save-settings" data-close>SAVE SETTINGS</button><button class="sign-out-button" id="signOutButton">SIGN OUT</button></div>
+  </div>
+
+  <div class="modal" id="addFriendModal" role="dialog" aria-modal="true" aria-labelledby="addFriendTitle">
+    <div class="modal-card friend-modal-card">
+      <button class="modal-close" data-close-friends aria-label="Close friend finder">×</button>
+      <p class="eyebrow">GROW YOUR CREW</p><h2 id="addFriendTitle">Add a friend</h2>
+      <p class="friend-modal-copy">Type the exact username of the player you want to add.</p>
+      <form id="addFriendForm">
+        <label class="friend-search"><span>♙</span><input id="friendUsernameInput" aria-label="Friend username" maxlength="16" placeholder="Enter a username" autocomplete="off" required></label>
+        <small>Use 3–16 letters, numbers, or underscores.</small>
+        <button class="add-by-username" type="submit">ADD FRIEND <span>→</span></button>
+      </form>
+      <p class="friend-add-message" id="friendAddMessage" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <div class="modal" id="unfriendModal" role="dialog" aria-modal="true" aria-labelledby="unfriendTitle">
+    <div class="modal-card confirm-card">
+      <div class="confirm-icon">♧</div>
+      <p class="eyebrow">FRIEND OPTIONS</p><h2 id="unfriendTitle">Unfriend player?</h2>
+      <p><b id="unfriendPlayerName">This player</b> will be removed from your crew. You can add them again later.</p>
+      <div class="confirm-actions"><button data-cancel-unfriend>KEEP FRIEND</button><button id="confirmUnfriend">UNFRIEND</button></div>
+    </div>
+  </div>
+
+  <div class="modal" id="createWorldModal" role="dialog" aria-modal="true" aria-labelledby="createWorldTitle">
+    <div class="modal-card world-creator-card">
+      <button class="modal-close" data-close-world aria-label="Close world creator">×</button>
+      <p class="eyebrow">BUILD SOMETHING NEW</p><h2 id="createWorldTitle">Create a world</h2>
+      <form id="createWorldForm">
+        <label class="creator-label" for="worldNameInput">World name</label>
+        <input class="creator-input" id="worldNameInput" maxlength="32" placeholder="My awesome world" required>
+        <label class="creator-label" for="worldDescriptionInput">Description</label>
+        <textarea class="creator-input" id="worldDescriptionInput" maxlength="100" placeholder="What will players do here?"></textarea>
+        <fieldset class="theme-picker"><legend>Environment</legend>
+          <label><input type="radio" name="worldTheme" value="grass" checked><span class="theme-thumb grass-theme"><i></i></span><b>Grasslands</b></label>
+          <label><input type="radio" name="worldTheme" value="desert"><span class="theme-thumb desert-theme"><i></i></span><b>Desert</b></label>
+          <label><input type="radio" name="worldTheme" value="moon"><span class="theme-thumb moon-theme"><i></i></span><b>Moon</b></label>
+          <label><input type="radio" name="worldTheme" value="neon"><span class="theme-thumb neon-theme"><i></i></span><b>Neon</b></label>
+        </fieldset>
+        <button class="create-world-submit" type="submit">CREATE DRAFT <span>→</span></button>
+        <p class="world-create-message" id="worldCreateMessage" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="publishWorldModal" role="dialog" aria-modal="true" aria-labelledby="publishWorldTitle">
+    <div class="modal-card confirm-card publish-card">
+      <div class="confirm-icon publish-icon">▲</div>
+      <p class="eyebrow">ROBOX PUBLISHER</p><h2 id="publishWorldTitle">Publish this game?</h2>
+      <p><b id="publishWorldName">This world</b> will become playable in Published Games. Your current blocks and environment will be copied to the live version.</p>
+      <div class="publish-summary"><span>◇ Public listing</span><span>♙ Created by you</span><span>↻ Update anytime</span></div>
+      <div class="confirm-actions"><button data-cancel-world-publish>KEEP DRAFT</button><button id="confirmPublishWorld">PUBLISH GAME</button></div>
+    </div>
+  </div>
+
+  <div class="modal" id="deleteWorldModal" role="dialog" aria-modal="true" aria-labelledby="deleteWorldTitle">
+    <div class="modal-card confirm-card">
+      <div class="confirm-icon world-delete-icon">◇</div>
+      <p class="eyebrow">WORLD OPTIONS</p><h2 id="deleteWorldTitle">Delete this world?</h2>
+      <p><b id="deleteWorldName">This world</b> and all of its saved block edits will be permanently removed.</p>
+      <div class="confirm-actions"><button data-cancel-world-delete>KEEP WORLD</button><button id="confirmDeleteWorld">DELETE WORLD</button></div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
