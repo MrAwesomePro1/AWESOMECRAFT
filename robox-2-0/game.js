@@ -235,7 +235,8 @@
   $$('[data-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 
   const updateNotes = [
-    { version:'UPDATE 5 • LATEST', badge:'UPDATE 5', title:'Multiple Accounts', summary:'Save several player accounts on one device and switch without losing progress.', features:['Switch accounts from Settings','Keep each profile\'s worlds and friends separate','Migrate existing accounts automatically'] },
+    { version:'UPDATE 6 • LATEST', badge:'UPDATE 6', title:'Control Switcher', summary:'Choose how you play before entering a world or switch controls during a game.', features:['Controls button on the home screen','Switch controls while a game is paused','Save Auto, Keyboard & Mouse, or Touch mode'] },
+    { version:'UPDATE 5', badge:'UPDATE 5', title:'Multiple Accounts', summary:'Save several player accounts on one device and switch without losing progress.', features:['Switch accounts from Settings','Keep each profile\'s worlds and friends separate','Migrate existing accounts automatically'] },
     { version:'UPDATE 4', badge:'UPDATE 4', title:'Invites & Permissions', summary:'World owners can invite players by username and decide who gets build access.', features:['Invite exact player usernames','Choose play-only or Can Build','Change permissions or remove invites'] },
     { version:'UPDATE 3', badge:'UPDATE 3', title:'Expandable Worlds', summary:'Creators can grow their platform and share a finished game with everyone.', features:['Expand platforms up to 32 × 32','Publish and update live games','Right-click to place and left-click to wreck'] },
     { version:'UPDATE 2', badge:'UPDATE 2', title:'World Creator', summary:'Every experience begins with a world made by a player.', features:['Create named worlds with four environments','Save block changes automatically','Delete drafts and their published copy'] },
@@ -269,6 +270,47 @@
     event.currentTarget.querySelector('span').textContent = audioEnabled ? '♪' : '×';
     beep(640);
   });
+
+  const controlsModal = $('#controlsModal');
+  const validControlModes = ['auto','keyboard','touch'];
+  let controlMode = localStorage.getItem('robox-control-mode') || 'auto';
+  let resumeAfterControls = false;
+  if (!validControlModes.includes(controlMode)) controlMode = 'auto';
+  function controlModeLabel(mode) {
+    return mode === 'keyboard' ? 'Keyboard & Mouse' : mode === 'touch' ? 'Touch Controls' : 'Automatic';
+  }
+  function applyControlMode(mode, announce = true) {
+    controlMode = validControlModes.includes(mode) ? mode : 'auto';
+    localStorage.setItem('robox-control-mode', controlMode);
+    document.body.classList.toggle('force-keyboard', controlMode === 'keyboard');
+    document.body.classList.toggle('force-touch', controlMode === 'touch');
+    document.body.dataset.controlMode = controlMode;
+    $$('#controlModeList [data-control-mode]').forEach(button => button.classList.toggle('active', button.dataset.controlMode === controlMode));
+    $('#controlCurrent').textContent = `${controlModeLabel(controlMode)} selected`;
+    if (announce) {
+      beep(760, .1);
+      if (game.active) showToast('Controls changed', controlModeLabel(controlMode));
+    }
+  }
+  function openControlsModal() {
+    resumeAfterControls = !!game.active && !game.paused;
+    if (resumeAfterControls) togglePause(true);
+    controlsModal.classList.add('show');
+  }
+  function closeControlsModal() {
+    controlsModal.classList.remove('show');
+    if (resumeAfterControls && game.active) togglePause(false);
+    resumeAfterControls = false;
+  }
+  $('#homeControlsButton').addEventListener('click', openControlsModal);
+  $('#gameControlsButton').addEventListener('click', openControlsModal);
+  $$('[data-close-controls]').forEach(button => button.addEventListener('click', closeControlsModal));
+  controlsModal.addEventListener('click', event => { if (event.target === controlsModal) closeControlsModal(); });
+  $('#controlModeList').addEventListener('click', event => {
+    const button = event.target.closest('[data-control-mode]');
+    if (button) applyControlMode(button.dataset.controlMode);
+  });
+  applyControlMode(controlMode, false);
 
   $('#claimDaily').addEventListener('click', event => {
     if (profile.dailyClaimed) return;

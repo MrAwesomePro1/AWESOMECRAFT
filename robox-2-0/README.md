@@ -20,6 +20,8 @@ World owners can open Invite Players on any creation, invite an exact username, 
 
 The Updates tab provides a browsable release history. Players can choose an update directly or move through update notes with Previous and Next controls.
 
+The home screen and in-game top bar both include a Controls button. Players can save Automatic, Keyboard & Mouse, or Touch Controls mode and change it during a paused game.
+
 ## Publishing games
 
 New worlds begin as private drafts. Creators can publish a draft as a game in the shared Published Games list, then use Update Live to push later block changes. Deleting a world removes its draft and published copy permanently; deletion records prevent it from returning after the next login.

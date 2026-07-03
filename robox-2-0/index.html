@@ -120,6 +120,7 @@
             <h2>Welcome back, <span id="welcomeName">Player</span></h2>
             <p>Your world library is empty and ready for whatever comes next.</p>
           </div>
+          <button class="home-controls-button" id="homeControlsButton"><span>⌨</span> CONTROLS</button>
         </div>
 
         <div class="worlds-toolbar"><div><p class="eyebrow">MY CREATIONS</p><h3>Your worlds</h3></div><button id="createWorldBtn">＋ CREATE WORLD</button></div>
@@ -168,21 +169,22 @@
       </section>
 
       <section class="view" id="updatesView">
-        <div class="page-heading"><div><p class="eyebrow">WHAT'S NEW</p><h2>Robox Updates</h2><p>Move through earlier releases and see what changed.</p></div><span class="update-version" id="updateVersion">UPDATE 5</span></div>
+        <div class="page-heading"><div><p class="eyebrow">WHAT'S NEW</p><h2>Robox Updates</h2><p>Move through earlier releases and see what changed.</p></div><span class="update-version" id="updateVersion">UPDATE 6</span></div>
         <div class="updates-layout">
           <div class="updates-list" id="updatesList">
-            <button class="active" data-update-index="0"><span>NEW</span><b>Multiple Accounts</b><small>Switch between saved player profiles.</small></button>
-            <button data-update-index="1"><span>4</span><b>Invites & Permissions</b><small>Invite players and choose who can build.</small></button>
-            <button data-update-index="2"><span>3</span><b>Expandable Worlds</b><small>Grow platforms and publish games.</small></button>
-            <button data-update-index="3"><span>2</span><b>World Creator</b><small>Create, save, and delete your own worlds.</small></button>
-            <button data-update-index="4"><span>1</span><b>Accounts & Friends</b><small>Age checks, friends, and daily Day 1.</small></button>
+            <button class="active" data-update-index="0"><span>NEW</span><b>Control Switcher</b><small>Choose Auto, Keyboard, or Touch.</small></button>
+            <button data-update-index="1"><span>5</span><b>Multiple Accounts</b><small>Switch between saved player profiles.</small></button>
+            <button data-update-index="2"><span>4</span><b>Invites & Permissions</b><small>Invite players and choose who can build.</small></button>
+            <button data-update-index="3"><span>3</span><b>Expandable Worlds</b><small>Grow platforms and publish games.</small></button>
+            <button data-update-index="4"><span>2</span><b>World Creator</b><small>Create, save, and delete your own worlds.</small></button>
+            <button data-update-index="5"><span>1</span><b>Accounts & Friends</b><small>Age checks, friends, and daily Day 1.</small></button>
           </div>
           <article class="update-detail" id="updateDetail">
-            <p class="eyebrow" id="updateKicker">UPDATE 5 • LATEST</p>
-            <h3 id="updateTitle">Multiple Accounts</h3>
-            <p id="updateSummary">Save several player accounts on one device and switch without losing progress.</p>
-            <ul id="updateFeatures"><li>Switch accounts from Settings</li><li>Keep each profile's worlds and friends separate</li><li>Migrate existing accounts automatically</li></ul>
-            <div class="update-navigation"><button id="previousUpdate" disabled>← PREVIOUS</button><span id="updatePosition">1 / 5</span><button id="nextUpdate">NEXT →</button></div>
+            <p class="eyebrow" id="updateKicker">UPDATE 6 • LATEST</p>
+            <h3 id="updateTitle">Control Switcher</h3>
+            <p id="updateSummary">Choose how you play before entering a world or switch controls during a game.</p>
+            <ul id="updateFeatures"><li>Controls button on the home screen</li><li>Switch controls while a game is paused</li><li>Save Auto, Keyboard & Mouse, or Touch mode</li></ul>
+            <div class="update-navigation"><button id="previousUpdate" disabled>← PREVIOUS</button><span id="updatePosition">1 / 6</span><button id="nextUpdate">NEXT →</button></div>
           </article>
         </div>
       </section>
@@ -194,6 +196,7 @@
     <div class="game-vignette"></div>
     <div class="game-topbar">
       <button class="square-btn" id="exitGame" aria-label="Exit game">☰</button>
+      <button class="square-btn game-controls-button" id="gameControlsButton" aria-label="Change controls" title="Change controls">⌨</button>
       <div class="world-name"><span id="worldIcon">◇</span><div><b id="worldName">NO WORLD LOADED</b><small id="serverName">Your world library is empty</small></div></div>
       <div class="game-stats"><div><span class="coin">R</span><b id="gameCoins">240</b></div><div class="xp-stat"><span>XP</span><b id="xpText">320 / 500</b></div></div>
     </div>
@@ -213,6 +216,20 @@
       <div><span class="brand-cube">R</span><h2>Paused</h2><p>Your world is waiting.</p><button id="resumeGame">RESUME</button><button id="resetPlayer">RESET CHARACTER</button><button id="leaveGame">LEAVE WORLD</button></div>
     </div>
   </section>
+
+  <div class="modal" id="controlsModal" role="dialog" aria-modal="true" aria-labelledby="controlsModalTitle">
+    <div class="modal-card controls-modal-card">
+      <button class="modal-close" data-close-controls aria-label="Close controls">×</button>
+      <p class="eyebrow">PLAY YOUR WAY</p><h2 id="controlsModalTitle">Choose controls</h2>
+      <p class="controls-modal-copy">Switch control styles now or before entering a world. Your choice is saved on this device.</p>
+      <div class="control-mode-list" id="controlModeList">
+        <button data-control-mode="auto"><span>◎</span><div><b>Automatic</b><small>Keyboard on computers, touch on phones and tablets.</small></div><em>RECOMMENDED</em></button>
+        <button data-control-mode="keyboard"><span>⌨</span><div><b>Keyboard & Mouse</b><small>WASD, Space, B, E, and mouse building.</small></div><em>DESKTOP</em></button>
+        <button data-control-mode="touch"><span>◇</span><div><b>Touch Controls</b><small>On-screen movement, Jump, Build, and Talk buttons.</small></div><em>MOBILE</em></button>
+      </div>
+      <p class="control-current" id="controlCurrent" aria-live="polite"></p>
+    </div>
+  </div>
 
   <div class="modal" id="settingsModal">
     <div class="modal-card settings-card"><button class="modal-close" data-close>×</button><p class="eyebrow">PREFERENCES</p><h2>Settings</h2><label>Music <input id="musicRange" type="range" min="0" max="100" value="45"></label><label>World detail <select id="detailSelect"><option>High</option><option>Medium</option><option>Low</option></select></label><label class="toggle-row">Camera shake <input id="shakeToggle" type="checkbox" checked><span></span></label><button class="save-settings" data-close>SAVE SETTINGS</button><button class="switch-account-button" id="switchAccountButton">SWITCH ACCOUNT</button><button class="sign-out-button" id="signOutButton">SIGN OUT</button></div>
