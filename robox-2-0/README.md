@@ -24,6 +24,10 @@ The home screen and in-game top bar both include a Controls button. Players can 
 
 Update 7 adds a cache-busted version check. If an older copy is missing newer features, Robox shows Reload Latest and opens the canonical public build. The home screen also provides a downloadable offline ZIP package.
 
+Update 8 adds a Pet Shop with four companions purchased using saved in-game R currency (Robux). Buying a pet deducts its price from that account only; no real-money payment is used. Equipped pets follow the player inside worlds. Press E while playing, or use the heart button on touch devices, to open the shop without losing the current world.
+
+The home screen now includes a direct Switch Account button. Each saved account keeps its own Robux, pets, friends, worlds, avatar, and reward progress.
+
 ## Publishing games
 
 New worlds begin as private drafts. Creators can publish a draft as a game in the shared Published Games list, then use Update Live to push later block changes. Deleting a world removes its draft and published copy permanently; deletion records prevent it from returning after the next login.

@@ -16,10 +16,16 @@
     moon: { label:'Moon', icon:'☾', sky:['#111a3a','#4a4774'], ground:'#7b8394', side:'#4a5061', accent:'#e1b94c' },
     neon: { label:'Neon', icon:'◇', sky:['#27104d','#a5269c'], ground:'#343b57', side:'#171c32', accent:'#54edff' }
   };
+  const petCatalog = [
+    { id:'cube-pup', name:'Cube Pup', type:'pup', icon:'🐶', price:50, color:'#d99a55', accent:'#7a4928', description:'A loyal blocky pup who loves every world.' },
+    { id:'neon-kitty', name:'Neon Kitty', type:'cat', icon:'🐱', price:100, color:'#a95cff', accent:'#54edff', description:'A glowing cat with a bright cyan tail.' },
+    { id:'moon-bot', name:'Moon Bot', type:'bot', icon:'🤖', price:150, color:'#8e9aaa', accent:'#f0cf62', description:'A tiny robot built for lunar adventures.' },
+    { id:'tiny-dragon', name:'Tiny Dragon', type:'dragon', icon:'🐉', price:250, color:'#31bd83', accent:'#ff7e91', description:'A rare little dragon with colorful wings.' }
+  ];
 
   const defaultProfile = (name = 'Guest_Player') => ({
     name, coins: 100, xp: 0, level: 1, skin: '#f5b640', shirt: '#7557ff', hair: 'spikes',
-    dailyClaimed: false, streak: 1, friends: [], worlds: [], deletedWorldIds: [], ageVerified: false, ageGroup: null
+    dailyClaimed: false, streak: 1, friends: [], worlds: [], deletedWorldIds: [], pets: [], equippedPet: null, ageVerified: false, ageGroup: null
   });
   const readSavedAccount = () => {
     try { return JSON.parse(localStorage.getItem('robox-account') || 'null'); }
@@ -79,7 +85,7 @@
   };
 
   function updateProfileUI() {
-    ['walletCoins', 'avatarCoins', 'gameCoins'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = profile.coins; });
+    ['walletCoins', 'avatarCoins', 'petCoins', 'gameCoins'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = profile.coins; });
     $('#profileLevel').textContent = profile.level;
     $('#profileName').textContent = profile.name;
     $('#welcomeName').textContent = profile.name;
@@ -97,7 +103,11 @@
     $('#friendCount').textContent = friendTotal;
     $('#friendCount').hidden = friendTotal === 0;
     $('#friendSummary').textContent = friendTotal === 0 ? 'You have no friends yet. Find some players and start a crew!' : `${friendTotal} friend${friendTotal === 1 ? '' : 's'} in your crew.`;
+    const petTotal = Array.isArray(profile.pets) ? profile.pets.length : 0;
+    $('#petCount').textContent = petTotal;
+    $('#petCount').hidden = petTotal === 0;
     renderFriends();
+    renderPets();
     renderWorlds();
     renderPublishedGames();
   }
@@ -144,6 +154,8 @@
     if (!Array.isArray(profile.friends)) profile.friends = [];
     if (!Array.isArray(profile.worlds)) profile.worlds = [];
     if (!Array.isArray(profile.deletedWorldIds)) profile.deletedWorldIds = [];
+    if (!Array.isArray(profile.pets)) profile.pets = [];
+    if (profile.equippedPet && !profile.pets.includes(profile.equippedPet)) profile.equippedPet = null;
     if (mode === 'account') {
       const backup = readWorldLibrary()[profile.name.toLowerCase()] || {};
       const backupWorlds = Array.isArray(backup.worlds) ? backup.worlds : [];
@@ -235,7 +247,8 @@
   $$('[data-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 
   const updateNotes = [
-    { version:'UPDATE 7 • LATEST', badge:'UPDATE 7', title:'Stay Current & Download', summary:'Robox can detect an older copy, reload every missing feature, and download an offline package.', features:['Automatic latest-version checks','One-tap Reload Latest recovery','Downloadable offline ZIP package'] },
+    { version:'UPDATE 8 • LATEST', badge:'UPDATE 8', title:'Pets & Robux Shop', summary:'Unlock pets with in-game Robux and equip a companion that follows you into worlds.', features:['Four pets in the Pet Shop','Pay with saved in-game R currency','Press E in a world to open the shop'] },
+    { version:'UPDATE 7', badge:'UPDATE 7', title:'Stay Current & Download', summary:'Robox can detect an older copy, reload every missing feature, and download an offline package.', features:['Automatic latest-version checks','One-tap Reload Latest recovery','Downloadable offline ZIP package'] },
     { version:'UPDATE 6', badge:'UPDATE 6', title:'Control Switcher', summary:'Choose how you play before entering a world or switch controls during a game.', features:['Controls button on the home screen','Switch controls while a game is paused','Save Auto, Keyboard & Mouse, or Touch mode'] },
     { version:'UPDATE 5', badge:'UPDATE 5', title:'Multiple Accounts', summary:'Save several player accounts on one device and switch without losing progress.', features:['Switch accounts from Settings','Keep each profile\'s worlds and friends separate','Migrate existing accounts automatically'] },
     { version:'UPDATE 4', badge:'UPDATE 4', title:'Invites & Permissions', summary:'World owners can invite players by username and decide who gets build access.', features:['Invite exact player usernames','Choose play-only or Can Build','Change permissions or remove invites'] },
@@ -397,6 +410,47 @@
       return `<article class="offline" data-friend-id="${id}"><span class="friend-avatar ${color}">${name.charAt(0).toUpperCase()}</span><div><h3>${name}</h3><p>Friend • Offline</p></div><div class="friend-card-actions"><button class="unfriend-btn" data-friend-action="unfriend">UNFRIEND</button></div></article>`;
     }).join('');
   }
+
+  function petCardsMarkup() {
+    const ownedPets = Array.isArray(profile.pets) ? profile.pets : [];
+    return petCatalog.map(pet => {
+      const owned = ownedPets.includes(pet.id);
+      const equipped = profile.equippedPet === pet.id;
+      const label = equipped ? 'EQUIPPED' : owned ? 'EQUIP' : `GET FOR R ${pet.price}`;
+      return `<article class="pet-card ${equipped ? 'equipped' : ''}"><div class="pet-art ${pet.type}" style="--pet-color:${pet.color};--pet-accent:${pet.accent}"><span>${pet.icon}</span>${equipped ? '<b>FOLLOWING YOU</b>' : ''}</div><div class="pet-info"><p class="eyebrow">${owned ? 'OWNED PET' : `R ${pet.price} ROBUX`}</p><h3>${escapeHTML(pet.name)}</h3><p>${escapeHTML(pet.description)}</p><button data-pet-id="${pet.id}" data-pet-action="${owned ? 'equip' : 'buy'}" ${equipped ? 'disabled' : ''}>${label}</button></div></article>`;
+    }).join('');
+  }
+  function renderPets() {
+    const markup = petCardsMarkup();
+    ['#petGrid', '#gamePetGrid'].forEach(selector => { const grid = $(selector); if (grid) grid.innerHTML = markup; });
+    const gamePetCoins = $('#gamePetCoins');
+    if (gamePetCoins) gamePetCoins.textContent = profile.coins;
+  }
+  function handlePetAction(event) {
+    const button = event.target.closest('[data-pet-id]');
+    if (!button) return;
+    const pet = petCatalog.find(item => item.id === button.dataset.petId);
+    if (!pet) return;
+    if (!Array.isArray(profile.pets)) profile.pets = [];
+    if (button.dataset.petAction === 'buy') {
+      if (profile.coins < pet.price) { showToast('Not enough Robux', `You need R ${pet.price - profile.coins} more for ${pet.name}`); beep(240, .12); return; }
+      profile.coins -= pet.price;
+      profile.pets.push(pet.id);
+      profile.equippedPet = pet.id;
+      saveProfile();
+      showToast(`${pet.name} unlocked!`, `R ${pet.price} Robux paid • Pet equipped`);
+      beep(980, .18);
+      return;
+    }
+    if (profile.pets.includes(pet.id)) {
+      profile.equippedPet = pet.id;
+      saveProfile();
+      showToast(`${pet.name} equipped`, 'Your pet will follow you into worlds');
+      beep(820, .12);
+    }
+  }
+  $('#petGrid').addEventListener('click', handlePetAction);
+  $('#gamePetGrid').addEventListener('click', handlePetAction);
 
   function worldConfigFromRecord(record) {
     const theme = worldThemes[record.theme] || worldThemes.grass;
@@ -692,7 +746,7 @@
   const settingsModal = $('#settingsModal');
   const accountSwitcherModal = $('#accountSwitcherModal');
   function renderSavedAccounts() {
-    const current = readSavedAccount()?.username?.toLowerCase();
+    const current = sessionMode === 'account' ? readSavedAccount()?.username?.toLowerCase() : null;
     const accounts = savedAccountList().sort((a, b) => (a.username.toLowerCase() === current ? -1 : b.username.toLowerCase() === current ? 1 : a.username.localeCompare(b.username)));
     const list = $('#savedAccountsList');
     if (!accounts.length) { list.innerHTML = '<div class="account-switch-empty">No saved accounts yet.</div>'; return; }
@@ -719,11 +773,13 @@
   $('#settingsBtn').addEventListener('click', () => settingsModal.classList.add('show'));
   $$('[data-close]').forEach(button => button.addEventListener('click', () => settingsModal.classList.remove('show')));
   settingsModal.addEventListener('click', e => { if (e.target === settingsModal) settingsModal.classList.remove('show'); });
-  $('#switchAccountButton').addEventListener('click', () => {
+  function openAccountSwitcher() {
     settingsModal.classList.remove('show');
     renderSavedAccounts();
     accountSwitcherModal.classList.add('show');
-  });
+  }
+  $('#switchAccountButton').addEventListener('click', openAccountSwitcher);
+  $('#homeSwitchAccountButton').addEventListener('click', openAccountSwitcher);
   $$('[data-close-account-switch]').forEach(button => button.addEventListener('click', () => accountSwitcherModal.classList.remove('show')));
   accountSwitcherModal.addEventListener('click', event => { if (event.target === accountSwitcherModal) accountSwitcherModal.classList.remove('show'); });
   $('#savedAccountsList').addEventListener('click', event => {
@@ -750,7 +806,7 @@
   const game = {
     active: false, paused: false, world: null, userWorldId: null, publishedWorldId: null, canBuild: false, isWorldOwner: false, loadedBlocks: null, worldSize: 12, last: 0, time: 0, keys: {}, buildMode: false, selectedBlock: 1,
     player: { x: 5, y: 5, z: 0, vz: 0, angle: 0 }, camera: { x: 0, y: 0 }, collected: 0,
-    coins: [], blocks: [], particles: [], npc: { x: 7.5, y: 5.5, name: 'Nova' }
+    coins: [], blocks: [], particles: [], pet: { x: 4.3, y: 5.5, z: 0 }, npc: { x: 7.5, y: 5.5, name: 'Nova' }
   };
 
   const tileW = 72, tileH = 36, blockH = 33;
@@ -770,7 +826,7 @@
   window.addEventListener('resize', resize); resize();
 
   function generateWorld() {
-    game.player = { x: 5, y: 5, z: 0, vz: 0, angle: 0 }; game.camera = { x: 0, y: 0 }; game.collected = 0; game.coins = []; game.blocks = []; game.particles = [];
+    game.player = { x: 5, y: 5, z: 0, vz: 0, angle: 0 }; game.camera = { x: 0, y: 0 }; game.pet = { x: 4.3, y: 5.5, z: 0 }; game.collected = 0; game.coins = []; game.blocks = []; game.particles = [];
     const fixed = [[2,2,2,2],[2,3,2,2],[3,2,1,3],[8,3,1,2],[9,3,2,2],[8,4,1,2],[3,8,1,1],[7,8,2,3],[8,8,1,3],[10,7,1,2],[1,7,1,1]];
     if (Array.isArray(game.loadedBlocks)) game.blocks = game.loadedBlocks.map(block => ({ ...block }));
     else fixed.forEach(([x,y,h,type]) => game.blocks.push({ x,y,h,type }));
@@ -801,7 +857,7 @@
   $$('.game-card').forEach(card => card.addEventListener('dblclick', () => launchGame($('.card-play', card).dataset.game)));
 
   function leaveGame() {
-    game.active = false; game.paused = false; $('#gameScreen').classList.remove('active'); document.body.style.overflow = ''; beep(280, .08);
+    game.active = false; game.paused = false; $('#gameScreen').classList.remove('active'); $('#gameShopModal').classList.remove('show'); document.body.style.overflow = ''; beep(280, .08);
   }
   function togglePause(force) {
     game.paused = typeof force === 'boolean' ? force : !game.paused;
@@ -811,6 +867,22 @@
   $('#resumeGame').addEventListener('click', () => togglePause(false));
   $('#leaveGame').addEventListener('click', leaveGame);
   $('#resetPlayer').addEventListener('click', () => { game.player = { x: 5, y: 5, z: 0, vz: 0, angle: 0 }; togglePause(false); showToast('Character reset', 'Back at spawn'); });
+
+  function openGameShop() {
+    if (!game.active) return;
+    game.paused = true;
+    $('#pausePanel').classList.remove('show');
+    renderPets();
+    $('#gameShopModal').classList.add('show');
+    beep(760, .08);
+  }
+  function closeGameShop() {
+    $('#gameShopModal').classList.remove('show');
+    if (game.active) game.paused = false;
+  }
+  $('#gameShopButton').addEventListener('click', openGameShop);
+  $('#closeGameShop').addEventListener('click', closeGameShop);
+  $('#gameShopModal').addEventListener('click', event => { if (event.target === $('#gameShopModal')) closeGameShop(); });
 
   function setBuildMode(enabled) {
     if (enabled && !game.canBuild) { showToast('Build permission required', 'The world owner has not allowed you to build'); beep(260, .1); return; }
@@ -824,9 +896,10 @@
     if (!game.active) return;
     const key = event.key.toLowerCase(); game.keys[key] = true;
     if ([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(key)) event.preventDefault();
-    if (key === 'escape') togglePause();
+    if (key === 'escape') { if ($('#gameShopModal').classList.contains('show')) closeGameShop(); else togglePause(); }
     if (key === 'b' && !event.repeat) setBuildMode(!game.buildMode);
-    if (key === 'e' && nearNpc()) { showToast('Nova says hello!', 'Keep exploring, Builder!'); game.npc.talk = 2; }
+    if (key === 'e' && !event.repeat) openGameShop();
+    if (key === 'f' && nearNpc()) { showToast('Nova says hello!', 'Keep exploring, Builder!'); game.npc.talk = 2; }
   });
   window.addEventListener('keyup', event => { game.keys[event.key.toLowerCase()] = false; });
   $$('.mobile-controls button[data-key]').forEach(button => {
@@ -917,6 +990,14 @@
     const target = project(p.x, p.y, p.z);
     game.camera.x += (target.x - canvas.width/2) * dt * 2.2;
     game.camera.y += (target.y - canvas.height*.54) * dt * 2.2;
+    if (profile.equippedPet) {
+      const followX = Math.max(.25, Math.min(game.worldSize - .25, p.x - .72));
+      const followY = Math.max(.25, Math.min(game.worldSize - .25, p.y + .48));
+      const followSpeed = Math.min(1, dt * 5.5);
+      game.pet.x += (followX - game.pet.x) * followSpeed;
+      game.pet.y += (followY - game.pet.y) * followSpeed;
+      game.pet.z = highestBlockAt(game.pet.x, game.pet.y);
+    }
     game.coins.forEach(coin => {
       if (!coin.got && Math.hypot(p.x-coin.x,p.y-coin.y) < .52 && Math.abs(p.z-coin.z) < 1.2) {
         coin.got = true; game.collected++; profile.coins += 5; profile.xp = Math.min(500, profile.xp + 18); saveProfile();
@@ -975,6 +1056,23 @@
     ctx.restore();
   }
 
+  function drawPet() {
+    const pet = petCatalog.find(item => item.id === profile.equippedPet);
+    if (!pet) return;
+    const p = project(game.pet.x, game.pet.y, game.pet.z), bob = Math.sin(game.time * 5) * 2;
+    ctx.save(); ctx.translate(p.x, p.y - 22 + bob);
+    ctx.fillStyle = '#0005'; ctx.beginPath(); ctx.ellipse(0, 23, 18, 6, 0, 0, Math.PI * 2); ctx.fill();
+    if (pet.type === 'dragon') { ctx.fillStyle = pet.accent; ctx.beginPath(); ctx.moveTo(-14,-7);ctx.lineTo(-27,-18);ctx.lineTo(-22,3);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(14,-7);ctx.lineTo(27,-18);ctx.lineTo(22,3);ctx.closePath();ctx.fill(); }
+    if (pet.type === 'cat' || pet.type === 'dragon') { ctx.fillStyle = pet.color; ctx.beginPath();ctx.moveTo(-13,-17);ctx.lineTo(-9,-30);ctx.lineTo(-2,-18);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(13,-17);ctx.lineTo(9,-30);ctx.lineTo(2,-18);ctx.closePath();ctx.fill(); }
+    if (pet.type === 'pup') { ctx.fillStyle = pet.accent; ctx.fillRect(-18,-20,7,15);ctx.fillRect(11,-20,7,15); }
+    ctx.fillStyle = pet.color; ctx.fillRect(-15,-19,30,27); ctx.fillRect(-11,8,8,12); ctx.fillRect(3,8,8,12);
+    if (pet.type === 'bot') { ctx.strokeStyle = pet.accent;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,-19);ctx.lineTo(0,-29);ctx.stroke();ctx.fillStyle=pet.accent;ctx.fillRect(-3,-33,6,6); }
+    ctx.fillStyle = '#182035'; ctx.fillRect(-8,-9,4,5);ctx.fillRect(4,-9,4,5);
+    ctx.fillStyle = pet.accent; ctx.fillRect(-10,1,20,3);
+    ctx.fillStyle = '#101728dd';ctx.fillRect(-25,-48,50,13);ctx.fillStyle='#fff';ctx.font='bold 7px Inter';ctx.textAlign='center';ctx.fillText(pet.name.toUpperCase(),0,-39);
+    ctx.restore();
+  }
+
   function drawCoin(coin) {
     const p=project(coin.x,coin.y,coin.z+Math.sin(game.time*2.8+coin.phase)*.16), squash=Math.abs(Math.cos(game.time*2.4+coin.phase));
     ctx.save();ctx.translate(p.x,p.y-19);ctx.shadowColor=game.world.accent;ctx.shadowBlur=18;ctx.fillStyle=game.world.accent;ctx.beginPath();ctx.ellipse(0,0,10*squash+2,14,0,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#4d3b12';ctx.font='bold 9px Chakra Petch';ctx.textAlign='center';ctx.fillText(game.world===worlds.caverns?'◆':'R',0,3);ctx.restore();
@@ -994,7 +1092,7 @@
     const groundTop=game.world.ground,groundLeft=shade(groundTop,-35),groundRight=shade(groundTop,-50);
     const size=game.worldSize;
     for(let sum=0;sum<=2*(size-1);sum++)for(let x=0;x<size;x++){const y=sum-x;if(y<0||y>=size)continue;const p=project(x+.5,y+.5,0),tw=tileW/2,th=tileH/2;ctx.fillStyle=(x+y)%2?groundTop:shade(groundTop,5);ctx.beginPath();ctx.moveTo(p.x,p.y-th);ctx.lineTo(p.x+tw,p.y);ctx.lineTo(p.x,p.y+th);ctx.lineTo(p.x-tw,p.y);ctx.closePath();ctx.fill();ctx.strokeStyle='#ffffff0b';ctx.stroke();if(x===size-1||y===size-1){ctx.fillStyle=x===size-1?groundRight:groundLeft;ctx.beginPath();ctx.moveTo(p.x+(x===size-1?tw:-tw),p.y);ctx.lineTo(p.x,p.y+th);ctx.lineTo(p.x,p.y+th+35);ctx.lineTo(p.x+(x===size-1?tw:-tw),p.y+35);ctx.closePath();ctx.fill();}}
-    const drawables=[];game.blocks.forEach(block=>drawables.push({sort:block.x+block.y+.1,fn:()=>drawBlock(block)}));game.coins.filter(c=>!c.got).forEach(c=>drawables.push({sort:c.x+c.y,fn:()=>drawCoin(c)}));drawables.push({sort:game.npc.x+game.npc.y,fn:()=>drawAvatar(game.npc.x,game.npc.y,0,true)});drawables.push({sort:game.player.x+game.player.y,fn:()=>drawAvatar(game.player.x,game.player.y,game.player.z,false)});drawables.sort((a,b)=>a.sort-b.sort).forEach(d=>d.fn());
+    const drawables=[];game.blocks.forEach(block=>drawables.push({sort:block.x+block.y+.1,fn:()=>drawBlock(block)}));game.coins.filter(c=>!c.got).forEach(c=>drawables.push({sort:c.x+c.y,fn:()=>drawCoin(c)}));drawables.push({sort:game.npc.x+game.npc.y,fn:()=>drawAvatar(game.npc.x,game.npc.y,0,true)});if(profile.equippedPet)drawables.push({sort:game.pet.x+game.pet.y+.05,fn:drawPet});drawables.push({sort:game.player.x+game.player.y,fn:()=>drawAvatar(game.player.x,game.player.y,game.player.z,false)});drawables.sort((a,b)=>a.sort-b.sort).forEach(d=>d.fn());
     drawDecor();
     game.particles.forEach(particle=>{const p=project(particle.x,particle.y,particle.z);ctx.globalAlpha=Math.max(0,particle.life*1.5);ctx.fillStyle=particle.color;ctx.fillRect(p.x-3,p.y-3,6,6);ctx.globalAlpha=1;});
   }

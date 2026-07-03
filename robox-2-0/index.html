@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0c1020">
   <title>Robox 2.0 — Play Beyond</title>
-  <link rel="stylesheet" href="styles.css?v=7">
+  <link rel="stylesheet" href="styles.css?v=8">
 </head>
 <body>
   <section class="maintenance-screen" id="maintenanceScreen" aria-label="Robox update in progress">
@@ -104,6 +104,7 @@
         <button class="nav-item active" data-view="discover"><span>⌂</span><b>Discover</b></button>
         <button class="nav-item" data-view="avatar"><span>♙</span><b>Avatar</b></button>
         <button class="nav-item" data-view="friends"><span>♧</span><b>Friends</b><i id="friendCount" hidden>0</i></button>
+        <button class="nav-item" data-view="pets"><span>♥</span><b>Pets</b><i id="petCount" hidden>0</i></button>
         <button class="nav-item" data-view="updates"><span>↻</span><b>Updates</b></button>
       </nav>
       <div class="daily-card">
@@ -123,7 +124,7 @@
             <h2>Welcome back, <span id="welcomeName">Player</span></h2>
             <p>Your world library is empty and ready for whatever comes next.</p>
           </div>
-          <div class="home-quick-actions"><button class="home-controls-button" id="homeControlsButton"><span>⌨</span> CONTROLS</button><button class="home-update-button" id="checkUpdatesButton"><span>↻</span> CHECK UPDATE</button><a class="home-download-button" id="downloadGameButton" href="robox-2.0-download.zip" download><span>⇩</span> DOWNLOAD</a></div>
+          <div class="home-quick-actions"><button class="home-account-button" id="homeSwitchAccountButton"><span>♙</span> SWITCH ACCOUNT</button><button class="home-controls-button" id="homeControlsButton"><span>⌨</span> CONTROLS</button><button class="home-update-button" id="checkUpdatesButton"><span>↻</span> CHECK UPDATE</button><a class="home-download-button" id="downloadGameButton" href="robox-2.0-download.zip" download><span>⇩</span> DOWNLOAD</a></div>
         </div>
 
         <div class="worlds-toolbar"><div><p class="eyebrow">MY CREATIONS</p><h3>Your worlds</h3></div><button id="createWorldBtn">＋ CREATE WORLD</button></div>
@@ -171,24 +172,30 @@
         </div>
       </section>
 
+      <section class="view" id="petsView">
+        <div class="page-heading"><div><p class="eyebrow">YOUR LITTLE CREW</p><h2>Pet Shop</h2><p>Get a pet with Robox coins, equip it, and bring it into every world.</p></div><div class="coin-pill big"><span class="coin">R</span><b id="petCoins">100</b></div></div>
+        <div class="pet-grid" id="petGrid"></div>
+      </section>
+
       <section class="view" id="updatesView">
-        <div class="page-heading"><div><p class="eyebrow">WHAT'S NEW</p><h2>Robox Updates</h2><p>Move through earlier releases and see what changed.</p></div><span class="update-version" id="updateVersion">UPDATE 7</span></div>
+        <div class="page-heading"><div><p class="eyebrow">WHAT'S NEW</p><h2>Robox Updates</h2><p>Move through earlier releases and see what changed.</p></div><span class="update-version" id="updateVersion">UPDATE 8</span></div>
         <div class="updates-layout">
           <div class="updates-list" id="updatesList">
-            <button class="active" data-update-index="0"><span>NEW</span><b>Stay Current & Download</b><small>Reload missing features or download Robox.</small></button>
-            <button data-update-index="1"><span>6</span><b>Control Switcher</b><small>Choose Auto, Keyboard, or Touch.</small></button>
-            <button data-update-index="2"><span>5</span><b>Multiple Accounts</b><small>Switch between saved player profiles.</small></button>
-            <button data-update-index="3"><span>4</span><b>Invites & Permissions</b><small>Invite players and choose who can build.</small></button>
-            <button data-update-index="4"><span>3</span><b>Expandable Worlds</b><small>Grow platforms and publish games.</small></button>
-            <button data-update-index="5"><span>2</span><b>World Creator</b><small>Create, save, and delete your own worlds.</small></button>
-            <button data-update-index="6"><span>1</span><b>Accounts & Friends</b><small>Age checks, friends, and daily Day 1.</small></button>
+            <button class="active" data-update-index="0"><span>NEW</span><b>Pets & Robux Shop</b><small>Buy pets and bring one into every world.</small></button>
+            <button data-update-index="1"><span>7</span><b>Stay Current & Download</b><small>Reload missing features or download Robox.</small></button>
+            <button data-update-index="2"><span>6</span><b>Control Switcher</b><small>Choose Auto, Keyboard, or Touch.</small></button>
+            <button data-update-index="3"><span>5</span><b>Multiple Accounts</b><small>Switch between saved player profiles.</small></button>
+            <button data-update-index="4"><span>4</span><b>Invites & Permissions</b><small>Invite players and choose who can build.</small></button>
+            <button data-update-index="5"><span>3</span><b>Expandable Worlds</b><small>Grow platforms and publish games.</small></button>
+            <button data-update-index="6"><span>2</span><b>World Creator</b><small>Create, save, and delete your own worlds.</small></button>
+            <button data-update-index="7"><span>1</span><b>Accounts & Friends</b><small>Age checks, friends, and daily Day 1.</small></button>
           </div>
           <article class="update-detail" id="updateDetail">
-            <p class="eyebrow" id="updateKicker">UPDATE 7 • LATEST</p>
-            <h3 id="updateTitle">Stay Current & Download</h3>
-            <p id="updateSummary">Robox can detect an older copy, reload every missing feature, and download an offline package.</p>
-            <ul id="updateFeatures"><li>Automatic latest-version checks</li><li>One-tap Reload Latest recovery</li><li>Downloadable offline ZIP package</li></ul>
-            <div class="update-navigation"><button id="previousUpdate" disabled>← PREVIOUS</button><span id="updatePosition">1 / 7</span><button id="nextUpdate">NEXT →</button></div>
+            <p class="eyebrow" id="updateKicker">UPDATE 8 • LATEST</p>
+            <h3 id="updateTitle">Pets & Robux Shop</h3>
+            <p id="updateSummary">Unlock pets with in-game Robux and equip a companion that follows you into worlds.</p>
+            <ul id="updateFeatures"><li>Four pets in the Pet Shop</li><li>Pay with saved in-game R currency</li><li>Press E in a world to open the shop</li></ul>
+            <div class="update-navigation"><button id="previousUpdate" disabled>← PREVIOUS</button><span id="updatePosition">1 / 8</span><button id="nextUpdate">NEXT →</button></div>
           </article>
         </div>
       </section>
@@ -201,14 +208,15 @@
     <div class="game-topbar">
       <button class="square-btn" id="exitGame" aria-label="Exit game">☰</button>
       <button class="square-btn game-controls-button" id="gameControlsButton" aria-label="Change controls" title="Change controls">⌨</button>
+      <button class="square-btn game-shop-button" id="gameShopButton" aria-label="Open pet shop" title="Pet Shop (E)">♥</button>
       <div class="world-name"><span id="worldIcon">◇</span><div><b id="worldName">NO WORLD LOADED</b><small id="serverName">Your world library is empty</small></div></div>
       <div class="game-stats"><div><span class="coin">R</span><b id="gameCoins">240</b></div><div class="xp-stat"><span>XP</span><b id="xpText">320 / 500</b></div></div>
     </div>
     <div class="quest-card" id="questCard"><span class="quest-symbol">✦</span><div><small>CURRENT QUEST</small><b id="questTitle">Welcome to Blockhaven</b><p id="questText">Collect 5 Robox coins</p><div class="quest-progress"><i id="questProgress"></i></div></div><strong id="questCount">0/5</strong></div>
-    <div class="controls-help"><span><kbd>WASD</kbd> MOVE</span><span><kbd>SPACE</kbd> JUMP</span><span><kbd>B</kbd> BUILD</span><span><kbd>E</kbd> INTERACT</span></div>
+    <div class="controls-help"><span><kbd>WASD</kbd> MOVE</span><span><kbd>SPACE</kbd> JUMP</span><span><kbd>B</kbd> BUILD</span><span><kbd>E</kbd> SHOP</span><span><kbd>F</kbd> TALK</span></div>
     <div class="build-toolbar" id="buildToolbar"><small>BUILD MODE</small><button class="active" data-block="1"><span class="block grass"></span>Grass</button><button data-block="2"><span class="block stone"></span>Stone</button><button data-block="3"><span class="block glow"></span>Glow</button><button data-block="0"><span class="block erase">×</span>Erase</button><button class="expand-platform" id="expandPlatform"><span>↗</span>Expand</button><em>Right-click: place • Left-click: wreck • Touch: choose a tool</em></div>
     <div class="toast" id="toast"><span>✦</span><div><b>Coin collected!</b><small>+5 R</small></div></div>
-    <div class="interact-prompt" id="interactPrompt"><kbd>E</kbd><span>Talk to Nova</span></div>
+    <div class="interact-prompt" id="interactPrompt"><kbd>F</kbd><span>Talk to Nova</span></div>
     <div class="crosshair">＋</div>
     <div class="mobile-controls">
       <div class="dpad"><button data-key="w">▲</button><button data-key="a">◀</button><button data-key="s">▼</button><button data-key="d">▶</button></div>
@@ -221,6 +229,14 @@
     </div>
   </section>
 
+  <div class="modal game-shop-modal" id="gameShopModal" role="dialog" aria-modal="true" aria-labelledby="gameShopTitle">
+    <div class="modal-card game-shop-card">
+      <button class="modal-close" id="closeGameShop" aria-label="Close pet shop">×</button>
+      <div class="game-shop-heading"><div><p class="eyebrow">IN-GAME SHOP</p><h2 id="gameShopTitle">Choose a pet</h2><p>Pets cost in-game Robux. Your world stays right where you left it.</p></div><div class="coin-pill big"><span class="coin">R</span><b id="gamePetCoins">100</b></div></div>
+      <div class="pet-grid game-pet-grid" id="gamePetGrid"></div>
+    </div>
+  </div>
+
   <div class="modal" id="controlsModal" role="dialog" aria-modal="true" aria-labelledby="controlsModalTitle">
     <div class="modal-card controls-modal-card">
       <button class="modal-close" data-close-controls aria-label="Close controls">×</button>
@@ -228,7 +244,7 @@
       <p class="controls-modal-copy">Switch control styles now or before entering a world. Your choice is saved on this device.</p>
       <div class="control-mode-list" id="controlModeList">
         <button data-control-mode="auto"><span>◎</span><div><b>Automatic</b><small>Keyboard on computers, touch on phones and tablets.</small></div><em>RECOMMENDED</em></button>
-        <button data-control-mode="keyboard"><span>⌨</span><div><b>Keyboard & Mouse</b><small>WASD, Space, B, E, and mouse building.</small></div><em>DESKTOP</em></button>
+        <button data-control-mode="keyboard"><span>⌨</span><div><b>Keyboard & Mouse</b><small>WASD, Space, B, E for Shop, F to Talk, and mouse building.</small></div><em>DESKTOP</em></button>
         <button data-control-mode="touch"><span>◇</span><div><b>Touch Controls</b><small>On-screen movement, Jump, Build, and Talk buttons.</small></div><em>MOBILE</em></button>
       </div>
       <p class="control-current" id="controlCurrent" aria-live="polite"></p>
@@ -328,7 +344,7 @@
     </div>
   </div>
 
-  <script src="config.js?v=7"></script>
-  <script src="game.js?v=7"></script>
+  <script src="config.js?v=8"></script>
+  <script src="game.js?v=8"></script>
 </body>
 </html>
