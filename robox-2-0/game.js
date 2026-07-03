@@ -235,7 +235,8 @@
   $$('[data-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 
   const updateNotes = [
-    { version:'UPDATE 6 • LATEST', badge:'UPDATE 6', title:'Control Switcher', summary:'Choose how you play before entering a world or switch controls during a game.', features:['Controls button on the home screen','Switch controls while a game is paused','Save Auto, Keyboard & Mouse, or Touch mode'] },
+    { version:'UPDATE 7 • LATEST', badge:'UPDATE 7', title:'Stay Current & Download', summary:'Robox can detect an older copy, reload every missing feature, and download an offline package.', features:['Automatic latest-version checks','One-tap Reload Latest recovery','Downloadable offline ZIP package'] },
+    { version:'UPDATE 6', badge:'UPDATE 6', title:'Control Switcher', summary:'Choose how you play before entering a world or switch controls during a game.', features:['Controls button on the home screen','Switch controls while a game is paused','Save Auto, Keyboard & Mouse, or Touch mode'] },
     { version:'UPDATE 5', badge:'UPDATE 5', title:'Multiple Accounts', summary:'Save several player accounts on one device and switch without losing progress.', features:['Switch accounts from Settings','Keep each profile\'s worlds and friends separate','Migrate existing accounts automatically'] },
     { version:'UPDATE 4', badge:'UPDATE 4', title:'Invites & Permissions', summary:'World owners can invite players by username and decide who gets build access.', features:['Invite exact player usernames','Choose play-only or Can Build','Change permissions or remove invites'] },
     { version:'UPDATE 3', badge:'UPDATE 3', title:'Expandable Worlds', summary:'Creators can grow their platform and share a finished game with everyone.', features:['Expand platforms up to 32 × 32','Publish and update live games','Right-click to place and left-click to wreck'] },
@@ -263,6 +264,34 @@
   $('#previousUpdate').addEventListener('click', () => renderUpdate(activeUpdateIndex - 1));
   $('#nextUpdate').addEventListener('click', () => renderUpdate(activeUpdateIndex + 1));
   renderUpdate(0);
+
+  const currentAppVersion = Number(appConfig.version) || 0;
+  const canonicalAppUrl = appConfig.canonicalUrl || 'https://mrawesomepro1.github.io/AWESOMECRAFT/robox-2-0/';
+  let latestAppVersion = currentAppVersion;
+  async function checkForUpdates(manual = false) {
+    try {
+      const response = await fetch(`${canonicalAppUrl}version.json?check=${Date.now()}`, { cache:'no-store' });
+      if (!response.ok) throw new Error('Update server unavailable');
+      const latest = await response.json();
+      latestAppVersion = Number(latest.version) || currentAppVersion;
+      const needsUpdate = latestAppVersion > currentAppVersion;
+      $('#updateBanner').classList.toggle('show', needsUpdate);
+      if (manual) showToast(needsUpdate ? 'New update found!' : 'Robox is up to date', needsUpdate ? `Update ${latestAppVersion} is ready to reload` : `You have Update ${currentAppVersion}`);
+      return needsUpdate;
+    } catch (_) {
+      if (manual) showToast('Could not check updates', 'Check your internet connection and try again');
+      return false;
+    }
+  }
+  function reloadLatestVersion() {
+    const target = new URL(canonicalAppUrl);
+    target.searchParams.set('version', String(latestAppVersion || currentAppVersion));
+    target.searchParams.set('reload', String(Date.now()));
+    window.location.replace(target.href);
+  }
+  $('#checkUpdatesButton').addEventListener('click', () => checkForUpdates(true));
+  $('#reloadLatestButton').addEventListener('click', reloadLatestVersion);
+  setTimeout(() => checkForUpdates(false), 1800);
 
   $('#soundToggle').addEventListener('click', event => {
     audioEnabled = !audioEnabled;

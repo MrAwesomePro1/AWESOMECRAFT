@@ -22,6 +22,8 @@ The Updates tab provides a browsable release history. Players can choose an upda
 
 The home screen and in-game top bar both include a Controls button. Players can save Automatic, Keyboard & Mouse, or Touch Controls mode and change it during a paused game.
 
+Update 7 adds a cache-busted version check. If an older copy is missing newer features, Robox shows Reload Latest and opens the canonical public build. The home screen also provides a downloadable offline ZIP package.
+
 ## Publishing games
 
 New worlds begin as private drafts. Creators can publish a draft as a game in the shared Published Games list, then use Update Live to push later block changes. Deleting a world removes its draft and published copy permanently; deletion records prevent it from returning after the next login.
