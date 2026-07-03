@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0c1020">
   <title>Robox 2.0 — Play Beyond</title>
-  <link rel="stylesheet" href="styles.css?v=8">
+  <link rel="stylesheet" href="styles.css?v=9">
 </head>
 <body>
   <section class="maintenance-screen" id="maintenanceScreen" aria-label="Robox update in progress">
@@ -173,29 +173,44 @@
       </section>
 
       <section class="view" id="petsView">
-        <div class="page-heading"><div><p class="eyebrow">YOUR LITTLE CREW</p><h2>Pet Shop</h2><p>Get a pet with Robox coins, equip it, and bring it into every world.</p></div><div class="coin-pill big"><span class="coin">R</span><b id="petCoins">100</b></div></div>
+        <div class="page-heading"><div><p class="eyebrow">YOUR LITTLE CREW</p><h2>Pet Shop</h2><p>Get a pet with Robox coins, equip it, and bring it into every world.</p></div><div class="pet-page-actions"><button class="design-pet-button" id="openPetDesigner">✦ DESIGN A PET — R 1,000</button><div class="coin-pill big"><span class="coin">R</span><b id="petCoins">100</b></div></div></div>
         <div class="pet-grid" id="petGrid"></div>
       </section>
 
+      <section class="view" id="petDesignView">
+        <div class="page-heading"><div><p class="eyebrow">ONE OF A KIND</p><h2>Pet Designer</h2><p>Create a custom companion for R 1,000 Robux.</p></div><button class="back-to-pets" id="backToPets">← BACK TO PETS</button></div>
+        <div class="pet-designer-layout">
+          <div class="pet-designer-preview"><div class="designer-stage" id="designerStage" style="--pet-color:#ff7a9d;--pet-accent:#55e6ff"><span id="designerPetIcon">🐶</span><b id="designerPetName">MY PET</b></div><div class="designer-price"><span>CREATION PRICE</span><strong><i class="coin">R</i> 1,000</strong><small>Your custom pet is saved only after payment.</small></div></div>
+          <form class="pet-designer-form" id="petDesignerForm">
+            <label for="customPetName">PET NAME</label><input id="customPetName" class="designer-input" maxlength="18" placeholder="Name your pet" required>
+            <fieldset class="pet-style-picker"><legend>CHOOSE A STYLE</legend><label><input type="radio" name="customPetType" value="pup" checked><span>🐶</span><b>Pup</b></label><label><input type="radio" name="customPetType" value="cat"><span>🐱</span><b>Kitty</b></label><label><input type="radio" name="customPetType" value="bot"><span>🤖</span><b>Bot</b></label><label><input type="radio" name="customPetType" value="dragon"><span>🐉</span><b>Dragon</b></label></fieldset>
+            <div class="pet-color-pickers"><label>BODY COLOR<input type="color" id="customPetColor" value="#ff7a9d"></label><label>ACCENT COLOR<input type="color" id="customPetAccent" value="#55e6ff"></label></div>
+            <div class="designer-balance"><span>YOUR ROBUX</span><strong><i class="coin">R</i> <b id="designerCoins">100</b></strong></div>
+            <button class="create-custom-pet" type="submit">CREATE & EQUIP FOR R 1,000</button><p class="designer-message" id="designerMessage" aria-live="polite"></p>
+          </form>
+        </div>
+      </section>
+
       <section class="view" id="updatesView">
-        <div class="page-heading"><div><p class="eyebrow">WHAT'S NEW</p><h2>Robox Updates</h2><p>Move through earlier releases and see what changed.</p></div><span class="update-version" id="updateVersion">UPDATE 8</span></div>
+        <div class="page-heading"><div><p class="eyebrow">WHAT'S NEW</p><h2>Robox Updates</h2><p>Move through earlier releases and see what changed.</p></div><span class="update-version" id="updateVersion">UPDATE 9</span></div>
         <div class="updates-layout">
           <div class="updates-list" id="updatesList">
-            <button class="active" data-update-index="0"><span>NEW</span><b>Pets & Robux Shop</b><small>Buy pets and bring one into every world.</small></button>
-            <button data-update-index="1"><span>7</span><b>Stay Current & Download</b><small>Reload missing features or download Robox.</small></button>
-            <button data-update-index="2"><span>6</span><b>Control Switcher</b><small>Choose Auto, Keyboard, or Touch.</small></button>
-            <button data-update-index="3"><span>5</span><b>Multiple Accounts</b><small>Switch between saved player profiles.</small></button>
-            <button data-update-index="4"><span>4</span><b>Invites & Permissions</b><small>Invite players and choose who can build.</small></button>
-            <button data-update-index="5"><span>3</span><b>Expandable Worlds</b><small>Grow platforms and publish games.</small></button>
-            <button data-update-index="6"><span>2</span><b>World Creator</b><small>Create, save, and delete your own worlds.</small></button>
-            <button data-update-index="7"><span>1</span><b>Accounts & Friends</b><small>Age checks, friends, and daily Day 1.</small></button>
+            <button class="active" data-update-index="0"><span>NEW</span><b>Pet Designer</b><small>Make a custom pet for R 1,000.</small></button>
+            <button data-update-index="1"><span>8</span><b>Pets & Robux Shop</b><small>Buy pets and bring one into every world.</small></button>
+            <button data-update-index="2"><span>7</span><b>Stay Current & Download</b><small>Reload missing features or download Robox.</small></button>
+            <button data-update-index="3"><span>6</span><b>Control Switcher</b><small>Choose Auto, Keyboard, or Touch.</small></button>
+            <button data-update-index="4"><span>5</span><b>Multiple Accounts</b><small>Switch between saved player profiles.</small></button>
+            <button data-update-index="5"><span>4</span><b>Invites & Permissions</b><small>Invite players and choose who can build.</small></button>
+            <button data-update-index="6"><span>3</span><b>Expandable Worlds</b><small>Grow platforms and publish games.</small></button>
+            <button data-update-index="7"><span>2</span><b>World Creator</b><small>Create, save, and delete your own worlds.</small></button>
+            <button data-update-index="8"><span>1</span><b>Accounts & Friends</b><small>Age checks, friends, and daily Day 1.</small></button>
           </div>
           <article class="update-detail" id="updateDetail">
-            <p class="eyebrow" id="updateKicker">UPDATE 8 • LATEST</p>
-            <h3 id="updateTitle">Pets & Robux Shop</h3>
-            <p id="updateSummary">Unlock pets with in-game Robux and equip a companion that follows you into worlds.</p>
-            <ul id="updateFeatures"><li>Four pets in the Pet Shop</li><li>Pay with saved in-game R currency</li><li>Press E in a world to open the shop</li></ul>
-            <div class="update-navigation"><button id="previousUpdate" disabled>← PREVIOUS</button><span id="updatePosition">1 / 8</span><button id="nextUpdate">NEXT →</button></div>
+            <p class="eyebrow" id="updateKicker">UPDATE 9 • LATEST</p>
+            <h3 id="updateTitle">Pet Designer</h3>
+            <p id="updateSummary">Design a one-of-a-kind pet with your own name, style, and colors for R 1,000 Robux.</p>
+            <ul id="updateFeatures"><li>Live custom-pet preview</li><li>Choose four styles and two colors</li><li>Create and equip for R 1,000</li></ul>
+            <div class="update-navigation"><button id="previousUpdate" disabled>← PREVIOUS</button><span id="updatePosition">1 / 9</span><button id="nextUpdate">NEXT →</button></div>
           </article>
         </div>
       </section>
@@ -344,7 +359,7 @@
     </div>
   </div>
 
-  <script src="config.js?v=8"></script>
-  <script src="game.js?v=8"></script>
+  <script src="config.js?v=9"></script>
+  <script src="game.js?v=9"></script>
 </body>
 </html>

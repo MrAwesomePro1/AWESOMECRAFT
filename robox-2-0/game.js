@@ -25,7 +25,7 @@
 
   const defaultProfile = (name = 'Guest_Player') => ({
     name, coins: 100, xp: 0, level: 1, skin: '#f5b640', shirt: '#7557ff', hair: 'spikes',
-    dailyClaimed: false, streak: 1, friends: [], worlds: [], deletedWorldIds: [], pets: [], equippedPet: null, ageVerified: false, ageGroup: null
+    dailyClaimed: false, streak: 1, friends: [], worlds: [], deletedWorldIds: [], pets: [], customPets: [], equippedPet: null, ageVerified: false, ageGroup: null
   });
   const readSavedAccount = () => {
     try { return JSON.parse(localStorage.getItem('robox-account') || 'null'); }
@@ -85,7 +85,7 @@
   };
 
   function updateProfileUI() {
-    ['walletCoins', 'avatarCoins', 'petCoins', 'gameCoins'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = profile.coins; });
+    ['walletCoins', 'avatarCoins', 'petCoins', 'designerCoins', 'gameCoins'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = profile.coins; });
     $('#profileLevel').textContent = profile.level;
     $('#profileName').textContent = profile.name;
     $('#welcomeName').textContent = profile.name;
@@ -155,6 +155,7 @@
     if (!Array.isArray(profile.worlds)) profile.worlds = [];
     if (!Array.isArray(profile.deletedWorldIds)) profile.deletedWorldIds = [];
     if (!Array.isArray(profile.pets)) profile.pets = [];
+    if (!Array.isArray(profile.customPets)) profile.customPets = [];
     if (profile.equippedPet && !profile.pets.includes(profile.equippedPet)) profile.equippedPet = null;
     if (mode === 'account') {
       const backup = readWorldLibrary()[profile.name.toLowerCase()] || {};
@@ -247,7 +248,8 @@
   $$('[data-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 
   const updateNotes = [
-    { version:'UPDATE 8 • LATEST', badge:'UPDATE 8', title:'Pets & Robux Shop', summary:'Unlock pets with in-game Robux and equip a companion that follows you into worlds.', features:['Four pets in the Pet Shop','Pay with saved in-game R currency','Press E in a world to open the shop'] },
+    { version:'UPDATE 9 • LATEST', badge:'UPDATE 9', title:'Pet Designer', summary:'Design a one-of-a-kind pet with your own name, style, and colors for R 1,000 Robux.', features:['Live custom-pet preview','Choose four styles and two colors','Create and equip for R 1,000'] },
+    { version:'UPDATE 8', badge:'UPDATE 8', title:'Pets & Robux Shop', summary:'Unlock pets with in-game Robux and equip a companion that follows you into worlds.', features:['Four pets in the Pet Shop','Pay with saved in-game R currency','Press E in a world to open the shop'] },
     { version:'UPDATE 7', badge:'UPDATE 7', title:'Stay Current & Download', summary:'Robox can detect an older copy, reload every missing feature, and download an offline package.', features:['Automatic latest-version checks','One-tap Reload Latest recovery','Downloadable offline ZIP package'] },
     { version:'UPDATE 6', badge:'UPDATE 6', title:'Control Switcher', summary:'Choose how you play before entering a world or switch controls during a game.', features:['Controls button on the home screen','Switch controls while a game is paused','Save Auto, Keyboard & Mouse, or Touch mode'] },
     { version:'UPDATE 5', badge:'UPDATE 5', title:'Multiple Accounts', summary:'Save several player accounts on one device and switch without losing progress.', features:['Switch accounts from Settings','Keep each profile\'s worlds and friends separate','Migrate existing accounts automatically'] },
@@ -413,7 +415,7 @@
 
   function petCardsMarkup() {
     const ownedPets = Array.isArray(profile.pets) ? profile.pets : [];
-    return petCatalog.map(pet => {
+    return [...petCatalog, ...(Array.isArray(profile.customPets) ? profile.customPets : [])].map(pet => {
       const owned = ownedPets.includes(pet.id);
       const equipped = profile.equippedPet === pet.id;
       const label = equipped ? 'EQUIPPED' : owned ? 'EQUIP' : `GET FOR R ${pet.price}`;
@@ -429,7 +431,7 @@
   function handlePetAction(event) {
     const button = event.target.closest('[data-pet-id]');
     if (!button) return;
-    const pet = petCatalog.find(item => item.id === button.dataset.petId);
+    const pet = [...petCatalog, ...(profile.customPets || [])].find(item => item.id === button.dataset.petId);
     if (!pet) return;
     if (!Array.isArray(profile.pets)) profile.pets = [];
     if (button.dataset.petAction === 'buy') {
@@ -451,6 +453,41 @@
   }
   $('#petGrid').addEventListener('click', handlePetAction);
   $('#gamePetGrid').addEventListener('click', handlePetAction);
+
+  const customPetIcons = { pup:'🐶', cat:'🐱', bot:'🤖', dragon:'🐉' };
+  function updatePetDesignerPreview() {
+    const type = $('input[name="customPetType"]:checked')?.value || 'pup';
+    const name = $('#customPetName').value.trim() || 'MY PET';
+    $('#designerPetIcon').textContent = customPetIcons[type];
+    $('#designerPetName').textContent = name.toUpperCase();
+    $('#designerStage').style.setProperty('--pet-color', $('#customPetColor').value);
+    $('#designerStage').style.setProperty('--pet-accent', $('#customPetAccent').value);
+  }
+  $('#openPetDesigner').addEventListener('click', () => { $('#designerMessage').textContent = ''; updatePetDesignerPreview(); switchView('petDesign'); });
+  $('#backToPets').addEventListener('click', () => switchView('pets'));
+  $('#customPetName').addEventListener('input', updatePetDesignerPreview);
+  $('#customPetColor').addEventListener('input', updatePetDesignerPreview);
+  $('#customPetAccent').addEventListener('input', updatePetDesignerPreview);
+  $$('input[name="customPetType"]').forEach(input => input.addEventListener('change', updatePetDesignerPreview));
+  $('#petDesignerForm').addEventListener('submit', event => {
+    event.preventDefault();
+    const message = $('#designerMessage'), name = $('#customPetName').value.trim();
+    if (sessionMode !== 'account') { message.textContent = 'Create or sign in to an account before designing a pet.'; beep(240, .12); return; }
+    if (name.length < 2) { message.textContent = 'Give your pet a name with at least 2 characters.'; return; }
+    if (profile.coins < 1000) { message.textContent = `You need R ${1000 - profile.coins} more Robux to create this pet.`; beep(240, .12); return; }
+    const type = $('input[name="customPetType"]:checked')?.value || 'pup';
+    const customPet = { id:`custom-${Date.now()}`, name, type, icon:customPetIcons[type], price:1000, color:$('#customPetColor').value, accent:$('#customPetAccent').value, description:`A one-of-a-kind ${type} designed by ${profile.name}.`, custom:true };
+    profile.coins -= 1000;
+    profile.customPets.push(customPet);
+    profile.pets.push(customPet.id);
+    profile.equippedPet = customPet.id;
+    saveProfile();
+    $('#customPetName').value = '';
+    message.textContent = '';
+    switchView('pets');
+    showToast(`${customPet.name} created!`, 'R 1,000 Robux paid • Custom pet equipped');
+    beep(1080, .2);
+  });
 
   function worldConfigFromRecord(record) {
     const theme = worldThemes[record.theme] || worldThemes.grass;
@@ -1057,7 +1094,7 @@
   }
 
   function drawPet() {
-    const pet = petCatalog.find(item => item.id === profile.equippedPet);
+    const pet = [...petCatalog, ...(profile.customPets || [])].find(item => item.id === profile.equippedPet);
     if (!pet) return;
     const p = project(game.pet.x, game.pet.y, game.pet.z), bob = Math.sin(game.time * 5) * 2;
     ctx.save(); ctx.translate(p.x, p.y - 22 + bob);

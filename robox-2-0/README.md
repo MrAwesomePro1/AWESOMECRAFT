@@ -28,6 +28,8 @@ Update 8 adds a Pet Shop with four companions purchased using saved in-game R cu
 
 The home screen now includes a direct Switch Account button. Each saved account keeps its own Robux, pets, friends, worlds, avatar, and reward progress.
 
+Update 9 adds a full Pet Designer page. Signed-in players can name a pet, choose a Pup, Kitty, Bot, or Dragon style, select body and accent colors, and preview the result live. Creating the custom pet costs R 1,000 in-game Robux, then saves and equips it to that account.
+
 ## Publishing games
 
 New worlds begin as private drafts. Creators can publish a draft as a game in the shared Published Games list, then use Update Live to push later block changes. Deleting a world removes its draft and published copy permanently; deletion records prevent it from returning after the next login.
