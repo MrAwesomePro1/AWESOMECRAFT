@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0c1020">
   <title>Robox 2.0 — Play Beyond</title>
-  <link rel="stylesheet" href="styles.css?v=9">
+  <link rel="stylesheet" href="styles.css?v=11">
+  <style>.avatar-page-actions{display:flex;align-items:center;gap:10px}.open-skin-maker{border:1px solid #8069f36e;border-radius:10px;background:#7557ff20;color:#c9c0ff;padding:11px 14px;text-decoration:none;font:700 8px "Chakra Petch";letter-spacing:.7px}@media(max-width:680px){.avatar-page-actions{width:100%}.open-skin-maker{flex:1;text-align:center}}</style>
 </head>
 <body>
   <section class="maintenance-screen" id="maintenanceScreen" aria-label="Robox update in progress">
@@ -43,6 +44,14 @@
       <div class="new-player-badge">NEW PLAYER</div>
       <h2>Welcome to Robox</h2>
       <p>Choose how you want to enter the universe.</p>
+      <div class="start-device-card" id="startDeviceChoice" aria-label="Choose device type">
+        <span>START ON</span>
+        <div>
+          <button class="active" type="button" data-start-device="touch"><b>iPad / iPhone</b><small>Big touch buttons</small></button>
+          <button type="button" data-start-device="keyboard"><b>Computer</b><small>Keyboard + mouse</small></button>
+        </div>
+        <p id="startDeviceMessage">Touch controls selected for phones and tablets.</p>
+      </div>
       <div class="auth-tabs" role="tablist" aria-label="Account options">
         <button class="active" type="button" data-auth-tab="create" role="tab" aria-selected="true">Create account</button>
         <button type="button" data-auth-tab="signin" role="tab" aria-selected="false">Sign in</button>
@@ -124,7 +133,7 @@
             <h2>Welcome back, <span id="welcomeName">Player</span></h2>
             <p>Your world library is empty and ready for whatever comes next.</p>
           </div>
-          <div class="home-quick-actions"><button class="home-account-button" id="homeSwitchAccountButton"><span>♙</span> SWITCH ACCOUNT</button><button class="home-controls-button" id="homeControlsButton"><span>⌨</span> CONTROLS</button><button class="home-update-button" id="checkUpdatesButton"><span>↻</span> CHECK UPDATE</button><a class="home-download-button" id="downloadGameButton" href="robox-2.0-download.zip" download><span>⇩</span> DOWNLOAD</a></div>
+        <div class="home-quick-actions"><button class="home-account-button" id="homeSwitchAccountButton"><span>♙</span> SWITCH ACCOUNT</button><button class="home-controls-button" id="homeControlsButton"><span>⌨</span> CONTROLS</button><button class="home-update-button" id="checkUpdatesButton"><span>↻</span> CHECK UPDATE</button><a class="home-download-button" id="downloadGameButton" href="robox-2.0-update-11-download.zip" download><span>⇩</span> DOWNLOAD</a></div>
         </div>
 
         <div class="worlds-toolbar"><div><p class="eyebrow">MY CREATIONS</p><h3>Your worlds</h3></div><button id="createWorldBtn">＋ CREATE WORLD</button></div>
@@ -135,7 +144,7 @@
       </section>
 
       <section class="view" id="avatarView">
-        <div class="page-heading"><div><p class="eyebrow">MAKE IT YOURS</p><h2>Avatar Studio</h2><p>Mix colors and styles. Your look saves automatically.</p></div><div class="coin-pill big"><span class="coin">R</span><b id="avatarCoins">240</b></div></div>
+        <div class="page-heading"><div><p class="eyebrow">MAKE IT YOURS</p><h2>Avatar Studio</h2><p>Mix colors here, or launch the separate app for full skin creation.</p></div><div class="avatar-page-actions"><a class="open-skin-maker" href="../Robox Skin Maker/index.html">✦ OPEN SKIN MAKER</a><div class="coin-pill big"><span class="coin">R</span><b id="avatarCoins">240</b></div></div></div>
         <div class="avatar-studio">
           <div class="avatar-stage">
             <div class="stage-glow"></div>
@@ -158,6 +167,58 @@
             <button class="save-look" id="saveLook">✓ LOOK EQUIPPED</button>
           </div>
         </div>
+      </section>
+
+      <section class="view embedded-skin-lab" id="skinLabEmbeddedView">
+        <div class="page-heading skin-lab-heading"><div><p class="eyebrow">SKIN LAB 2.0</p><h2>Build your custom skin</h2><p>Design every layer, save your creations, and publish one to your Robox profile.</p></div><span class="skin-cloud-status"><i></i> READY TO CREATE</span></div>
+        <div class="avatar-studio skin-lab">
+          <div class="avatar-stage skin-preview-stage" id="skinPreviewStage">
+            <div class="preview-topline"><span>LIVE PREVIEW</span><button id="resetSkinDraft" type="button">RESET</button></div>
+            <div class="stage-glow"></div>
+            <div class="studio-avatar" id="skinStudioAvatar" data-outfit="classic" data-face="smile"><div class="a-head"><i></i><i></i><b></b></div><div class="a-hair"></div><div class="a-body"><span class="shirt-mark">R</span></div><div class="a-arm left"></div><div class="a-arm right"></div><div class="a-leg left"></div><div class="a-leg right"></div></div>
+            <div class="turntable"></div>
+            <div class="preview-angle-tools" aria-label="Preview angle"><button type="button" data-preview-turn="-45" aria-label="Turn left">↶</button><span>DRAG TO SPIN</span><button type="button" data-preview-turn="45" aria-label="Turn right">↷</button></div>
+          </div>
+          <div class="closet skin-builder">
+            <label class="skin-name-field" for="skinName"><span>SKIN NAME</span><input id="skinName" maxlength="24" value="My First Skin" placeholder="Name your creation"></label>
+            <div class="closet-tabs skin-tabs" role="tablist" aria-label="Skin tools"><button class="active" type="button" data-skin-tab="colors">Colors</button><button type="button" data-skin-tab="outfits">Outfits</button><button type="button" data-skin-tab="face">Face &amp; hair</button></div>
+            <div class="skin-tool-panel active" data-skin-panel="colors">
+              <div class="skin-color-grid">
+                <label><span>Body</span><input type="color" id="skinBodyColor" data-skin-color="skin" value="#f5b640"></label>
+                <label><span>Shirt</span><input type="color" id="skinShirtColor" data-skin-color="shirt" value="#7557ff"></label>
+                <label><span>Accent</span><input type="color" id="skinAccentColor" data-skin-color="accent" value="#55e6ff"></label>
+                <label><span>Pants</span><input type="color" id="skinPantsColor" data-skin-color="pants" value="#28325e"></label>
+                <label><span>Hair</span><input type="color" id="skinHairColor" data-skin-color="hairColor" value="#2b1b18"></label>
+              </div>
+              <p class="tool-label">QUICK PALETTES</p>
+              <div class="palette-list" id="skinPalettes">
+                <button type="button" data-palette="neon"><i style="--c:#7557ff"></i><i style="--c:#55e6ff"></i><b>Neon</b></button>
+                <button type="button" data-palette="sunset"><i style="--c:#ff5470"></i><i style="--c:#ffc857"></i><b>Sunset</b></button>
+                <button type="button" data-palette="forest"><i style="--c:#146b52"></i><i style="--c:#70e000"></i><b>Forest</b></button>
+                <button type="button" data-palette="mono"><i style="--c:#20263a"></i><i style="--c:#f5f7ff"></i><b>Mono</b></button>
+              </div>
+            </div>
+            <div class="skin-tool-panel" data-skin-panel="outfits">
+              <p class="tool-label">CHOOSE A SHIRT STYLE</p>
+              <div class="skin-choice-grid" id="skinOutfitStyles">
+                <button class="active" type="button" data-outfit="classic"><span class="outfit-icon classic">R</span><b>Classic</b><small>Clean logo tee</small></button>
+                <button type="button" data-outfit="stripe"><span class="outfit-icon stripe"></span><b>Stripe</b><small>Bold center line</small></button>
+                <button type="button" data-outfit="hoodie"><span class="outfit-icon hoodie"></span><b>Hoodie</b><small>Cozy drawstrings</small></button>
+                <button type="button" data-outfit="cyber"><span class="outfit-icon cyber"></span><b>Cyber</b><small>Glowing circuit</small></button>
+              </div>
+            </div>
+            <div class="skin-tool-panel" data-skin-panel="face">
+              <p class="tool-label">EXPRESSION</p>
+              <div class="face-choice-grid" id="skinFaceStyles"><button class="active" type="button" data-face="smile"><span>◡</span><b>Happy</b></button><button type="button" data-face="cool"><span>⌐■</span><b>Cool</b></button><button type="button" data-face="wink"><span>◠</span><b>Wink</b></button><button type="button" data-face="robot"><span>▣</span><b>Robot</b></button></div>
+              <p class="tool-label">HAIR STYLE</p>
+              <div class="style-grid" id="skinHairStyles"><button class="active" type="button" data-hair="spikes"><span class="hair-preview spikes"></span><b>Spikes</b><small>Free</small></button><button type="button" data-hair="cap"><span class="hair-preview cap">◰</span><b>Cap</b><small>Free</small></button><button type="button" data-hair="none"><span class="hair-preview none">—</span><b>None</b><small>Free</small></button></div>
+            </div>
+            <div class="skin-publish-card"><div><span>DESTINATION</span><b><i class="brand-cube tiny">R</i> Robox 2.0 profile</b><small>Your design stays on this device.</small></div><button class="save-look" id="publishSkin" type="button">UPLOAD TO ROBOX 2.0</button></div>
+            <div class="skin-file-actions"><button id="exportSkin" type="button">⇩ EXPORT .ROBOXSKIN</button><button id="downloadSkinPng" type="button">▧ PNG</button><button id="importSkin" type="button">⇧ IMPORT</button><input id="skinFileInput" type="file" accept=".roboxskin,.json,application/json" hidden></div>
+            <p class="skin-message" id="skinMessage" aria-live="polite"></p>
+          </div>
+        </div>
+        <section class="skin-library-section"><div class="skin-library-heading"><div><p class="eyebrow">MY SKINS</p><h3>Saved creations</h3></div><span id="skinLibraryCount">0 / 12</span></div><div class="skin-library" id="skinLibrary"></div></section>
       </section>
 
       <section class="view" id="friendsView">
@@ -192,25 +253,27 @@
       </section>
 
       <section class="view" id="updatesView">
-        <div class="page-heading"><div><p class="eyebrow">WHAT'S NEW</p><h2>Robox Updates</h2><p>Move through earlier releases and see what changed.</p></div><span class="update-version" id="updateVersion">UPDATE 9</span></div>
+        <div class="page-heading"><div><p class="eyebrow">WHAT'S NEW</p><h2>Robox Updates</h2><p>Move through earlier releases and see what changed.</p></div><span class="update-version" id="updateVersion">UPDATE 11</span></div>
         <div class="updates-layout">
           <div class="updates-list" id="updatesList">
-            <button class="active" data-update-index="0"><span>NEW</span><b>Pet Designer</b><small>Make a custom pet for R 1,000.</small></button>
-            <button data-update-index="1"><span>8</span><b>Pets & Robux Shop</b><small>Buy pets and bring one into every world.</small></button>
-            <button data-update-index="2"><span>7</span><b>Stay Current & Download</b><small>Reload missing features or download Robox.</small></button>
-            <button data-update-index="3"><span>6</span><b>Control Switcher</b><small>Choose Auto, Keyboard, or Touch.</small></button>
-            <button data-update-index="4"><span>5</span><b>Multiple Accounts</b><small>Switch between saved player profiles.</small></button>
-            <button data-update-index="5"><span>4</span><b>Invites & Permissions</b><small>Invite players and choose who can build.</small></button>
-            <button data-update-index="6"><span>3</span><b>Expandable Worlds</b><small>Grow platforms and publish games.</small></button>
-            <button data-update-index="7"><span>2</span><b>World Creator</b><small>Create, save, and delete your own worlds.</small></button>
-            <button data-update-index="8"><span>1</span><b>Accounts & Friends</b><small>Age checks, friends, and daily Day 1.</small></button>
+            <button class="active" data-update-index="0"><span>NEW</span><b>Robux Store</b><small>Buy in-game Robux bundles.</small></button>
+            <button data-update-index="1"><span>10</span><b>Standalone Skin Maker</b><small>Create skins in a separate app, then upload them.</small></button>
+            <button data-update-index="2"><span>9</span><b>Pet Designer</b><small>Make a custom pet for R 1,000.</small></button>
+            <button data-update-index="3"><span>8</span><b>Pets & Robux Shop</b><small>Buy pets and bring one into every world.</small></button>
+            <button data-update-index="4"><span>7</span><b>Stay Current & Download</b><small>Reload missing features or download Robox.</small></button>
+            <button data-update-index="5"><span>6</span><b>Control Switcher</b><small>Choose Auto, Keyboard, or Touch.</small></button>
+            <button data-update-index="6"><span>5</span><b>Multiple Accounts</b><small>Switch between saved player profiles.</small></button>
+            <button data-update-index="7"><span>4</span><b>Invites & Permissions</b><small>Invite players and choose who can build.</small></button>
+            <button data-update-index="8"><span>3</span><b>Expandable Worlds</b><small>Grow platforms and publish games.</small></button>
+            <button data-update-index="9"><span>2</span><b>World Creator</b><small>Create, save, and delete your own worlds.</small></button>
+            <button data-update-index="10"><span>1</span><b>Accounts & Friends</b><small>Age checks, friends, and daily Day 1.</small></button>
           </div>
           <article class="update-detail" id="updateDetail">
-            <p class="eyebrow" id="updateKicker">UPDATE 9 • LATEST</p>
-            <h3 id="updateTitle">Pet Designer</h3>
-            <p id="updateSummary">Design a one-of-a-kind pet with your own name, style, and colors for R 1,000 Robux.</p>
-            <ul id="updateFeatures"><li>Live custom-pet preview</li><li>Choose four styles and two colors</li><li>Create and equip for R 1,000</li></ul>
-            <div class="update-navigation"><button id="previousUpdate" disabled>← PREVIOUS</button><span id="updatePosition">1 / 9</span><button id="nextUpdate">NEXT →</button></div>
+            <p class="eyebrow" id="updateKicker">UPDATE 11 • LATEST</p>
+            <h3 id="updateTitle">Robux Store</h3>
+            <p id="updateSummary">Buy in-game Robux bundles for your Robox account without using real money.</p>
+            <ul id="updateFeatures"><li>New Buy Robux buttons around the app</li><li>R 250, R 1,000, and R 5,000 demo bundles</li><li>Balances update instantly and save to signed-in accounts</li></ul>
+            <div class="update-navigation"><button id="previousUpdate" disabled>← PREVIOUS</button><span id="updatePosition">1 / 11</span><button id="nextUpdate">NEXT →</button></div>
           </article>
         </div>
       </section>
@@ -359,7 +422,7 @@
     </div>
   </div>
 
-  <script src="config.js?v=9"></script>
-  <script src="game.js?v=9"></script>
+  <script src="config.js?v=11"></script>
+  <script src="game.js?v=11"></script>
 </body>
 </html>

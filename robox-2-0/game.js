@@ -5,6 +5,15 @@
   const $$ = (selector, scope = document) => [...scope.querySelectorAll(selector)];
   const escapeHTML = value => String(value).replace(/[&<>'"]/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' })[character]);
   const appConfig = window.ROBOX_CONFIG || {};
+  let incomingSkinPayload = (() => {
+    if (!window.location.hash.startsWith('#skin=')) return null;
+    try {
+      const encoded = window.location.hash.slice(6).replace(/-/g, '+').replace(/_/g, '/');
+      const padded = encoded + '='.repeat((4 - encoded.length % 4) % 4);
+      const bytes = Uint8Array.from(atob(padded), character => character.charCodeAt(0));
+      return JSON.parse(new TextDecoder().decode(bytes));
+    } catch (_) { return null; }
+  })();
   const maintenancePreview = new URLSearchParams(window.location.search).get('maintenance') === '1';
   if (appConfig.maintenance || maintenancePreview) {
     $('#maintenanceMessage').textContent = appConfig.maintenanceMessage || "Robox 2.0 is temporarily unavailable while we're making an update. Please check back soon.";
@@ -22,9 +31,16 @@
     { id:'moon-bot', name:'Moon Bot', type:'bot', icon:'🤖', price:150, color:'#8e9aaa', accent:'#f0cf62', description:'A tiny robot built for lunar adventures.' },
     { id:'tiny-dragon', name:'Tiny Dragon', type:'dragon', icon:'🐉', price:250, color:'#31bd83', accent:'#ff7e91', description:'A rare little dragon with colorful wings.' }
   ];
+  const robuxBundles = [
+    { amount:250, name:'Starter Stack', note:'Enough for a pet or a boost toward your designer pet.' },
+    { amount:1000, name:'Designer Pack', note:'Perfect for making one custom pet right away.' },
+    { amount:5000, name:'Mega Builder Vault', note:'Stock up for pets, designs, and future Robox items.' }
+  ];
 
   const defaultProfile = (name = 'Guest_Player') => ({
-    name, coins: 100, xp: 0, level: 1, skin: '#f5b640', shirt: '#7557ff', hair: 'spikes',
+    name, coins: 100, xp: 0, level: 1,
+    skin: '#f5b640', shirt: '#7557ff', accent: '#55e6ff', pants: '#28325e', hairColor: '#2b1b18', hair: 'spikes', outfit: 'classic', face: 'smile',
+    customSkins: [], equippedSkin: null,
     dailyClaimed: false, streak: 1, friends: [], worlds: [], deletedWorldIds: [], pets: [], customPets: [], equippedPet: null, ageVerified: false, ageGroup: null
   });
   const readSavedAccount = () => {
@@ -69,6 +85,7 @@
   const writeWorldLibrary = library => localStorage.setItem('robox-world-library', JSON.stringify(library));
   let profile = defaultProfile();
   let sessionMode = 'signed-out';
+  let skinDraft = null;
 
   const saveProfile = () => {
     if (sessionMode === 'account') {
@@ -85,12 +102,15 @@
   };
 
   function updateProfileUI() {
-    ['walletCoins', 'avatarCoins', 'petCoins', 'designerCoins', 'gameCoins'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = profile.coins; });
+    ['walletCoins', 'avatarCoins', 'petCoins', 'designerCoins', 'gameCoins', 'storeCoins'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = profile.coins; });
     $('#profileLevel').textContent = profile.level;
     $('#profileName').textContent = profile.name;
     $('#welcomeName').textContent = profile.name;
     document.documentElement.style.setProperty('--skin', profile.skin);
     document.documentElement.style.setProperty('--shirt', profile.shirt);
+    document.documentElement.style.setProperty('--accent', profile.accent || '#55e6ff');
+    document.documentElement.style.setProperty('--pants', profile.pants || '#28325e');
+    document.documentElement.style.setProperty('--hair', profile.hairColor || '#2b1b18');
     $('#xpText').textContent = `${profile.xp} / 500`;
     const dailyButton = $('#claimDaily');
     dailyButton.textContent = profile.dailyClaimed ? '✓ Claimed today' : 'Claim +25 R';
@@ -148,14 +168,27 @@
     $$('#shirtSwatches button').forEach(button => button.classList.toggle('active', button.dataset.color === profile.shirt));
     $$('#hairStyles button').forEach(button => button.classList.toggle('active', button.dataset.hair === profile.hair));
     $('#studioAvatar .a-hair').className = `a-hair ${profile.hair}`;
+    skinDraft = skinFromProfile();
+    syncSkinLab();
   }
   function enterSession(nextProfile, mode) {
     profile = Object.assign(defaultProfile(nextProfile.name), nextProfile);
+    let receivedSkin = null;
     if (!Array.isArray(profile.friends)) profile.friends = [];
     if (!Array.isArray(profile.worlds)) profile.worlds = [];
     if (!Array.isArray(profile.deletedWorldIds)) profile.deletedWorldIds = [];
     if (!Array.isArray(profile.pets)) profile.pets = [];
     if (!Array.isArray(profile.customPets)) profile.customPets = [];
+    if (!Array.isArray(profile.customSkins)) profile.customSkins = [];
+    if (incomingSkinPayload) {
+      receivedSkin = cleanSkin(incomingSkinPayload);
+      const uploaded = { ...receivedSkin, id:`skin-${Date.now()}`, updatedAt:new Date().toISOString() };
+      profile.customSkins = [uploaded, ...profile.customSkins.filter(item => String(item.name || '').toLowerCase() !== uploaded.name.toLowerCase())].slice(0,12);
+      profile.equippedSkin = uploaded.id;
+      applySkinToProfile(uploaded);
+      incomingSkinPayload = null;
+      try { history.replaceState(null, '', `${location.pathname}${location.search}`); } catch (_) { location.hash = ''; }
+    }
     if (profile.equippedPet && !profile.pets.includes(profile.equippedPet)) profile.equippedPet = null;
     if (mode === 'account') {
       const backup = readWorldLibrary()[profile.name.toLowerCase()] || {};
@@ -179,6 +212,7 @@
     $('#appShell').removeAttribute('inert');
     showAuthMessage('');
     updateProfileUI(); syncCustomizer();
+    if (receivedSkin) showToast('Skin uploaded!', `${receivedSkin.name} is now equipped`);
     beep(760, .12);
   }
   function selectAuthTab(mode) {
@@ -248,7 +282,9 @@
   $$('[data-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 
   const updateNotes = [
-    { version:'UPDATE 9 • LATEST', badge:'UPDATE 9', title:'Pet Designer', summary:'Design a one-of-a-kind pet with your own name, style, and colors for R 1,000 Robux.', features:['Live custom-pet preview','Choose four styles and two colors','Create and equip for R 1,000'] },
+    { version:'UPDATE 11 • LATEST', badge:'UPDATE 11', title:'Robux Store', summary:'Buy in-game Robux bundles for your Robox account without using real money.', features:['New Buy Robux buttons around the app','R 250, R 1,000, and R 5,000 demo bundles','Balances update instantly and save to signed-in accounts'] },
+    { version:'UPDATE 10', badge:'UPDATE 10', title:'Standalone Skin Maker', summary:'Create custom player skins in a separate app, then hand a finished look into Robox 2.0.', features:['Separate full-screen skin creator','Saved 12-skin library with one-click upload','Portable .roboxskin and PNG exports'] },
+    { version:'UPDATE 9', badge:'UPDATE 9', title:'Pet Designer', summary:'Design a one-of-a-kind pet with your own name, style, and colors for R 1,000 Robux.', features:['Live custom-pet preview','Choose four styles and two colors','Create and equip for R 1,000'] },
     { version:'UPDATE 8', badge:'UPDATE 8', title:'Pets & Robux Shop', summary:'Unlock pets with in-game Robux and equip a companion that follows you into worlds.', features:['Four pets in the Pet Shop','Pay with saved in-game R currency','Press E in a world to open the shop'] },
     { version:'UPDATE 7', badge:'UPDATE 7', title:'Stay Current & Download', summary:'Robox can detect an older copy, reload every missing feature, and download an offline package.', features:['Automatic latest-version checks','One-tap Reload Latest recovery','Downloadable offline ZIP package'] },
     { version:'UPDATE 6', badge:'UPDATE 6', title:'Control Switcher', summary:'Choose how you play before entering a world or switch controls during a game.', features:['Controls button on the home screen','Switch controls while a game is paused','Save Auto, Keyboard & Mouse, or Touch mode'] },
@@ -258,6 +294,16 @@
     { version:'UPDATE 2', badge:'UPDATE 2', title:'World Creator', summary:'Every experience begins with a world made by a player.', features:['Create named worlds with four environments','Save block changes automatically','Delete drafts and their published copy'] },
     { version:'UPDATE 1', badge:'UPDATE 1', title:'Accounts & Friends', summary:'Player profiles start clean and stay saved on the device.', features:['Age verification for accounts','Add and unfriend by username','Start daily rewards at Day 1'] }
   ];
+  function rebuildUpdatesList() {
+    const list = $('#updatesList');
+    if (!list) return;
+    list.innerHTML = updateNotes.map((note, index) => {
+      const badge = index === 0 ? 'NEW' : note.badge.replace('UPDATE ', '');
+      const summary = index === 0 ? 'Buy in-game Robux bundles.' : note.summary;
+      return `<button class="${index === 0 ? 'active' : ''}" data-update-index="${index}"><span>${escapeHTML(badge)}</span><b>${escapeHTML(note.title)}</b><small>${escapeHTML(summary)}</small></button>`;
+    }).join('');
+  }
+  rebuildUpdatesList();
   let activeUpdateIndex = 0;
   function renderUpdate(index) {
     activeUpdateIndex = Math.max(0, Math.min(updateNotes.length - 1, index));
@@ -308,6 +354,72 @@
   $('#reloadLatestButton').addEventListener('click', reloadLatestVersion);
   setTimeout(() => checkForUpdates(false), 1800);
 
+  const formatRobux = value => Number(value || 0).toLocaleString();
+  function makeRobuxButton(id, className, label, detail = '') {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.id = id;
+    button.className = className;
+    button.dataset.openRobuxStore = 'true';
+    button.innerHTML = detail ? `<span>R+</span><div><b>${label}</b><small>${detail}</small></div>` : `<span>R+</span><b>${label}</b>`;
+    return button;
+  }
+  function injectRobuxStoreUI() {
+    const download = $('#downloadGameButton');
+    if (download) download.href = appConfig.downloadFile || 'robox-2.0-update-11-download.zip';
+    const walletPill = $('#walletCoins')?.closest('.coin-pill');
+    if (walletPill && !$('#topRobuxButton')) walletPill.insertAdjacentElement('afterend', makeRobuxButton('topRobuxButton', 'robux-store-button top-robux-button', 'BUY'));
+    if ($('#downloadGameButton') && !$('#homeRobuxButton')) $('#downloadGameButton').insertAdjacentElement('beforebegin', makeRobuxButton('homeRobuxButton', 'home-robux-button', 'BUY ROBUX'));
+    const petActions = $('.pet-page-actions');
+    if (petActions && !$('#petRobuxButton')) {
+      const petCoins = $('#petCoins')?.closest('.coin-pill');
+      const button = makeRobuxButton('petRobuxButton', 'mini-robux-button', 'BUY ROBUX');
+      if (petCoins) petCoins.insertAdjacentElement('beforebegin', button); else petActions.appendChild(button);
+    }
+    const designerBalance = $('.designer-balance');
+    if (designerBalance && !$('#designerRobuxButton')) designerBalance.insertAdjacentElement('afterend', makeRobuxButton('designerRobuxButton', 'designer-buy-robux', 'GET MORE ROBUX'));
+    const gameShopCoins = $('#gamePetCoins')?.closest('.coin-pill');
+    if (gameShopCoins && !$('#gameRobuxButton')) gameShopCoins.insertAdjacentElement('beforebegin', makeRobuxButton('gameRobuxButton', 'mini-robux-button game-robux-button', 'BUY ROBUX'));
+    if (!$('#robuxStoreModal')) {
+      document.body.insertAdjacentHTML('beforeend', `<div class="modal robux-store-modal" id="robuxStoreModal" role="dialog" aria-modal="true" aria-labelledby="robuxStoreTitle"><div class="modal-card robux-store-card"><button class="modal-close" id="closeRobuxStore" aria-label="Close Robux store">×</button><div class="robux-store-hero"><div><p class="eyebrow">ROBOX WALLET</p><h2 id="robuxStoreTitle">Buy Robux</h2><p>Pick a bundle and the in-game Robux is added to this Robox profile.</p></div><div class="robux-balance-card"><span>YOUR BALANCE</span><strong><i class="coin">R</i> <b id="storeCoins">100</b></strong></div></div><div class="robux-bundle-grid" id="robuxBundleGrid"></div><p class="robux-safe-note"><b>Robox-only store:</b> these are pretend in-game purchases. No real money, payment cards, or Roblox account is used.</p><p class="robux-store-message" id="robuxStoreMessage" aria-live="polite"></p></div></div>`);
+    }
+  }
+  function renderRobuxStore() {
+    const grid = $('#robuxBundleGrid');
+    if (!grid) return;
+    grid.innerHTML = robuxBundles.map((bundle, index) => `<button class="robux-bundle ${index === 1 ? 'featured' : ''}" type="button" data-robux-amount="${bundle.amount}"><span class="coin">R</span><strong>${formatRobux(bundle.amount)}</strong><b>${escapeHTML(bundle.name)}</b><small>${escapeHTML(bundle.note)}</small><em>DEMO BUY</em></button>`).join('');
+    const storeCoins = $('#storeCoins');
+    if (storeCoins) storeCoins.textContent = profile.coins;
+  }
+  function openRobuxStore() {
+    renderRobuxStore();
+    $('#robuxStoreMessage').textContent = '';
+    $('#robuxStoreModal').classList.add('show');
+    beep(720, .08);
+  }
+  function closeRobuxStore() {
+    $('#robuxStoreModal').classList.remove('show');
+  }
+  injectRobuxStoreUI();
+  document.addEventListener('click', event => {
+    if (event.target.closest('[data-open-robux-store]')) openRobuxStore();
+  });
+  $('#closeRobuxStore').addEventListener('click', closeRobuxStore);
+  $('#robuxStoreModal').addEventListener('click', event => { if (event.target === $('#robuxStoreModal')) closeRobuxStore(); });
+  $('#robuxBundleGrid').addEventListener('click', event => {
+    const button = event.target.closest('[data-robux-amount]');
+    if (!button) return;
+    const amount = Number(button.dataset.robuxAmount) || 0;
+    if (amount <= 0) return;
+    profile.coins += amount;
+    saveProfile();
+    renderRobuxStore();
+    const saveNote = sessionMode === 'account' ? 'Saved to your account.' : 'Guest Robux may reset when the guest session ends.';
+    $('#robuxStoreMessage').textContent = `Added R ${formatRobux(amount)} to ${profile.name}. ${saveNote}`;
+    showToast('Robux added!', `+R ${formatRobux(amount)} demo purchase`);
+    beep(1040, .18);
+  });
+
   $('#soundToggle').addEventListener('click', event => {
     audioEnabled = !audioEnabled;
     event.currentTarget.classList.toggle('muted', !audioEnabled);
@@ -317,11 +429,20 @@
 
   const controlsModal = $('#controlsModal');
   const validControlModes = ['auto','keyboard','touch'];
-  let controlMode = localStorage.getItem('robox-control-mode') || 'auto';
+  const detectedStartControlMode = window.matchMedia && window.matchMedia('(pointer: coarse)').matches ? 'touch' : 'keyboard';
+  let controlMode = localStorage.getItem('robox-control-mode') || detectedStartControlMode;
   let resumeAfterControls = false;
   if (!validControlModes.includes(controlMode)) controlMode = 'auto';
   function controlModeLabel(mode) {
     return mode === 'keyboard' ? 'Keyboard & Mouse' : mode === 'touch' ? 'Touch Controls' : 'Automatic';
+  }
+  function syncStartDeviceChoice(mode) {
+    const choice = $('#startDeviceChoice');
+    if (!choice) return;
+    const startMode = mode === 'keyboard' ? 'keyboard' : mode === 'touch' ? 'touch' : detectedStartControlMode;
+    $$('[data-start-device]', choice).forEach(button => button.classList.toggle('active', button.dataset.startDevice === startMode));
+    const message = $('#startDeviceMessage');
+    if (message) message.textContent = startMode === 'keyboard' ? 'Computer controls selected: keyboard, mouse, and E for shop.' : 'iPad/iPhone controls selected: big touch buttons for play.';
   }
   function applyControlMode(mode, announce = true) {
     controlMode = validControlModes.includes(mode) ? mode : 'auto';
@@ -330,6 +451,7 @@
     document.body.classList.toggle('force-touch', controlMode === 'touch');
     document.body.dataset.controlMode = controlMode;
     $$('#controlModeList [data-control-mode]').forEach(button => button.classList.toggle('active', button.dataset.controlMode === controlMode));
+    syncStartDeviceChoice(controlMode);
     $('#controlCurrent').textContent = `${controlModeLabel(controlMode)} selected`;
     if (announce) {
       beep(760, .1);
@@ -354,6 +476,10 @@
     const button = event.target.closest('[data-control-mode]');
     if (button) applyControlMode(button.dataset.controlMode);
   });
+  $('#startDeviceChoice')?.addEventListener('click', event => {
+    const button = event.target.closest('[data-start-device]');
+    if (button) applyControlMode(button.dataset.startDevice);
+  });
   applyControlMode(controlMode, false);
 
   $('#claimDaily').addEventListener('click', event => {
@@ -375,6 +501,209 @@
     if (event.key === 'Escape' && document.activeElement === search) search.blur();
   });
   $('#seeAllBtn')?.addEventListener('click', () => { search.value = ''; search.focus(); search.dispatchEvent(new Event('input')); });
+
+  const skinKeys = ['skin', 'shirt', 'accent', 'pants', 'hairColor'];
+  const skinPalettes = {
+    neon: { shirt:'#7557ff', accent:'#55e6ff', pants:'#202858', hairColor:'#241b4d' },
+    sunset: { shirt:'#ff5470', accent:'#ffc857', pants:'#532b52', hairColor:'#4b2430' },
+    forest: { shirt:'#146b52', accent:'#70e000', pants:'#173d35', hairColor:'#27341f' },
+    mono: { shirt:'#20263a', accent:'#f5f7ff', pants:'#111521', hairColor:'#0b0e16' }
+  };
+  const validHairStyles = ['spikes', 'cap', 'none'];
+  const validOutfits = ['classic', 'stripe', 'hoodie', 'cyber'];
+  const validFaces = ['smile', 'cool', 'wink', 'robot'];
+  const isHexColor = value => /^#[0-9a-f]{6}$/i.test(String(value || ''));
+
+  function skinFromProfile() {
+    return {
+      name: 'My First Skin', skin: profile.skin || '#f5b640', shirt: profile.shirt || '#7557ff',
+      accent: profile.accent || '#55e6ff', pants: profile.pants || '#28325e', hairColor: profile.hairColor || '#2b1b18',
+      hair: validHairStyles.includes(profile.hair) ? profile.hair : 'spikes',
+      outfit: validOutfits.includes(profile.outfit) ? profile.outfit : 'classic',
+      face: validFaces.includes(profile.face) ? profile.face : 'smile'
+    };
+  }
+
+  function cleanSkin(candidate) {
+    const fallback = skinFromProfile();
+    const source = candidate && typeof candidate === 'object' ? candidate : {};
+    return {
+      name: String(source.name || fallback.name).trim().slice(0, 24) || fallback.name,
+      ...Object.fromEntries(skinKeys.map(key => [key, isHexColor(source[key]) ? source[key].toLowerCase() : fallback[key]])),
+      hair: validHairStyles.includes(source.hair) ? source.hair : fallback.hair,
+      outfit: validOutfits.includes(source.outfit) ? source.outfit : fallback.outfit,
+      face: validFaces.includes(source.face) ? source.face : fallback.face
+    };
+  }
+
+  function applySkinPreview(skin) {
+    const avatar = $('#skinStudioAvatar');
+    if (!avatar || !skin) return;
+    avatar.style.setProperty('--skin', skin.skin);
+    avatar.style.setProperty('--shirt', skin.shirt);
+    avatar.style.setProperty('--accent', skin.accent);
+    avatar.style.setProperty('--pants', skin.pants);
+    avatar.style.setProperty('--hair-color', skin.hairColor);
+    avatar.dataset.hair = skin.hair;
+    avatar.dataset.outfit = skin.outfit;
+    avatar.dataset.face = skin.face;
+  }
+
+  function syncSkinLab() {
+    if (!$('#skinStudioAvatar')) return;
+    skinDraft = cleanSkin(skinDraft || skinFromProfile());
+    $('#skinName').value = skinDraft.name;
+    $$('[data-skin-color]').forEach(input => { input.value = skinDraft[input.dataset.skinColor]; });
+    $$('#skinHairStyles button').forEach(button => button.classList.toggle('active', button.dataset.hair === skinDraft.hair));
+    $$('#skinOutfitStyles button').forEach(button => button.classList.toggle('active', button.dataset.outfit === skinDraft.outfit));
+    $$('#skinFaceStyles button').forEach(button => button.classList.toggle('active', button.dataset.face === skinDraft.face));
+    applySkinPreview(skinDraft);
+    renderSkinLibrary();
+  }
+
+  function setSkinMessage(message, error = false) {
+    const element = $('#skinMessage');
+    element.textContent = message;
+    element.classList.toggle('error', error);
+  }
+
+  function renderSkinLibrary() {
+    const library = $('#skinLibrary');
+    if (!library) return;
+    const skins = Array.isArray(profile.customSkins) ? profile.customSkins : [];
+    $('#skinLibraryCount').textContent = `${skins.length} / 12`;
+    if (!skins.length) {
+      library.innerHTML = '<div class="skin-library-empty">Your uploaded skins will appear here. Make something unmistakably yours.</div>';
+      return;
+    }
+    library.innerHTML = skins.map(skin => {
+      const equipped = skin.id === profile.equippedSkin;
+      return `<article class="skin-card ${equipped ? 'equipped' : ''}" data-skin-id="${escapeHTML(skin.id)}"><div class="skin-card-preview"><i style="--card-color:${skin.skin}"></i><i style="--card-color:${skin.shirt}"></i><i style="--card-color:${skin.accent}"></i><i style="--card-color:${skin.pants}"></i><i style="--card-color:${skin.hairColor}"></i></div><div class="skin-card-info"><b>${escapeHTML(skin.name)}</b><small>${escapeHTML(skin.outfit)} outfit • ${escapeHTML(skin.face)} face</small><div class="skin-card-actions"><button type="button" data-skin-equip>${equipped ? '✓ EQUIPPED' : 'EQUIP'}</button><button type="button" data-skin-delete aria-label="Delete skin">×</button></div></div></article>`;
+    }).join('');
+  }
+
+  function applySkinToProfile(skin) {
+    skinKeys.forEach(key => { profile[key] = skin[key]; });
+    profile.hair = skin.hair;
+    profile.outfit = skin.outfit;
+    profile.face = skin.face;
+  }
+
+  function fileSafeName(name) {
+    return String(name || 'robox-skin').trim().replace(/[^a-z0-9_-]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'robox-skin';
+  }
+
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url; link.download = filename; document.body.appendChild(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function drawSkinPng(skin) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 640; canvas.height = 640;
+    const ctx = canvas.getContext('2d');
+    const rounded = (x, y, w, h, r, color) => { ctx.fillStyle = color; ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fill(); };
+    const gradient = ctx.createLinearGradient(0, 0, 640, 640); gradient.addColorStop(0, '#202950'); gradient.addColorStop(1, '#090e1b'); ctx.fillStyle = gradient; ctx.fillRect(0, 0, 640, 640);
+    ctx.strokeStyle = '#ffffff0d'; ctx.lineWidth = 1; for (let i = 0; i <= 640; i += 40) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,640); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(640,i); ctx.stroke(); }
+    ctx.save(); ctx.shadowColor = skin.accent; ctx.shadowBlur = 55; rounded(233, 450, 174, 40, 20, '#343b66'); ctx.restore();
+    rounded(245, 105, 150, 137, 22, skin.skin); rounded(220, 255, 200, 185, 18, skin.shirt); rounded(165, 264, 47, 194, 14, skin.skin); rounded(428, 264, 47, 194, 14, skin.skin); rounded(235, 424, 78, 153, 13, skin.pants); rounded(327, 424, 78, 153, 13, skin.pants);
+    ctx.fillStyle = '#202332'; rounded(278, 164, 13, 18, 7, '#202332'); rounded(349, 164, 13, 18, 7, '#202332');
+    ctx.strokeStyle = skin.face === 'robot' ? skin.accent : '#784936'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(320, 188, 24, .15, Math.PI - .15); ctx.stroke();
+    if (skin.hair !== 'none') { ctx.fillStyle = skin.hairColor; ctx.beginPath(); ctx.moveTo(238,140); ctx.lineTo(250,91); ctx.lineTo(276,121); ctx.lineTo(301,82); ctx.lineTo(326,121); ctx.lineTo(356,88); ctx.lineTo(388,140); ctx.closePath(); ctx.fill(); if (skin.hair === 'cap') rounded(240, 91, 157, 52, 24, skin.hairColor); }
+    if (skin.outfit === 'classic') { ctx.fillStyle = '#fff'; ctx.font = 'bold 80px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('R', 320, 375); }
+    if (skin.outfit === 'stripe') rounded(305, 255, 30, 185, 0, skin.accent);
+    if (skin.outfit === 'hoodie') { ctx.strokeStyle = skin.accent; ctx.lineWidth = 10; ctx.beginPath(); ctx.arc(320, 270, 65, 0, Math.PI); ctx.stroke(); }
+    if (skin.outfit === 'cyber') { ctx.strokeStyle = skin.accent; ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(260,340); ctx.lineTo(300,340); ctx.lineTo(320,300); ctx.lineTo(345,380); ctx.lineTo(385,380); ctx.stroke(); }
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.font = '700 18px sans-serif'; ctx.fillText('ROBOX 2.0 • SKIN LAB', 35, 45); ctx.font = '800 29px sans-serif'; ctx.fillText(skin.name, 35, 605);
+    return canvas;
+  }
+
+  $$('[data-skin-tab]').forEach(button => button.addEventListener('click', () => {
+    $$('[data-skin-tab]').forEach(item => item.classList.toggle('active', item === button));
+    $$('[data-skin-panel]').forEach(panel => panel.classList.toggle('active', panel.dataset.skinPanel === button.dataset.skinTab));
+  }));
+  $$('[data-skin-color]').forEach(input => input.addEventListener('input', () => {
+    skinDraft[input.dataset.skinColor] = input.value; applySkinPreview(skinDraft); setSkinMessage('Preview updated — upload when you are ready.');
+  }));
+  $('#skinName').addEventListener('input', event => { skinDraft.name = event.target.value.slice(0, 24); });
+  $('#skinPalettes').addEventListener('click', event => {
+    const button = event.target.closest('[data-palette]'); if (!button) return;
+    Object.assign(skinDraft, skinPalettes[button.dataset.palette]); syncSkinLab(); beep(620);
+  });
+  $('#skinOutfitStyles').addEventListener('click', event => {
+    const button = event.target.closest('[data-outfit]'); if (!button) return;
+    skinDraft.outfit = button.dataset.outfit; syncSkinLab(); beep(620);
+  });
+  $('#skinFaceStyles').addEventListener('click', event => {
+    const button = event.target.closest('[data-face]'); if (!button) return;
+    skinDraft.face = button.dataset.face; syncSkinLab(); beep(650);
+  });
+  $('#skinHairStyles').addEventListener('click', event => {
+    const button = event.target.closest('[data-hair]'); if (!button) return;
+    skinDraft.hair = button.dataset.hair; syncSkinLab(); beep(600);
+  });
+  $('#resetSkinDraft').addEventListener('click', () => { skinDraft = skinFromProfile(); syncSkinLab(); setSkinMessage('Draft reset to your equipped look.'); });
+
+  $('#publishSkin').addEventListener('click', event => {
+    skinDraft.name = $('#skinName').value.trim().slice(0, 24);
+    if (skinDraft.name.length < 2) { setSkinMessage('Give your skin a name with at least 2 characters.', true); return; }
+    if (!Array.isArray(profile.customSkins)) profile.customSkins = [];
+    const existing = profile.customSkins.find(item => item.name.toLowerCase() === skinDraft.name.toLowerCase());
+    const record = { ...cleanSkin(skinDraft), id: existing?.id || `skin-${Date.now()}`, updatedAt: new Date().toISOString() };
+    profile.customSkins = [record, ...profile.customSkins.filter(item => item.id !== record.id)].slice(0, 12);
+    profile.equippedSkin = record.id; applySkinToProfile(record); skinDraft = { ...record }; saveProfile(); syncSkinLab();
+    event.currentTarget.textContent = '✓ UPLOADED & EQUIPPED'; setSkinMessage(`${record.name} is live on your Robox 2.0 profile.`); showToast('Skin uploaded!', `${record.name} is now equipped`); beep(920, .16);
+    setTimeout(() => { event.currentTarget.textContent = 'UPLOAD TO ROBOX 2.0'; }, 1500);
+  });
+
+  $('#exportSkin').addEventListener('click', () => {
+    skinDraft.name = $('#skinName').value.trim().slice(0, 24) || 'My Skin';
+    const packageData = { format:'robox-skin', version:1, createdBy:profile.name, exportedAt:new Date().toISOString(), skin:cleanSkin(skinDraft) };
+    downloadBlob(new Blob([JSON.stringify(packageData, null, 2)], { type:'application/json' }), `${fileSafeName(skinDraft.name)}.roboxskin`);
+    setSkinMessage('Skin file exported. Import it on another device anytime.');
+  });
+  $('#downloadSkinPng').addEventListener('click', () => {
+    skinDraft.name = $('#skinName').value.trim().slice(0, 24) || 'My Skin';
+    drawSkinPng(cleanSkin(skinDraft)).toBlob(blob => downloadBlob(blob, `${fileSafeName(skinDraft.name)}.png`), 'image/png'); setSkinMessage('PNG preview downloaded.');
+  });
+  $('#importSkin').addEventListener('click', () => $('#skinFileInput').click());
+  $('#skinFileInput').addEventListener('change', event => {
+    const file = event.target.files?.[0]; if (!file) return;
+    if (file.size > 100000) { setSkinMessage('That skin file is too large.', true); event.target.value = ''; return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(reader.result); const incoming = parsed.format === 'robox-skin' ? parsed.skin : parsed;
+        if (!incoming || !skinKeys.every(key => isHexColor(incoming[key]))) throw new Error('invalid');
+        skinDraft = cleanSkin(incoming); syncSkinLab(); setSkinMessage(`${skinDraft.name} imported — preview it, then upload.`); beep(760);
+      } catch (_) { setSkinMessage('This is not a valid .roboxskin file.', true); }
+      event.target.value = '';
+    };
+    reader.onerror = () => { setSkinMessage('The skin file could not be read.', true); event.target.value = ''; };
+    reader.readAsText(file);
+  });
+
+  $('#skinLibrary').addEventListener('click', event => {
+    const card = event.target.closest('[data-skin-id]'); if (!card) return;
+    const selected = (profile.customSkins || []).find(item => item.id === card.dataset.skinId); if (!selected) return;
+    if (event.target.closest('[data-skin-delete]')) {
+      profile.customSkins = profile.customSkins.filter(item => item.id !== selected.id);
+      if (profile.equippedSkin === selected.id) profile.equippedSkin = null;
+      saveProfile(); renderSkinLibrary(); setSkinMessage(`${selected.name} deleted.`); return;
+    }
+    if (event.target.closest('[data-skin-equip]')) {
+      profile.equippedSkin = selected.id; applySkinToProfile(selected); skinDraft = { ...selected }; saveProfile(); syncSkinLab(); setSkinMessage(`${selected.name} equipped.`); showToast('Look equipped', selected.name); beep(860);
+    }
+  });
+
+  let skinDragStart = null, skinAvatarAngle = 0;
+  const skinStudioAvatar = $('#skinStudioAvatar');
+  skinStudioAvatar.addEventListener('pointerdown', event => { skinDragStart = event.clientX; skinStudioAvatar.setPointerCapture(event.pointerId); });
+  skinStudioAvatar.addEventListener('pointermove', event => { if (skinDragStart === null) return; skinAvatarAngle += (event.clientX - skinDragStart) * .7; skinDragStart = event.clientX; skinStudioAvatar.style.transform = `scale(1.08) rotateY(${skinAvatarAngle}deg)`; });
+  skinStudioAvatar.addEventListener('pointerup', () => { skinDragStart = null; });
+  $$('[data-preview-turn]').forEach(button => button.addEventListener('click', () => { skinAvatarAngle += Number(button.dataset.previewTurn); skinStudioAvatar.style.transform = `scale(1.08) rotateY(${skinAvatarAngle}deg)`; }));
 
   function setSwatch(group, value, key) {
     $$(group + ' button').forEach(button => button.classList.toggle('active', button.dataset.color === value));
@@ -1078,15 +1407,18 @@
     const p=project(x,y,z), bounce=Math.sin(game.time*8)*((game.keys.w||game.keys.a||game.keys.s||game.keys.d)&&!isNpc?2:0), scale=1;
     ctx.save();ctx.translate(p.x,p.y-42+bounce);ctx.scale(scale,scale);
     ctx.fillStyle='#0004';ctx.beginPath();ctx.ellipse(0,43,22,8,0,0,Math.PI*2);ctx.fill();
-    const shirt=isNpc?'#22b89a':profile.shirt, skin=isNpc?'#e9a96d':profile.skin;
+    const shirt=isNpc?'#22b89a':profile.shirt, skin=isNpc?'#e9a96d':profile.skin, pants=isNpc?'#29355c':(profile.pants||'#28325e'), accent=isNpc?'#e9f4ff':(profile.accent||'#55e6ff');
     // legs
-    ctx.fillStyle=isNpc?'#29355c':'#28325e';ctx.fillRect(-17,20,14,29);ctx.fillRect(3,20,14,29);
+    ctx.fillStyle=pants;ctx.fillRect(-17,20,14,29);ctx.fillRect(3,20,14,29);
     // arms and body
     ctx.fillStyle=skin;ctx.fillRect(-27,-12,10,31);ctx.fillRect(17,-12,10,31);ctx.fillStyle=shirt;ctx.fillRect(-18,-17,36,40);
-    ctx.fillStyle='#fff';ctx.font='bold 18px Chakra Petch';ctx.textAlign='center';ctx.fillText(isNpc?'N':'R',0,10);
+    if(!isNpc&&profile.outfit==='stripe'){ctx.fillStyle=accent;ctx.fillRect(-4,-17,8,40);}
+    else if(!isNpc&&profile.outfit==='hoodie'){ctx.strokeStyle=accent;ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,-14,12,0,Math.PI);ctx.stroke();}
+    else if(!isNpc&&profile.outfit==='cyber'){ctx.strokeStyle=accent;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-12,4);ctx.lineTo(-3,4);ctx.lineTo(2,-6);ctx.lineTo(7,13);ctx.lineTo(14,13);ctx.stroke();}
+    else{ctx.fillStyle='#fff';ctx.font='bold 18px Chakra Petch';ctx.textAlign='center';ctx.fillText(isNpc?'N':'R',0,10);}
     // head
     ctx.fillStyle=skin;ctx.fillRect(-15,-47,30,27);ctx.fillStyle='#202330';ctx.fillRect(-8,-37,3,4);ctx.fillRect(6,-37,3,4);ctx.fillRect(-4,-29,9,2);
-    ctx.fillStyle=isNpc?'#e9f4ff':'#2b1b18';
+    ctx.fillStyle=isNpc?'#e9f4ff':(profile.hairColor||'#2b1b18');
     if(isNpc||profile.hair==='spikes'){ctx.beginPath();ctx.moveTo(-17,-46);ctx.lineTo(-13,-60);ctx.lineTo(-6,-50);ctx.lineTo(0,-63);ctx.lineTo(6,-50);ctx.lineTo(14,-59);ctx.lineTo(17,-45);ctx.closePath();ctx.fill();}
     else if(profile.hair==='cap'){ctx.beginPath();ctx.ellipse(0,-49,18,10,0,Math.PI,0);ctx.fill();ctx.fillRect(8,-50,16,4);}
     if(isNpc){ctx.fillStyle='#111827cc';ctx.fillRect(-25,-80,50,15);ctx.fillStyle='#fff';ctx.font='bold 8px Inter';ctx.fillText('NOVA',0,-70);}

@@ -30,6 +30,10 @@ The home screen now includes a direct Switch Account button. Each saved account 
 
 Update 9 adds a full Pet Designer page. Signed-in players can name a pet, choose a Pup, Kitty, Bot, or Dragon style, select body and accent colors, and preview the result live. Creating the custom pet costs R 1,000 in-game Robux, then saves and equips it to that account.
 
+Update 10 adds the separate Robox Skin Maker app. Players can combine body, shirt, accent, pants, and hair colors with outfit, face, and hair layers; save up to 12 named skins; export a portable `.roboxskin` file; import that file on another device; download a PNG preview; and hand a finished skin into Robox 2.0 for equipping. The original in-game Avatar Studio remains available. Uploading does not send credentials or assets to the official Roblox platform.
+
+Update 11 adds a start-screen device chooser plus a Robux Store. Players can pick iPad/iPhone for touch controls or Computer for keyboard and mouse before entering Robox. The Buy Robux buttons open an in-game-only store with R 250, R 1,000, and R 5,000 demo bundles. Robux is added to the local Robox profile only; no real money, payment card, or official Roblox account is used.
+
 ## Publishing games
 
 New worlds begin as private drafts. Creators can publish a draft as a game in the shared Published Games list, then use Update Live to push later block changes. Deleting a world removes its draft and published copy permanently; deletion records prevent it from returning after the next login.
