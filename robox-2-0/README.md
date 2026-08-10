@@ -48,6 +48,8 @@ Update 17 adds promo codes to the Robux Store. Enter code `2017` and press Apply
 
 Update 18 adds an in-game SHOP button for iPad and iPhone touch controls. Touch players can open the pet shop without using a keyboard. Shared links can use `?version=18` to avoid old cached copies.
 
+Update 19 adds a Shop Item Maker. Signed-in players can create custom items, choose a type, color, description, and Robux price, then put those things into the in-game shop for players on the same device to buy. Shared links can use `?version=19` to avoid old cached copies.
+
 ## Publishing games
 
 New worlds begin as private drafts. Creators can publish a draft as a game in the shared Published Games list, then use Update Live to push later block changes. Deleting a world removes its draft and published copy permanently; deletion records prevent it from returning after the next login.

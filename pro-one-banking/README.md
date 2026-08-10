@@ -11,3 +11,5 @@ Version 2 removes the old 100,000 transfer cap. Deposits add the exact Kidtopia 
 Version 3 updates the Open Robox shortcut to Robox Update 17.
 
 Version 4 updates the Open Robox shortcut to Robox Update 18.
+
+Version 5 updates the Open Robox shortcut to Robox Update 19.

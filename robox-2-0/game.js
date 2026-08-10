@@ -4,6 +4,13 @@
   const $ = (selector, scope = document) => scope.querySelector(selector);
   const $$ = (selector, scope = document) => [...scope.querySelectorAll(selector)];
   const escapeHTML = value => String(value).replace(/[&<>'"]/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' })[character]);
+  function formatRobux(value) {
+    return Number(value || 0).toLocaleString();
+  }
+  function readWholeAmount(value) {
+    const amount = Math.floor(Number(value));
+    return Number.isFinite(amount) && amount > 0 ? amount : 0;
+  }
   const appConfig = window.ROBOX_CONFIG || {};
   (() => {
     const expectedVersion = Number(appConfig.version) || 0;
@@ -49,12 +56,14 @@
     { amount:1000, name:'Designer Pack', note:'Perfect for making one custom pet right away.' },
     { amount:5000, name:'Mega Builder Vault', note:'Stock up for pets, designs, and future Robox items.' }
   ];
+  const shopItemTypeIcons = { sword:'⚔️', hat:'🎩', trail:'✨', trophy:'🏆' };
   const kidtopiaRobuxRate = 10;
   const robuxPromoCodes = {
     '2017': { code:'2017', name:'2017 Throwback', discount:1, description:'100% off Robux Store purchases' }
   };
   const defaultKidtopiaMoney = 5000;
   const proOneBankingStorageKey = 'pro-one-banking-wallets-v1';
+  const playerShopStorageKey = 'robox-player-shop-items-v1';
   const machineShopCatalog = [
     { id:'speed-burst', name:'Speed Burst', price:75, kind:'boost', effect:'speed', duration:90, description:'Move faster in this world for 90 seconds.' },
     { id:'jump-boots', name:'Jump Boots', price:120, kind:'boost', effect:'jump', duration:90, description:'Jump higher in this world for 90 seconds.' },
@@ -66,7 +75,7 @@
     name, coins: 100, kidtopiaMoney: defaultKidtopiaMoney, xp: 0, level: 1,
     skin: '#f5b640', shirt: '#7557ff', accent: '#55e6ff', pants: '#28325e', hairColor: '#2b1b18', hair: 'spikes', outfit: 'classic', face: 'smile',
     customSkins: [], equippedSkin: null,
-    dailyClaimed: false, streak: 1, friends: [], worlds: [], deletedWorldIds: [], pets: [], customPets: [], equippedPet: null, machineItems: [], activeRobuxPromoCode: null, proOneBankingConnected: false, proOneBankingId: null, ageVerified: false, ageGroup: null
+    dailyClaimed: false, streak: 1, friends: [], worlds: [], deletedWorldIds: [], pets: [], customPets: [], equippedPet: null, machineItems: [], ownedShopItems: [], activeRobuxPromoCode: null, proOneBankingConnected: false, proOneBankingId: null, ageVerified: false, ageGroup: null
   });
   const readSavedAccount = () => {
     try { return JSON.parse(localStorage.getItem('robox-account') || 'null'); }
@@ -108,6 +117,13 @@
     } catch (_) { return {}; }
   };
   const writeWorldLibrary = library => localStorage.setItem('robox-world-library', JSON.stringify(library));
+  const readPlayerShopItems = () => {
+    try {
+      const items = JSON.parse(localStorage.getItem(playerShopStorageKey) || '[]');
+      return Array.isArray(items) ? items : [];
+    } catch (_) { return []; }
+  };
+  const writePlayerShopItems = items => localStorage.setItem(playerShopStorageKey, JSON.stringify(Array.isArray(items) ? items : []));
   let profile = defaultProfile();
   let sessionMode = 'signed-out';
   let skinDraft = null;
@@ -231,6 +247,7 @@
     $('#petCount').hidden = petTotal === 0;
     renderFriends();
     renderPets();
+    renderShopItems();
     renderWorlds();
     renderPublishedGames();
   }
@@ -284,6 +301,7 @@
     if (!Array.isArray(profile.customPets)) profile.customPets = [];
     if (!Array.isArray(profile.customSkins)) profile.customSkins = [];
     if (!Array.isArray(profile.machineItems)) profile.machineItems = [];
+    if (!Array.isArray(profile.ownedShopItems)) profile.ownedShopItems = [];
     if (!Number.isFinite(Number(profile.kidtopiaMoney))) profile.kidtopiaMoney = defaultKidtopiaMoney;
     if (requestedProOneBankingWallet) {
       profile.proOneBankingConnected = true;
@@ -392,7 +410,8 @@
   $$('[data-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 
   const updateNotes = [
-    { version:'UPDATE 18 • LATEST', badge:'UPDATE 18', title:'iPad Shop Button', summary:'iPad and iPhone players now have a big touch button to open the in-game shop.', features:['New SHOP button beside BUILD and TALK on touch controls','The button opens the pet shop without needing a keyboard','Works when iPad/iPhone controls are selected'] },
+    { version:'UPDATE 19 • LATEST', badge:'UPDATE 19', title:'Shop Item Maker', summary:'Players can now make custom things and put them inside the in-game shop.', features:['Create custom shop items from the Pets page','Choose item type, color, description, and Robux price','Created items appear in the in-game shop for players to buy'] },
+    { version:'UPDATE 18', badge:'UPDATE 18', title:'iPad Shop Button', summary:'iPad and iPhone players now have a big touch button to open the in-game shop.', features:['New SHOP button beside BUILD and TALK on touch controls','The button opens the pet shop without needing a keyboard','Works when iPad/iPhone controls are selected'] },
     { version:'UPDATE 17', badge:'UPDATE 17', title:'Promo Codes', summary:'Robux Store now has promo codes, and code 2017 gives 100% off.', features:['New promo-code box inside the Robux Store','Code 2017 makes Robux purchases cost K 0','Bundle and custom prices update when the code is active'] },
     { version:'UPDATE 16', badge:'UPDATE 16', title:'Infinite Custom Amounts', summary:'Bank deposits now add the exact amount, and custom Robux has no cap.', features:['Pro One Banking deposits use the exact typed amount','Custom Robux amount no longer stops at 100,000','Pro One Banking opens Robox Update 16'] },
     { version:'UPDATE 15', badge:'UPDATE 15', title:'Pro One Banking', summary:'Connect Kidtopia Money to the Pro One Banking website.', features:['Robux Store has Connect Bank and Open Website buttons','Kidtopia Money syncs with the Pro One Banking website wallet','Robux purchases create banking transactions'] },
@@ -416,7 +435,7 @@
     if (!list) return;
     list.innerHTML = updateNotes.map((note, index) => {
       const badge = index === 0 ? 'NEW' : note.badge.replace('UPDATE ', '');
-      const summary = index === 0 ? 'Touch players get a SHOP button in-game.' : note.summary;
+      const summary = index === 0 ? 'Create things to sell in the shop.' : note.summary;
       return `<button class="${index === 0 ? 'active' : ''}" data-update-index="${index}"><span>${escapeHTML(badge)}</span><b>${escapeHTML(note.title)}</b><small>${escapeHTML(summary)}</small></button>`;
     }).join('');
   }
@@ -471,11 +490,6 @@
   $('#reloadLatestButton').addEventListener('click', reloadLatestVersion);
   setTimeout(() => checkForUpdates(false), 1800);
 
-  const formatRobux = value => Number(value || 0).toLocaleString();
-  const readWholeAmount = value => {
-    const amount = Math.floor(Number(value));
-    return Number.isFinite(amount) && amount > 0 ? amount : 0;
-  };
   const robuxCost = amount => Math.max(1, Math.ceil((Number(amount) || 0) / kidtopiaRobuxRate));
   const normalizePromoCode = value => String(value || '').trim().toUpperCase();
   function activeRobuxPromo() {
@@ -506,7 +520,7 @@
   }
   function injectRobuxStoreUI() {
     const download = $('#downloadGameButton');
-    if (download) download.href = appConfig.downloadFile || 'robox-update-18-download.zip';
+    if (download) download.href = appConfig.downloadFile || 'robox-update-19-download.zip';
     const walletPill = $('#walletCoins')?.closest('.coin-pill');
     if (walletPill && !$('#topRobuxButton')) walletPill.insertAdjacentElement('afterend', makeRobuxButton('topRobuxButton', 'robux-store-button top-robux-button', 'BUY'));
     if ($('#downloadGameButton') && !$('#homeRobuxButton')) $('#downloadGameButton').insertAdjacentElement('beforebegin', makeRobuxButton('homeRobuxButton', 'home-robux-button', 'BUY ROBUX'));
@@ -975,6 +989,117 @@
     ['#petGrid', '#gamePetGrid'].forEach(selector => { const grid = $(selector); if (grid) grid.innerHTML = markup; });
     const gamePetCoins = $('#gamePetCoins');
     if (gamePetCoins) gamePetCoins.textContent = profile.coins;
+    renderShopItems();
+  }
+  function cleanShopItem(item) {
+    if (!item || typeof item !== 'object') return null;
+    const type = shopItemTypeIcons[item.type] ? item.type : 'trophy';
+    const price = readWholeAmount(item.price);
+    const name = String(item.name || '').trim().slice(0, 18);
+    if (!name || !price) return null;
+    const owner = String(item.owner || 'Robox Creator').trim().slice(0, 16) || 'Robox Creator';
+    const color = /^#[0-9a-f]{6}$/i.test(String(item.color || '')) ? item.color : '#ff7ab6';
+    return {
+      id: String(item.id || `shop-${Date.now()}`),
+      name,
+      type,
+      icon: shopItemTypeIcons[type],
+      price,
+      color,
+      description: String(item.description || `A custom ${type} made for the shop.`).trim().slice(0, 80),
+      owner,
+      ownerKey: String(item.ownerKey || owner).toLowerCase(),
+      createdAt: item.createdAt || new Date().toISOString()
+    };
+  }
+  function shopItemsCatalog() {
+    return readPlayerShopItems().map(cleanShopItem).filter(Boolean).slice(0, 80);
+  }
+  function shopItemCardsMarkup() {
+    const items = shopItemsCatalog();
+    if (!items.length) return `<div class="shop-items-empty"><span>✦</span><b>No creator items yet</b><small>Make something on the Pets page, then it will show up here.</small></div>`;
+    const ownedItems = Array.isArray(profile.ownedShopItems) ? profile.ownedShopItems : [];
+    return items.map(item => {
+      const owned = ownedItems.includes(item.id);
+      const madeByYou = item.ownerKey === String(profile.name || '').toLowerCase();
+      const label = owned ? 'OWNED' : `BUY FOR R ${formatRobux(item.price)}`;
+      return `<article class="shop-item-card ${owned ? 'owned' : ''}" style="--item-color:${escapeHTML(item.color)}"><div class="shop-item-art"><span>${escapeHTML(item.icon)}</span></div><div class="shop-item-info"><p class="eyebrow">${madeByYou ? 'YOUR CREATION' : `R ${formatRobux(item.price)} ROBUX`}</p><h3>${escapeHTML(item.name)}</h3><p>${escapeHTML(item.description)}</p><small>By ${escapeHTML(item.owner)}</small><button data-shop-item-id="${escapeHTML(item.id)}" ${owned ? 'disabled' : ''}>${label}</button></div></article>`;
+    }).join('');
+  }
+  function renderShopItems() {
+    const items = shopItemsCatalog();
+    const mine = items.filter(item => item.ownerKey === String(profile.name || '').toLowerCase());
+    const count = $('#shopItemCount');
+    if (count) count.textContent = `${mine.length} by you • ${items.length} in shop`;
+    const created = $('#createdShopItems');
+    if (created) {
+      created.innerHTML = mine.length ? mine.map(item => `<article class="created-shop-item" style="--item-color:${escapeHTML(item.color)}"><span>${escapeHTML(item.icon)}</span><div><b>${escapeHTML(item.name)}</b><small>In shop for R ${formatRobux(item.price)}</small></div><button data-delete-shop-item="${escapeHTML(item.id)}">DELETE</button></article>`).join('') : `<div class="created-shop-empty">No items made by you yet. Fill out the maker above and press Put In Shop.</div>`;
+    }
+    const grid = $('#gameShopItemGrid');
+    if (grid) grid.innerHTML = shopItemCardsMarkup();
+    const gamePetCoins = $('#gamePetCoins');
+    if (gamePetCoins) gamePetCoins.textContent = profile.coins;
+  }
+  function createShopItem(event) {
+    event.preventDefault();
+    const message = $('#shopItemMessage');
+    if (sessionMode !== 'account') { message.textContent = 'Create or sign in to an account before making shop items.'; beep(240, .12); return; }
+    const name = $('#shopItemName').value.trim();
+    const price = readWholeAmount($('#shopItemPrice').value);
+    if (name.length < 2) { message.textContent = 'Give your shop item a name with at least 2 characters.'; return; }
+    if (!price) { message.textContent = 'Set a Robux price of 1 or more.'; return; }
+    const type = $('#shopItemType').value;
+    const item = cleanShopItem({
+      id:`shop-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      name,
+      type,
+      price,
+      color:$('#shopItemColor').value,
+      description:$('#shopItemDescription').value.trim() || `A custom ${type} made by ${profile.name}.`,
+      owner:profile.name,
+      ownerKey:String(profile.name || '').toLowerCase(),
+      createdAt:new Date().toISOString()
+    });
+    if (!item) { message.textContent = 'This shop item could not be created.'; return; }
+    const items = shopItemsCatalog().filter(entry => entry.id !== item.id);
+    writePlayerShopItems([item, ...items].slice(0, 80));
+    if (!Array.isArray(profile.ownedShopItems)) profile.ownedShopItems = [];
+    profile.ownedShopItems = [...new Set([item.id, ...profile.ownedShopItems])];
+    saveProfile(`Created shop item ${item.name}`);
+    $('#shopItemName').value = '';
+    $('#shopItemDescription').value = '';
+    message.textContent = `${item.name} is now in the shop for R ${formatRobux(item.price)}.`;
+    renderShopItems();
+    showToast('Item added to shop!', `${item.name} costs R ${formatRobux(item.price)}`);
+    beep(980, .18);
+  }
+  function buyShopItem(itemId) {
+    const item = shopItemsCatalog().find(entry => entry.id === itemId);
+    if (!item) return;
+    if (!Array.isArray(profile.ownedShopItems)) profile.ownedShopItems = [];
+    if (profile.ownedShopItems.includes(item.id)) return;
+    if (profile.coins < item.price) {
+      $('#gameShopItemMessage').textContent = `You need R ${formatRobux(item.price - profile.coins)} more for ${item.name}.`;
+      showToast('Not enough Robux', `Need R ${formatRobux(item.price)}`);
+      beep(240, .12);
+      return;
+    }
+    profile.coins -= item.price;
+    profile.ownedShopItems.push(item.id);
+    saveProfile(`Bought shop item ${item.name}`);
+    $('#gameShopItemMessage').textContent = `${item.name} bought for R ${formatRobux(item.price)}.`;
+    renderShopItems();
+    showToast(`${item.name} bought!`, `Made by ${item.owner}`);
+    beep(1050, .16);
+  }
+  function deleteShopItem(itemId) {
+    const item = shopItemsCatalog().find(entry => entry.id === itemId);
+    if (!item || item.ownerKey !== String(profile.name || '').toLowerCase()) return;
+    writePlayerShopItems(shopItemsCatalog().filter(entry => entry.id !== itemId));
+    renderShopItems();
+    $('#shopItemMessage').textContent = `${item.name} was removed from the shop.`;
+    showToast('Removed from shop', item.name);
+    beep(420, .1);
   }
   function handlePetAction(event) {
     const button = event.target.closest('[data-pet-id]');
@@ -1001,6 +1126,15 @@
   }
   $('#petGrid').addEventListener('click', handlePetAction);
   $('#gamePetGrid').addEventListener('click', handlePetAction);
+  $('#shopItemForm').addEventListener('submit', createShopItem);
+  $('#createdShopItems').addEventListener('click', event => {
+    const button = event.target.closest('[data-delete-shop-item]');
+    if (button) deleteShopItem(button.dataset.deleteShopItem);
+  });
+  $('#gameShopItemGrid').addEventListener('click', event => {
+    const button = event.target.closest('[data-shop-item-id]');
+    if (button && !button.disabled) buyShopItem(button.dataset.shopItemId);
+  });
 
   const customPetIcons = { pup:'🐶', cat:'🐱', bot:'🤖', dragon:'🐉' };
   function updatePetDesignerPreview() {
@@ -1477,6 +1611,8 @@
     game.paused = true;
     $('#pausePanel').classList.remove('show');
     renderPets();
+    renderShopItems();
+    $('#gameShopItemMessage').textContent = '';
     $('#gameShopModal').classList.add('show');
     beep(760, .08);
   }
