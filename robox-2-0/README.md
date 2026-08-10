@@ -40,6 +40,8 @@ Update 13 renames the visible app to Robox. Existing public links still work, bu
 
 Update 14 adds Robux Machines and Kidtopia Money. Build mode includes a Robux Machine tool; owners and permitted builders can place machines in worlds, then players can press E near one to buy world boosts and items with Robux. The Robux Store now accepts any custom Robux amount and spends pretend Kidtopia Money to buy it. Shared links can use `?version=14` to avoid old cached copies.
 
+Update 15 adds the Pro One Banking website connection. The Robux Store can connect Kidtopia Money to the public Pro One Banking website, open that banking page, and write transactions when Kidtopia Money is spent to buy Robux. Shared links can use `?version=15` to avoid old cached copies.
+
 ## Publishing games
 
 New worlds begin as private drafts. Creators can publish a draft as a game in the shared Published Games list, then use Update Live to push later block changes. Deleting a world removes its draft and published copy permanently; deletion records prevent it from returning after the next login.

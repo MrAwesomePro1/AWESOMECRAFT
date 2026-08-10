@@ -721,6 +721,42 @@ h1 {
   font: 900 24px "Arial", sans-serif;
 }
 
+.banking-scene {
+  background:
+    radial-gradient(circle at 50% 35%, rgba(95,195,255,.38), transparent 32%),
+    linear-gradient(135deg, #07111f, #14243f 58%, #0c1020);
+}
+
+.bank-card-chip {
+  display: grid;
+  place-items: center;
+  width: 112px;
+  height: 72px;
+  border: 3px solid #0d1727;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #5fc3ff, #735bff);
+  color: #06111f;
+  font: 900 30px "Arial", sans-serif;
+  box-shadow: 14px 14px 0 rgba(0,0,0,.18);
+  transform: rotate(-7deg);
+}
+
+.bank-orb {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 3px solid #0d1727;
+  border-radius: 50%;
+  background: #ffd35a;
+  color: #6c4300;
+  font: 900 18px "Arial", sans-serif;
+}
+
+.bank-orb.one { left: 22%; bottom: 23%; }
+.bank-orb.two { right: 22%; top: 24%; background: #62e7b5; color: #073b2c; }
+
 .street-scene {
   background: #ffe08a;
 }

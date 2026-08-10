@@ -25,7 +25,9 @@
       return JSON.parse(new TextDecoder().decode(bytes));
     } catch (_) { return null; }
   })();
-  const maintenancePreview = new URLSearchParams(window.location.search).get('maintenance') === '1';
+  const pageParams = new URLSearchParams(window.location.search);
+  const requestedProOneBankingWallet = pageParams.get('bankWallet');
+  const maintenancePreview = pageParams.get('maintenance') === '1';
   if (appConfig.maintenance || maintenancePreview) {
     $('#maintenanceMessage').textContent = appConfig.maintenanceMessage || "Robox is temporarily unavailable while we're making an update. Please check back soon.";
     $('#maintenanceScreen').classList.add('show');
@@ -49,6 +51,7 @@
   ];
   const kidtopiaRobuxRate = 10;
   const defaultKidtopiaMoney = 5000;
+  const proOneBankingStorageKey = 'pro-one-banking-wallets-v1';
   const machineShopCatalog = [
     { id:'speed-burst', name:'Speed Burst', price:75, kind:'boost', effect:'speed', duration:90, description:'Move faster in this world for 90 seconds.' },
     { id:'jump-boots', name:'Jump Boots', price:120, kind:'boost', effect:'jump', duration:90, description:'Jump higher in this world for 90 seconds.' },
@@ -60,7 +63,7 @@
     name, coins: 100, kidtopiaMoney: defaultKidtopiaMoney, xp: 0, level: 1,
     skin: '#f5b640', shirt: '#7557ff', accent: '#55e6ff', pants: '#28325e', hairColor: '#2b1b18', hair: 'spikes', outfit: 'classic', face: 'smile',
     customSkins: [], equippedSkin: null,
-    dailyClaimed: false, streak: 1, friends: [], worlds: [], deletedWorldIds: [], pets: [], customPets: [], equippedPet: null, machineItems: [], ageVerified: false, ageGroup: null
+    dailyClaimed: false, streak: 1, friends: [], worlds: [], deletedWorldIds: [], pets: [], customPets: [], equippedPet: null, machineItems: [], proOneBankingConnected: false, proOneBankingId: null, ageVerified: false, ageGroup: null
   });
   const readSavedAccount = () => {
     try { return JSON.parse(localStorage.getItem('robox-account') || 'null'); }
@@ -106,7 +109,84 @@
   let sessionMode = 'signed-out';
   let skinDraft = null;
 
-  const saveProfile = () => {
+  function readProOneBanking() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(proOneBankingStorageKey) || '{}');
+      return saved && typeof saved === 'object' ? { version:1, wallets:{}, ...saved, wallets: saved.wallets && typeof saved.wallets === 'object' ? saved.wallets : {} } : { version:1, wallets:{} };
+    } catch (_) { return { version:1, wallets:{} }; }
+  }
+  function writeProOneBanking(bank) {
+    localStorage.setItem(proOneBankingStorageKey, JSON.stringify({ version:1, wallets: bank.wallets || {}, updatedAt:new Date().toISOString() }));
+  }
+  function proOneBankingId() {
+    const name = String(profile.name || 'Guest_Player').trim().toLowerCase().replace(/[^a-z0-9_]/g, '-') || 'guest-player';
+    return `robox:${name}`;
+  }
+  function makeBankTransaction(change, note, balance) {
+    return { id:`txn-${Date.now()}-${Math.random().toString(16).slice(2)}`, app:'Robox', change, note, balance, at:new Date().toISOString() };
+  }
+  function proOneBankingUrl() {
+    const url = new URL(appConfig.proOneBankingUrl || 'https://mrawesomepro1.github.io/AWESOMECRAFT/pro-one-banking/');
+    const id = profile.proOneBankingId || proOneBankingId();
+    url.searchParams.set('wallet', id);
+    url.searchParams.set('player', profile.name || 'Guest_Player');
+    return url.href;
+  }
+  function syncProfileFromProOneBanking() {
+    if (!profile.proOneBankingConnected || !profile.proOneBankingId) return false;
+    const wallet = readProOneBanking().wallets?.[profile.proOneBankingId];
+    if (!wallet || !Number.isFinite(Number(wallet.balance))) return false;
+    profile.kidtopiaMoney = Number(wallet.balance);
+    return true;
+  }
+  function syncProfileToProOneBanking(note = 'Robox balance synced') {
+    if (!profile.proOneBankingConnected) return;
+    const bank = readProOneBanking();
+    const id = profile.proOneBankingId || proOneBankingId();
+    const previous = bank.wallets[id];
+    const nextBalance = Math.max(0, Math.floor(Number(profile.kidtopiaMoney) || 0));
+    const previousBalance = Number(previous?.balance);
+    const change = Number.isFinite(previousBalance) ? nextBalance - previousBalance : 0;
+    bank.wallets[id] = {
+      id,
+      owner: profile.name || 'Guest_Player',
+      currency: 'Kidtopia Money',
+      connectedApps: [...new Set([...(previous?.connectedApps || []), 'Robox'])],
+      balance: nextBalance,
+      updatedAt: new Date().toISOString(),
+      transactions: [
+        ...(change || !previous ? [makeBankTransaction(change, note, nextBalance)] : []),
+        ...(Array.isArray(previous?.transactions) ? previous.transactions : [])
+      ].slice(0, 60)
+    };
+    profile.proOneBankingId = id;
+    writeProOneBanking(bank);
+  }
+  function renderProOneBankingStatus() {
+    const status = $('#proOneBankingStatus');
+    if (!status) return;
+    const connected = !!profile.proOneBankingConnected;
+    const walletId = profile.proOneBankingId || proOneBankingId();
+    const wallet = readProOneBanking().wallets?.[walletId];
+    status.textContent = connected ? `Connected as ${profile.name}` : 'Not connected yet';
+    $('#proOneBankingBalance').textContent = formatRobux(connected && wallet ? wallet.balance : profile.kidtopiaMoney);
+    $('#connectProOneBanking').textContent = connected ? 'SYNC BANK' : 'CONNECT BANK';
+    $('#proOneBankingLink').href = proOneBankingUrl();
+  }
+  function connectProOneBanking(openWebsite = false) {
+    const id = profile.proOneBankingId || proOneBankingId();
+    profile.proOneBankingConnected = true;
+    profile.proOneBankingId = id;
+    const existing = readProOneBanking().wallets?.[id];
+    if (existing && Number.isFinite(Number(existing.balance))) profile.kidtopiaMoney = Number(existing.balance);
+    saveProfile(existing ? 'Robox reconnected to Pro One Banking' : 'Robox connected to Pro One Banking');
+    renderRobuxStore();
+    showToast('Pro One Banking connected', 'Kidtopia Money now syncs to the website');
+    if (openWebsite) window.open(proOneBankingUrl(), '_blank', 'noopener');
+  }
+
+  const saveProfile = (bankNote = 'Robox balance synced') => {
+    if (profile.proOneBankingConnected) syncProfileToProOneBanking(bankNote);
     if (sessionMode === 'account') {
       rememberAccount({ username: profile.name, profile });
       const library = readWorldLibrary();
@@ -202,6 +282,11 @@
     if (!Array.isArray(profile.customSkins)) profile.customSkins = [];
     if (!Array.isArray(profile.machineItems)) profile.machineItems = [];
     if (!Number.isFinite(Number(profile.kidtopiaMoney))) profile.kidtopiaMoney = defaultKidtopiaMoney;
+    if (requestedProOneBankingWallet) {
+      profile.proOneBankingConnected = true;
+      profile.proOneBankingId = requestedProOneBankingWallet;
+    }
+    if (profile.proOneBankingConnected) syncProfileFromProOneBanking();
     if (incomingSkinPayload) {
       receivedSkin = cleanSkin(incomingSkinPayload);
       const uploaded = { ...receivedSkin, id:`skin-${Date.now()}`, updatedAt:new Date().toISOString() };
@@ -304,7 +389,8 @@
   $$('[data-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 
   const updateNotes = [
-    { version:'UPDATE 14 • LATEST', badge:'UPDATE 14', title:'Robux Machines', summary:'Place Robux Machines in worlds and buy Robux with Kidtopia Money.', features:['Build mode has a Robux Machine tool','Machines open a shop for boosts and items','Type any Robux amount and pay with Kidtopia Money'] },
+    { version:'UPDATE 15 • LATEST', badge:'UPDATE 15', title:'Pro One Banking', summary:'Connect Kidtopia Money to the Pro One Banking website.', features:['Robux Store has Connect Bank and Open Website buttons','Kidtopia Money syncs with the Pro One Banking website wallet','Robux purchases create banking transactions'] },
+    { version:'UPDATE 14', badge:'UPDATE 14', title:'Robux Machines', summary:'Place Robux Machines in worlds and buy Robux with Kidtopia Money.', features:['Build mode has a Robux Machine tool','Machines open a shop for boosts and items','Type any Robux amount and pay with Kidtopia Money'] },
     { version:'UPDATE 13', badge:'UPDATE 13', title:'Renamed to Robox', summary:'The visible app name is now Robox everywhere.', features:['Boot screen and top bar now say Robox','Shared links use the latest version','Awesome Development listing now says Robox'] },
     { version:'UPDATE 12', badge:'UPDATE 12', title:'Multiplayer Setup Needed', summary:'Robox now shows the truth when real-player multiplayer is not connected yet.', features:['Sad-face multiplayer setup screen','Play Together buttons do not fake real players','Friends can still be saved, managed, and unfriended'] },
     { version:'UPDATE 11', badge:'UPDATE 11', title:'Robux Store', summary:'Buy in-game Robux bundles for your Robox account without using real money.', features:['New Buy Robux buttons around the app','R 250, R 1,000, and R 5,000 demo bundles','Balances update instantly and save to signed-in accounts'] },
@@ -324,7 +410,7 @@
     if (!list) return;
     list.innerHTML = updateNotes.map((note, index) => {
       const badge = index === 0 ? 'NEW' : note.badge.replace('UPDATE ', '');
-      const summary = index === 0 ? 'Place machines and buy Robux with Kidtopia Money.' : note.summary;
+      const summary = index === 0 ? 'Connect Kidtopia Money to the banking website.' : note.summary;
       return `<button class="${index === 0 ? 'active' : ''}" data-update-index="${index}"><span>${escapeHTML(badge)}</span><b>${escapeHTML(note.title)}</b><small>${escapeHTML(summary)}</small></button>`;
     }).join('');
   }
@@ -392,7 +478,7 @@
   }
   function injectRobuxStoreUI() {
     const download = $('#downloadGameButton');
-    if (download) download.href = appConfig.downloadFile || 'robox-update-14-download.zip';
+    if (download) download.href = appConfig.downloadFile || 'robox-update-15-download.zip';
     const walletPill = $('#walletCoins')?.closest('.coin-pill');
     if (walletPill && !$('#topRobuxButton')) walletPill.insertAdjacentElement('afterend', makeRobuxButton('topRobuxButton', 'robux-store-button top-robux-button', 'BUY'));
     if ($('#downloadGameButton') && !$('#homeRobuxButton')) $('#downloadGameButton').insertAdjacentElement('beforebegin', makeRobuxButton('homeRobuxButton', 'home-robux-button', 'BUY ROBUX'));
@@ -409,6 +495,10 @@
     if (!$('#robuxStoreModal')) {
       document.body.insertAdjacentHTML('beforeend', `<div class="modal robux-store-modal" id="robuxStoreModal" role="dialog" aria-modal="true" aria-labelledby="robuxStoreTitle"><div class="modal-card robux-store-card"><button class="modal-close" id="closeRobuxStore" aria-label="Close Robux store">×</button><div class="robux-store-hero"><div><p class="eyebrow">KIDTOPIA EXCHANGE</p><h2 id="robuxStoreTitle">Buy Robux</h2><p>Use Kidtopia Money to buy pretend Robux for this Robox profile.</p></div><div class="robux-wallet-stack"><div class="robux-balance-card"><span>YOUR ROBUX</span><strong><i class="coin">R</i> <b id="storeCoins">100</b></strong></div><div class="kidtopia-balance-card"><span>KIDTOPIA MONEY</span><strong>K <b id="storeKidtopiaMoney">5,000</b></strong></div></div></div><div class="robux-bundle-grid" id="robuxBundleGrid"></div><form class="custom-robux-form" id="customRobuxForm"><label for="customRobuxAmount"><span>CUSTOM ROBUX AMOUNT</span><input id="customRobuxAmount" type="number" inputmode="numeric" min="1" max="100000" step="1" value="100"></label><button type="submit">BUY CUSTOM</button><small id="customRobuxCost">Costs K 10 Kidtopia Money</small></form><p class="robux-safe-note"><b>Robox-only store:</b> these are pretend in-game purchases. No real money, payment cards, or Roblox account is used. Kidtopia Money is pretend game money too.</p><p class="robux-store-message" id="robuxStoreMessage" aria-live="polite"></p></div></div>`);
     }
+    const storeCard = $('#robuxStoreModal .robux-store-card');
+    if (storeCard && !$('#proOneBankingCard')) {
+      storeCard.insertAdjacentHTML('beforeend', `<div class="pro-one-banking-card" id="proOneBankingCard"><div><p class="eyebrow">PRO ONE BANKING WEBSITE</p><h3>Connect Kidtopia Money</h3><p>Your Kidtopia Money can sync with the Pro One Banking website on this public site.</p><small id="proOneBankingStatus">Not connected yet</small></div><div class="pro-one-bank-balance"><span>BANK BALANCE</span><strong>K <b id="proOneBankingBalance">5,000</b></strong></div><div class="pro-one-bank-actions"><button type="button" id="connectProOneBanking">CONNECT BANK</button><button type="button" id="openProOneBanking">OPEN WEBSITE</button><a id="proOneBankingLink" href="https://mrawesomepro1.github.io/AWESOMECRAFT/pro-one-banking/" target="_blank" rel="noopener">PUBLIC BANK LINK</a></div></div>`);
+    }
   }
   function renderRobuxStore() {
     const grid = $('#robuxBundleGrid');
@@ -419,6 +509,7 @@
     const kidtopiaMoney = $('#storeKidtopiaMoney');
     if (kidtopiaMoney) kidtopiaMoney.textContent = formatRobux(profile.kidtopiaMoney);
     updateCustomRobuxCost();
+    renderProOneBankingStatus();
   }
   function updateCustomRobuxCost() {
     const amountInput = $('#customRobuxAmount');
@@ -438,7 +529,7 @@
     }
     profile.kidtopiaMoney -= cost;
     profile.coins += amount;
-    saveProfile();
+    saveProfile(`Bought R ${formatRobux(amount)} Robux with Kidtopia Money`);
     renderRobuxStore();
     const saveNote = sessionMode === 'account' ? 'Saved to your account.' : 'Guest Robux may reset when the guest session ends.';
     $('#robuxStoreMessage').textContent = `Bought R ${formatRobux(amount)} with K ${formatRobux(cost)} Kidtopia Money. ${saveNote}`;
@@ -469,6 +560,17 @@
   $('#customRobuxForm').addEventListener('submit', event => {
     event.preventDefault();
     buyRobuxWithKidtopia($('#customRobuxAmount').value);
+  });
+  $('#connectProOneBanking').addEventListener('click', () => connectProOneBanking(false));
+  $('#openProOneBanking').addEventListener('click', () => connectProOneBanking(true));
+  window.addEventListener('storage', event => {
+    if (event.key !== proOneBankingStorageKey || !profile.proOneBankingConnected) return;
+    if (syncProfileFromProOneBanking()) {
+      if (sessionMode === 'account') rememberAccount({ username: profile.name, profile });
+      updateProfileUI();
+      renderRobuxStore();
+      showToast('Bank balance synced', 'Pro One Banking updated Kidtopia Money');
+    }
   });
 
   $('#soundToggle').addEventListener('click', event => {

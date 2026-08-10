@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Pro One Banking — Kidtopia Wallet</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700;800;900&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=1">
+</head>
+<body>
+  <main class="bank-shell">
+    <section class="hero">
+      <nav class="bank-nav">
+        <a class="brand" href="./"><span>P1</span><b>Pro One Banking</b></a>
+        <a class="nav-link" id="openRoboxLink" href="../robox-2-0/?version=15">Open Robox</a>
+      </nav>
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">CONNECTED KIDTOPIA WALLET</p>
+          <h1>Bank your Robox Kidtopia Money.</h1>
+          <p>This website connects with Robox on the same public site. Connect your Robox account, then your Kidtopia Money balance and Robux purchase transactions show up here.</p>
+          <div class="hero-actions">
+            <button id="syncWalletButton">SYNC WALLET</button>
+            <button id="createWalletButton">CREATE TEST WALLET</button>
+          </div>
+        </div>
+        <article class="balance-card">
+          <span id="walletStatus">No wallet selected</span>
+          <strong>K <b id="walletBalance">0</b></strong>
+          <small id="walletOwner">Open from Robox or create a wallet.</small>
+        </article>
+      </div>
+    </section>
+
+    <section class="bank-grid">
+      <article class="panel">
+        <div class="panel-heading">
+          <p class="eyebrow">WALLET</p>
+          <h2>Selected account</h2>
+        </div>
+        <form class="wallet-form" id="walletForm">
+          <label for="walletName">Player name</label>
+          <input id="walletName" maxlength="32" placeholder="Robox player name">
+          <button type="submit">OPEN / CREATE WALLET</button>
+        </form>
+        <p class="safe-note">This is pretend Pro One Banking for Robox and Kidtopia Money. It is not a real bank and does not use real money.</p>
+      </article>
+
+      <article class="panel">
+        <div class="panel-heading">
+          <p class="eyebrow">TRANSFER</p>
+          <h2>Kidtopia Money</h2>
+        </div>
+        <form class="transfer-form" id="transferForm">
+          <label for="transferAmount">Amount</label>
+          <input id="transferAmount" type="number" inputmode="numeric" min="1" max="100000" step="1" value="100">
+          <label for="transferNote">Note</label>
+          <input id="transferNote" maxlength="60" value="Website adjustment">
+          <div class="transfer-actions">
+            <button type="button" data-transfer="deposit">DEPOSIT</button>
+            <button type="button" data-transfer="withdraw">WITHDRAW</button>
+          </div>
+        </form>
+      </article>
+
+      <article class="panel transactions-panel">
+        <div class="panel-heading">
+          <p class="eyebrow">HISTORY</p>
+          <h2>Transactions</h2>
+        </div>
+        <div class="transactions" id="transactionList"></div>
+      </article>
+
+      <article class="panel wallet-list-panel">
+        <div class="panel-heading">
+          <p class="eyebrow">SAVED</p>
+          <h2>Wallets on this browser</h2>
+        </div>
+        <div class="wallet-list" id="walletList"></div>
+      </article>
+    </section>
+  </main>
+
+  <div class="toast" id="toast">Wallet synced</div>
+  <script src="app.js?v=1"></script>
+</body>
+</html>

@@ -34,6 +34,7 @@ const sourceCodeLinks = {
   "snake-progect": "https://github.com/MrAwesomePro1/awesome-delvelment-publishing/blob/main/awesomecraft/snake.html",
   "robox": "https://github.com/MrAwesomePro1/AWESOMECRAFT/tree/main/robox-2-0",
   "robox-2-0": "https://github.com/MrAwesomePro1/AWESOMECRAFT/tree/main/robox-2-0",
+  "pro-one-banking": "https://github.com/MrAwesomePro1/AWESOMECRAFT/tree/main/pro-one-banking",
   "bank-rupt-street": "https://github.com/MrAwesomePro1/awesome-delvelment-publishing/tree/main/bank-rupt-street",
   "ai-council": "https://github.com/MrAwesomePro1/awesome-delvelment-publishing/tree/main/ai-council",
   "staff-messages": "https://github.com/MrAwesomePro1/awesome-delvelment-publishing/tree/main/staff-messages",
