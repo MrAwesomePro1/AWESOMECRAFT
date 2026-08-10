@@ -50,6 +50,8 @@ Update 18 adds an in-game SHOP button for iPad and iPhone touch controls. Touch 
 
 Update 19 adds a Shop Item Maker. Signed-in players can create custom items, choose a type, color, description, and Robux price, then put those things into the in-game shop for players on the same device to buy. Shared links can use `?version=19` to avoid old cached copies.
 
+Update 20 adds public multiplayer rooms for published worlds. Players can create a new room, join the first open public room, or select a visible room code. Up to 12 players can share a room and see each other's live positions across devices. Shared links can use `?version=20` to avoid old cached copies.
+
 ## Publishing games
 
 New worlds begin as private drafts. Creators can publish a draft as a game in the shared Published Games list, then use Update Live to push later block changes. Deleting a world removes its draft and published copy permanently; deletion records prevent it from returning after the next login.

@@ -12,6 +12,201 @@
     return Number.isFinite(amount) && amount > 0 ? amount : 0;
   }
   const appConfig = window.ROBOX_CONFIG || {};
+  const realtimeApi = appConfig.realtimeApi || '';
+  const publicWorldApi = realtimeApi ? `${realtimeApi}?resource=worlds` : '';
+  const publicWorldOwnerToken = (() => {
+    const key = 'robox-public-world-owner-token';
+    let token = localStorage.getItem(key);
+    if (!token) {
+      token = `owner-${crypto.randomUUID ? crypto.randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`}`;
+      localStorage.setItem(key, token);
+    }
+    return token;
+  })();
+  const multiplayerPlayerId = (() => {
+    const key = 'robox-multiplayer-player-id';
+    let id = sessionStorage.getItem(key);
+    if (!id) {
+      id = `player-${crypto.randomUUID ? crypto.randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`}`;
+      sessionStorage.setItem(key, id);
+    }
+    return id;
+  })();
+  const multiplayer = { roomId:null, worldId:null, players:[], syncing:false, timer:null, connecting:false };
+
+  async function roomApi(payload) {
+    if (!realtimeApi) throw new Error('Room server is not configured.');
+    const response = await fetch(realtimeApi, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body:JSON.stringify(payload)
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || 'The public room could not be reached.');
+    return result;
+  }
+
+  function multiplayerPayload(action, extra = {}) {
+    return {
+      action,
+      roomId:multiplayer.roomId,
+      worldId:multiplayer.worldId,
+      playerId:multiplayerPlayerId,
+      username:profile?.name || 'Player',
+      x:game?.player?.x ?? 5,
+      y:game?.player?.y ?? 5,
+      z:game?.player?.z ?? 0,
+      angle:game?.player?.angle ?? 0,
+      appearance:{
+        skin:profile?.skin, shirt:profile?.shirt, pants:profile?.pants,
+        accent:profile?.accent, hairColor:profile?.hairColor,
+        outfit:profile?.outfit, hair:profile?.hair
+      },
+      ...extra
+    };
+  }
+
+  async function enterPublicRoom(worldId, action = 'join', roomId = '') {
+    if (multiplayer.connecting) return;
+    const world = readPublishedGames().find(item => item.id === worldId);
+    if (!world) { showToast('World unavailable', 'Publish the world before creating a room'); return; }
+    multiplayer.connecting = true;
+    showToast(action === 'create' ? 'Creating room…' : 'Joining public room…', world.name);
+    try {
+      const result = await roomApi(multiplayerPayload(action, {
+        roomId,
+        worldId:world.id,
+        worldName:world.name
+      }));
+      multiplayer.roomId = result.roomId;
+      multiplayer.worldId = world.id;
+      multiplayer.players = (result.players || []).filter(player => player.playerId !== multiplayerPlayerId);
+      launchGame(world.id, true);
+      $('#serverName').textContent = `Public room ${multiplayer.roomId} · ${(result.players || []).length}/12 players`;
+      showToast(`Room ${multiplayer.roomId}`, action === 'create' ? 'Public room created' : 'Joined with live players');
+      startRoomSync();
+      refreshPublicRoomCards();
+    } catch (error) {
+      showToast('Could not join room', error.message || 'Try again in a moment');
+    } finally {
+      multiplayer.connecting = false;
+    }
+  }
+
+  async function syncPublicRoom() {
+    if (!game.active || !multiplayer.roomId || multiplayer.syncing) return;
+    multiplayer.syncing = true;
+    try {
+      const result = await roomApi(multiplayerPayload('sync'));
+      multiplayer.players = (result.players || []).filter(player => player.playerId !== multiplayerPlayerId);
+      $('#serverName').textContent = `Public room ${multiplayer.roomId} · ${(result.players || []).length}/12 players`;
+    } catch (_) {
+      $('#serverName').textContent = `Room ${multiplayer.roomId} · reconnecting…`;
+    } finally {
+      multiplayer.syncing = false;
+      if (game.active && multiplayer.roomId) multiplayer.timer = setTimeout(syncPublicRoom, 500);
+    }
+  }
+
+  function startRoomSync() {
+    clearTimeout(multiplayer.timer);
+    multiplayer.timer = setTimeout(syncPublicRoom, 250);
+  }
+
+  function leavePublicRoom() {
+    clearTimeout(multiplayer.timer);
+    if (multiplayer.roomId && realtimeApi) {
+      fetch(realtimeApi, {
+        method:'POST', headers:{ 'Content-Type':'application/json' }, keepalive:true,
+        body:JSON.stringify(multiplayerPayload('leave'))
+      }).catch(() => {});
+    }
+    multiplayer.roomId = null;
+    multiplayer.worldId = null;
+    multiplayer.players = [];
+    multiplayer.syncing = false;
+  }
+
+  async function refreshPublicRoomCards() {
+    if (!realtimeApi) return;
+    const lists = $$('[data-public-rooms-for]');
+    await Promise.all(lists.map(async list => {
+      const worldId = list.dataset.publicRoomsFor;
+      try {
+        const response = await fetch(`${realtimeApi}?worldId=${encodeURIComponent(worldId)}`, { cache:'no-store' });
+        const result = await response.json();
+        const rooms = Array.isArray(result.rooms) ? result.rooms : [];
+        list.replaceChildren();
+        if (!rooms.length) {
+          const empty = document.createElement('span');
+          empty.textContent = 'No rooms yet';
+          list.append(empty);
+          return;
+        }
+        rooms.forEach(room => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.dataset.joinRoom = room.id;
+          button.dataset.roomWorld = worldId;
+          button.textContent = `${room.id} · ${room.playerCount}/12`;
+          button.title = `Join ${room.hostName}'s room`;
+          list.append(button);
+        });
+      } catch (_) {
+        list.textContent = 'Rooms reconnecting…';
+      }
+    }));
+  }
+
+  let syncingPublicWorlds = false;
+  async function publishWorldToServer(world) {
+    if (!publicWorldApi || !world) return;
+    const response = await fetch(publicWorldApi, {
+      method:'POST', headers:{ 'Content-Type':'application/json' },
+      body:JSON.stringify({ action:'publish', ownerToken:publicWorldOwnerToken, worldId:world.id, world })
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || 'Published world could not be shared.');
+    return result.world;
+  }
+
+  async function deleteWorldFromServer(worldId) {
+    if (!publicWorldApi) return;
+    await fetch(publicWorldApi, {
+      method:'POST', headers:{ 'Content-Type':'application/json' },
+      body:JSON.stringify({ action:'delete', ownerToken:publicWorldOwnerToken, worldId })
+    });
+  }
+
+  async function syncPublicWorldsFromServer() {
+    if (!publicWorldApi || syncingPublicWorlds) return;
+    syncingPublicWorlds = true;
+    try {
+      let response = await fetch(publicWorldApi, { cache:'no-store' });
+      let result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Published worlds are unavailable.');
+      let remoteGames = Array.isArray(result.games) ? result.games : [];
+      const remoteIds = new Set(remoteGames.map(world => world.id));
+      const ownedLocalGames = sessionMode === 'account'
+        ? readPublishedGames().filter(world => String(world.owner || '').toLowerCase() === profile.name.toLowerCase())
+        : [];
+      const missingOwnedGames = ownedLocalGames.filter(world => !remoteIds.has(world.id));
+      if (missingOwnedGames.length) {
+        await Promise.all(missingOwnedGames.map(world => publishWorldToServer(world).catch(() => null)));
+        response = await fetch(publicWorldApi, { cache:'no-store' });
+        result = await response.json();
+        if (response.ok) remoteGames = Array.isArray(result.games) ? result.games : remoteGames;
+      }
+      writePublishedGames(remoteGames);
+      renderPublishedGames();
+    } catch (_) {
+      /* Keep the last downloaded public-world list while reconnecting. */
+    } finally {
+      syncingPublicWorlds = false;
+    }
+  }
+
+  window.addEventListener('beforeunload', leavePublicRoom);
   (() => {
     const expectedVersion = Number(appConfig.version) || 0;
     if (!expectedVersion) return;
@@ -254,6 +449,8 @@
 
   setTimeout(() => $('#bootScreen').classList.add('done'), 1450);
   updateProfileUI();
+  setTimeout(syncPublicWorldsFromServer, 250);
+  setInterval(syncPublicWorldsFromServer, 15000);
 
   const accountScreen = $('#accountScreen');
   const authMessage = $('#authMessage');
@@ -410,7 +607,8 @@
   $$('[data-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 
   const updateNotes = [
-    { version:'UPDATE 19 • LATEST', badge:'UPDATE 19', title:'Shop Item Maker', summary:'Players can now make custom things and put them inside the in-game shop.', features:['Create custom shop items from the Pets page','Choose item type, color, description, and Robux price','Created items appear in the in-game shop for players to buy'] },
+    { version:'UPDATE 20 • LATEST', badge:'UPDATE 20', title:'Public World Rooms', summary:'Published worlds now have real shared rooms for players on different devices.', features:['Create a public room from a published world','Join the first open room or choose a visible room code','See up to 12 live players moving inside the same world'] },
+    { version:'UPDATE 19', badge:'UPDATE 19', title:'Shop Item Maker', summary:'Players can now make custom things and put them inside the in-game shop.', features:['Create custom shop items from the Pets page','Choose item type, color, description, and Robux price','Created items appear in the in-game shop for players to buy'] },
     { version:'UPDATE 18', badge:'UPDATE 18', title:'iPad Shop Button', summary:'iPad and iPhone players now have a big touch button to open the in-game shop.', features:['New SHOP button beside BUILD and TALK on touch controls','The button opens the pet shop without needing a keyboard','Works when iPad/iPhone controls are selected'] },
     { version:'UPDATE 17', badge:'UPDATE 17', title:'Promo Codes', summary:'Robux Store now has promo codes, and code 2017 gives 100% off.', features:['New promo-code box inside the Robux Store','Code 2017 makes Robux purchases cost K 0','Bundle and custom prices update when the code is active'] },
     { version:'UPDATE 16', badge:'UPDATE 16', title:'Infinite Custom Amounts', summary:'Bank deposits now add the exact amount, and custom Robux has no cap.', features:['Pro One Banking deposits use the exact typed amount','Custom Robux amount no longer stops at 100,000','Pro One Banking opens Robox Update 16'] },
@@ -520,7 +718,7 @@
   }
   function injectRobuxStoreUI() {
     const download = $('#downloadGameButton');
-    if (download) download.href = appConfig.downloadFile || 'robox-update-19-download.zip';
+    if (download) download.href = appConfig.downloadFile || 'robox-update-20-download.zip';
     const walletPill = $('#walletCoins')?.closest('.coin-pill');
     if (walletPill && !$('#topRobuxButton')) walletPill.insertAdjacentElement('afterend', makeRobuxButton('topRobuxButton', 'robux-store-button top-robux-button', 'BUY'));
     if ($('#downloadGameButton') && !$('#homeRobuxButton')) $('#downloadGameButton').insertAdjacentElement('beforebegin', makeRobuxButton('homeRobuxButton', 'home-robux-button', 'BUY ROBUX'));
@@ -1211,6 +1409,13 @@
       accessButton.dataset.worldAccess = world.id;
       accessButton.textContent = 'INVITE PLAYERS';
       card.append(accessButton);
+      if (world.published) {
+        const roomButton = document.createElement('button');
+        roomButton.className = 'world-room-owner-btn';
+        roomButton.dataset.createRoom = world.id;
+        roomButton.textContent = '◎ CREATE ROOM';
+        card.append(roomButton);
+      }
     });
   }
 
@@ -1227,7 +1432,7 @@
       const name = escapeHTML(world.name);
       const owner = escapeHTML(world.owner || 'Robox Creator');
       const description = escapeHTML(world.description || 'A player-created game.');
-      return `<article class="game-card user-world-card published-game-card" data-title="${name.toLowerCase()} ${owner.toLowerCase()}"><div class="game-art user-world-art ${world.theme || 'grass'}"><span class="world-owner">BY ${owner}</span><span class="world-status live">LIVE</span></div><div class="game-info"><h4>${name}</h4><p>${description}</p><div><span>${theme.icon} ${theme.label}</span><span>◆ ${world.plays || 0} plays</span></div></div><button class="card-play" data-published-world-id="${world.id}" aria-label="Play published game ${name}">▶</button></article>`;
+      return `<article class="game-card user-world-card published-game-card" data-title="${name.toLowerCase()} ${owner.toLowerCase()}"><div class="game-art user-world-art ${world.theme || 'grass'}"><span class="world-owner">BY ${owner}</span><span class="world-status live">LIVE</span></div><div class="game-info"><h4>${name}</h4><p>${description}</p><div><span>${theme.icon} ${theme.label}</span><span>◆ ${world.plays || 0} plays</span></div></div><div class="public-room-actions"><button type="button" data-create-room="${world.id}">CREATE ROOM</button><button type="button" data-join-public="${world.id}">JOIN PUBLIC</button></div><div class="public-room-list" data-public-rooms-for="${world.id}"><span>Checking rooms…</span></div><button class="card-play" data-published-world-id="${world.id}" aria-label="Join public game ${name}">▶</button></article>`;
     }).join('');
     $$('.published-game-card', grid).forEach((card, index) => {
       const invites = Array.isArray(games[index].invites) ? games[index].invites : [];
@@ -1238,6 +1443,7 @@
       badge.textContent = invite.canBuild ? 'BUILD ACCESS' : 'INVITED';
       $('.game-art', card).append(badge);
     });
+    refreshPublicRoomCards();
   }
 
   const createWorldModal = $('#createWorldModal');
@@ -1308,6 +1514,8 @@
     saveProfile(); closeWorldCreator(); switchView('discover'); beep(920, .15);
   });
   $('#gameGrid').addEventListener('click', event => {
+    const roomButton = event.target.closest('[data-create-room]');
+    if (roomButton) { enterPublicRoom(roomButton.dataset.createRoom, 'create'); return; }
     const accessButton = event.target.closest('[data-world-access]');
     if (accessButton) { openWorldAccess(accessButton.dataset.worldAccess); return; }
     const publishButton = event.target.closest('[data-world-publish]');
@@ -1381,13 +1589,19 @@
     $('#invitePlayerMessage').textContent = `${removed?.username || 'Player'} was removed from this world.`;
   });
   $('#publishedGamesGrid').addEventListener('click', event => {
+    const createButton = event.target.closest('[data-create-room]');
+    if (createButton) { enterPublicRoom(createButton.dataset.createRoom, 'create'); return; }
+    const publicButton = event.target.closest('[data-join-public]');
+    if (publicButton) { enterPublicRoom(publicButton.dataset.joinPublic, 'join'); return; }
+    const roomButton = event.target.closest('[data-join-room]');
+    if (roomButton) { enterPublicRoom(roomButton.dataset.roomWorld, 'join', roomButton.dataset.joinRoom); return; }
     const playButton = event.target.closest('[data-published-world-id]');
-    if (playButton) launchGame(playButton.dataset.publishedWorldId, true);
+    if (playButton) enterPublicRoom(playButton.dataset.publishedWorldId, 'join');
   });
   function closePublishWorldPrompt() { pendingPublishWorldId = null; publishWorldModal.classList.remove('show'); }
   $$('[data-cancel-world-publish]').forEach(button => button.addEventListener('click', closePublishWorldPrompt));
   publishWorldModal.addEventListener('click', event => { if (event.target === publishWorldModal) closePublishWorldPrompt(); });
-  $('#confirmPublishWorld').addEventListener('click', () => {
+  $('#confirmPublishWorld').addEventListener('click', async () => {
     if (!pendingPublishWorldId) return;
     const world = profile.worlds.find(item => item.id === pendingPublishWorldId);
     if (!world) { closePublishWorldPrompt(); return; }
@@ -1396,18 +1610,29 @@
     world.publishVersion = (world.publishVersion || 0) + 1;
     const existingPublished = readPublishedGames().find(game => game.id === world.id);
     const published = readPublishedGames().filter(game => game.id !== world.id);
-    published.unshift({ ...world, owner:profile.name, plays:existingPublished?.plays || 0 });
+    const liveWorld = { ...world, owner:profile.name, plays:existingPublished?.plays || 0 };
+    published.unshift(liveWorld);
     writePublishedGames(published);
-    saveProfile(); closePublishWorldPrompt(); beep(1040, .18);
+    saveProfile();
+    try {
+      await publishWorldToServer(liveWorld);
+      showToast('World published!', 'Players on every device can now join');
+      await syncPublicWorldsFromServer();
+    } catch (error) {
+      showToast('Saved on this device', error.message || 'Public server will retry soon');
+    }
+    closePublishWorldPrompt(); beep(1040, .18);
   });
   function closeDeleteWorldPrompt() { pendingDeleteWorldId = null; deleteWorldModal.classList.remove('show'); }
   $$('[data-cancel-world-delete]').forEach(button => button.addEventListener('click', closeDeleteWorldPrompt));
   deleteWorldModal.addEventListener('click', event => { if (event.target === deleteWorldModal) closeDeleteWorldPrompt(); });
   $('#confirmDeleteWorld').addEventListener('click', () => {
     if (!pendingDeleteWorldId) return;
+    const deletedWorldId = pendingDeleteWorldId;
     if (!profile.deletedWorldIds.includes(pendingDeleteWorldId)) profile.deletedWorldIds.push(pendingDeleteWorldId);
     profile.worlds = profile.worlds.filter(world => world.id !== pendingDeleteWorldId);
     writePublishedGames(readPublishedGames().filter(world => world.id !== pendingDeleteWorldId));
+    deleteWorldFromServer(deletedWorldId).catch(() => {});
     saveProfile(); closeDeleteWorldPrompt(); beep(320, .12);
   });
 
@@ -1418,14 +1643,15 @@
   function openMultiplayerSetup(friendName = '') {
     const copy = $('#multiplayerSetupCopy');
     copy.textContent = friendName
-      ? `${friendName} is saved as your friend, but actual live players need an online realtime server before they can join your world.`
-      : 'Friends are saved on this device, but actual live players need an online realtime server before they can join your world.';
+      ? `${friendName} can join you by opening the same published world and choosing your public room code.`
+      : 'Open Published Games and choose Create Room or Join Public. Everyone who joins the same room appears inside that world.';
     multiplayerSetupModal.classList.add('show');
-    beep(240, .12);
+    beep(720, .12);
   }
   function closeMultiplayerSetup() { multiplayerSetupModal.classList.remove('show'); }
   $('#playTogetherBtn').addEventListener('click', () => openMultiplayerSetup());
   $$('[data-close-multiplayer]').forEach(button => button.addEventListener('click', closeMultiplayerSetup));
+  $('.multiplayer-ok').addEventListener('click', () => switchView('discover'));
   multiplayerSetupModal.addEventListener('click', event => { if (event.target === multiplayerSetupModal) closeMultiplayerSetup(); });
   function closeFriendFinder() {
     addFriendModal.classList.remove('show');
@@ -1583,7 +1809,7 @@
     const isWorldOwner = (!!ownedWorld && !publishedLaunch) || (signedInPlayer && String(worldRecord.owner || '').toLowerCase() === profile.name.toLowerCase());
     const invite = (Array.isArray(worldRecord.invites) ? worldRecord.invites : []).find(item => String(item.username || '').toLowerCase() === profile.name.toLowerCase());
     game.world = selectedWorld; game.userWorldId = !publishedLaunch && ownedWorld ? ownedWorld.id : null; game.publishedWorldId = publishedLaunch && publishedWorld ? publishedWorld.id : null; game.isWorldOwner = isWorldOwner; game.canBuild = isWorldOwner || signedInPlayer && !!invite?.canBuild; game.loadedBlocks = Array.isArray(worldRecord.blocks) ? worldRecord.blocks.map(block => ({ ...block })) : null; game.worldSize = Math.max(12, Math.min(32, Number(worldRecord.size) || 12)); game.active = true; game.paused = false; game.buildMode = false; game.time = 0;
-    if (publishedLaunch && publishedWorld) { publishedWorld.plays = (publishedWorld.plays || 0) + 1; writePublishedGames(publishedGames); renderPublishedGames(); }
+    if (publishedLaunch && publishedWorld) { publishedWorld.plays = (publishedWorld.plays || 0) + 1; writePublishedGames(publishedGames); renderPublishedGames(); if (publicWorldApi) fetch(publicWorldApi,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'play',worldId:publishedWorld.id})}).catch(()=>{}); }
     else if (ownedWorld) { ownedWorld.visits = (ownedWorld.visits || 0) + 1; saveProfile(); }
     $('#worldName').textContent = game.world.name; $('#worldIcon').textContent = game.world.icon; $('#serverName').textContent = game.canBuild ? (game.isWorldOwner ? 'Owner build access' : 'Builder permission granted') : 'Play-only access';
     $('#questTitle').textContent = game.world.quest; $('#questText').textContent = game.world.text;
@@ -1595,7 +1821,7 @@
   $$('.game-card').forEach(card => card.addEventListener('dblclick', () => launchGame($('.card-play', card).dataset.game)));
 
   function leaveGame() {
-    game.active = false; game.paused = false; $('#gameScreen').classList.remove('active'); $('#gameShopModal').classList.remove('show'); $('#robuxMachineModal').classList.remove('show'); document.body.style.overflow = ''; beep(280, .08);
+    leavePublicRoom(); game.active = false; game.paused = false; $('#gameScreen').classList.remove('active'); $('#gameShopModal').classList.remove('show'); $('#robuxMachineModal').classList.remove('show'); document.body.style.overflow = ''; refreshPublicRoomCards(); beep(280, .08);
   }
   function togglePause(force) {
     game.paused = typeof force === 'boolean' ? force : !game.paused;
@@ -1880,25 +2106,26 @@
     if(block.type===3){ctx.save();ctx.shadowColor='#5feaff';ctx.shadowBlur=20;ctx.strokeStyle='#9ff6ff';ctx.stroke();ctx.restore();}
   }
 
-  function drawAvatar(x,y,z,isNpc=false) {
+  function drawAvatar(x,y,z,isNpc=false, avatarProfile=profile, displayName='') {
     const p=project(x,y,z), bounce=Math.sin(game.time*8)*((game.keys.w||game.keys.a||game.keys.s||game.keys.d)&&!isNpc?2:0), scale=1;
     ctx.save();ctx.translate(p.x,p.y-42+bounce);ctx.scale(scale,scale);
     ctx.fillStyle='#0004';ctx.beginPath();ctx.ellipse(0,43,22,8,0,0,Math.PI*2);ctx.fill();
-    const shirt=isNpc?'#22b89a':profile.shirt, skin=isNpc?'#e9a96d':profile.skin, pants=isNpc?'#29355c':(profile.pants||'#28325e'), accent=isNpc?'#e9f4ff':(profile.accent||'#55e6ff');
+    const shirt=isNpc?'#22b89a':avatarProfile.shirt, skin=isNpc?'#e9a96d':avatarProfile.skin, pants=isNpc?'#29355c':(avatarProfile.pants||'#28325e'), accent=isNpc?'#e9f4ff':(avatarProfile.accent||'#55e6ff');
     // legs
     ctx.fillStyle=pants;ctx.fillRect(-17,20,14,29);ctx.fillRect(3,20,14,29);
     // arms and body
     ctx.fillStyle=skin;ctx.fillRect(-27,-12,10,31);ctx.fillRect(17,-12,10,31);ctx.fillStyle=shirt;ctx.fillRect(-18,-17,36,40);
-    if(!isNpc&&profile.outfit==='stripe'){ctx.fillStyle=accent;ctx.fillRect(-4,-17,8,40);}
-    else if(!isNpc&&profile.outfit==='hoodie'){ctx.strokeStyle=accent;ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,-14,12,0,Math.PI);ctx.stroke();}
-    else if(!isNpc&&profile.outfit==='cyber'){ctx.strokeStyle=accent;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-12,4);ctx.lineTo(-3,4);ctx.lineTo(2,-6);ctx.lineTo(7,13);ctx.lineTo(14,13);ctx.stroke();}
+    if(!isNpc&&avatarProfile.outfit==='stripe'){ctx.fillStyle=accent;ctx.fillRect(-4,-17,8,40);}
+    else if(!isNpc&&avatarProfile.outfit==='hoodie'){ctx.strokeStyle=accent;ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,-14,12,0,Math.PI);ctx.stroke();}
+    else if(!isNpc&&avatarProfile.outfit==='cyber'){ctx.strokeStyle=accent;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-12,4);ctx.lineTo(-3,4);ctx.lineTo(2,-6);ctx.lineTo(7,13);ctx.lineTo(14,13);ctx.stroke();}
     else{ctx.fillStyle='#fff';ctx.font='bold 18px Chakra Petch';ctx.textAlign='center';ctx.fillText(isNpc?'N':'R',0,10);}
     // head
     ctx.fillStyle=skin;ctx.fillRect(-15,-47,30,27);ctx.fillStyle='#202330';ctx.fillRect(-8,-37,3,4);ctx.fillRect(6,-37,3,4);ctx.fillRect(-4,-29,9,2);
-    ctx.fillStyle=isNpc?'#e9f4ff':(profile.hairColor||'#2b1b18');
-    if(isNpc||profile.hair==='spikes'){ctx.beginPath();ctx.moveTo(-17,-46);ctx.lineTo(-13,-60);ctx.lineTo(-6,-50);ctx.lineTo(0,-63);ctx.lineTo(6,-50);ctx.lineTo(14,-59);ctx.lineTo(17,-45);ctx.closePath();ctx.fill();}
-    else if(profile.hair==='cap'){ctx.beginPath();ctx.ellipse(0,-49,18,10,0,Math.PI,0);ctx.fill();ctx.fillRect(8,-50,16,4);}
+    ctx.fillStyle=isNpc?'#e9f4ff':(avatarProfile.hairColor||'#2b1b18');
+    if(isNpc||avatarProfile.hair==='spikes'){ctx.beginPath();ctx.moveTo(-17,-46);ctx.lineTo(-13,-60);ctx.lineTo(-6,-50);ctx.lineTo(0,-63);ctx.lineTo(6,-50);ctx.lineTo(14,-59);ctx.lineTo(17,-45);ctx.closePath();ctx.fill();}
+    else if(avatarProfile.hair==='cap'){ctx.beginPath();ctx.ellipse(0,-49,18,10,0,Math.PI,0);ctx.fill();ctx.fillRect(8,-50,16,4);}
     if(isNpc){ctx.fillStyle='#111827cc';ctx.fillRect(-25,-80,50,15);ctx.fillStyle='#fff';ctx.font='bold 8px Inter';ctx.fillText('NOVA',0,-70);}
+    else if(displayName){const safeName=String(displayName).slice(0,16).toUpperCase();ctx.font='bold 8px Inter';const width=Math.max(52,ctx.measureText(safeName).width+14);ctx.fillStyle='#111827dd';ctx.fillRect(-width/2,-80,width,16);ctx.fillStyle='#55e6ff';ctx.textAlign='center';ctx.fillText(safeName,0,-69);}
     ctx.restore();
   }
 
@@ -1938,7 +2165,7 @@
     const groundTop=game.world.ground,groundLeft=shade(groundTop,-35),groundRight=shade(groundTop,-50);
     const size=game.worldSize;
     for(let sum=0;sum<=2*(size-1);sum++)for(let x=0;x<size;x++){const y=sum-x;if(y<0||y>=size)continue;const p=project(x+.5,y+.5,0),tw=tileW/2,th=tileH/2;ctx.fillStyle=(x+y)%2?groundTop:shade(groundTop,5);ctx.beginPath();ctx.moveTo(p.x,p.y-th);ctx.lineTo(p.x+tw,p.y);ctx.lineTo(p.x,p.y+th);ctx.lineTo(p.x-tw,p.y);ctx.closePath();ctx.fill();ctx.strokeStyle='#ffffff0b';ctx.stroke();if(x===size-1||y===size-1){ctx.fillStyle=x===size-1?groundRight:groundLeft;ctx.beginPath();ctx.moveTo(p.x+(x===size-1?tw:-tw),p.y);ctx.lineTo(p.x,p.y+th);ctx.lineTo(p.x,p.y+th+35);ctx.lineTo(p.x+(x===size-1?tw:-tw),p.y+35);ctx.closePath();ctx.fill();}}
-    const drawables=[];game.blocks.forEach(block=>drawables.push({sort:block.x+block.y+.1,fn:()=>drawBlock(block)}));game.coins.filter(c=>!c.got).forEach(c=>drawables.push({sort:c.x+c.y,fn:()=>drawCoin(c)}));drawables.push({sort:game.npc.x+game.npc.y,fn:()=>drawAvatar(game.npc.x,game.npc.y,0,true)});if(profile.equippedPet)drawables.push({sort:game.pet.x+game.pet.y+.05,fn:drawPet});drawables.push({sort:game.player.x+game.player.y,fn:()=>drawAvatar(game.player.x,game.player.y,game.player.z,false)});drawables.sort((a,b)=>a.sort-b.sort).forEach(d=>d.fn());
+    const drawables=[];game.blocks.forEach(block=>drawables.push({sort:block.x+block.y+.1,fn:()=>drawBlock(block)}));game.coins.filter(c=>!c.got).forEach(c=>drawables.push({sort:c.x+c.y,fn:()=>drawCoin(c)}));drawables.push({sort:game.npc.x+game.npc.y,fn:()=>drawAvatar(game.npc.x,game.npc.y,0,true)});multiplayer.players.forEach(player=>drawables.push({sort:player.x+player.y,fn:()=>drawAvatar(player.x,player.y,player.z,false,player,player.username)}));if(profile.equippedPet)drawables.push({sort:game.pet.x+game.pet.y+.05,fn:drawPet});drawables.push({sort:game.player.x+game.player.y,fn:()=>drawAvatar(game.player.x,game.player.y,game.player.z,false,profile,profile.name)});drawables.sort((a,b)=>a.sort-b.sort).forEach(d=>d.fn());
     drawDecor();
     game.particles.forEach(particle=>{const p=project(particle.x,particle.y,particle.z);ctx.globalAlpha=Math.max(0,particle.life*1.5);ctx.fillStyle=particle.color;ctx.fillRect(p.x-3,p.y-3,6,6);ctx.globalAlpha=1;});
   }
