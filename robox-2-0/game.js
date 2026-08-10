@@ -5,6 +5,17 @@
   const $$ = (selector, scope = document) => [...scope.querySelectorAll(selector)];
   const escapeHTML = value => String(value).replace(/[&<>'"]/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' })[character]);
   const appConfig = window.ROBOX_CONFIG || {};
+  (() => {
+    const expectedVersion = Number(appConfig.version) || 0;
+    if (!expectedVersion) return;
+    try {
+      const currentUrl = new URL(window.location.href);
+      const sharedVersion = Number(currentUrl.searchParams.get('version')) || 0;
+      if (sharedVersion >= expectedVersion) return;
+      currentUrl.searchParams.set('version', String(expectedVersion));
+      window.history.replaceState(null, '', currentUrl.href);
+    } catch (_) { /* Keeping the visible share link fresh is optional. */ }
+  })();
   let incomingSkinPayload = (() => {
     if (!window.location.hash.startsWith('#skin=')) return null;
     try {
@@ -16,7 +27,7 @@
   })();
   const maintenancePreview = new URLSearchParams(window.location.search).get('maintenance') === '1';
   if (appConfig.maintenance || maintenancePreview) {
-    $('#maintenanceMessage').textContent = appConfig.maintenanceMessage || "Robox 2.0 is temporarily unavailable while we're making an update. Please check back soon.";
+    $('#maintenanceMessage').textContent = appConfig.maintenanceMessage || "Robox is temporarily unavailable while we're making an update. Please check back soon.";
     $('#maintenanceScreen').classList.add('show');
   }
   const worldThemes = {
@@ -282,9 +293,10 @@
   $$('[data-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 
   const updateNotes = [
-    { version:'UPDATE 12 • LATEST', badge:'UPDATE 12', title:'Multiplayer Setup Needed', summary:'Robox now shows the truth when real-player multiplayer is not connected yet.', features:['Sad-face multiplayer setup screen','Play Together buttons do not fake real players','Friends can still be saved, managed, and unfriended'] },
+    { version:'UPDATE 13 • LATEST', badge:'UPDATE 13', title:'Renamed to Robox', summary:'The visible app name is now Robox everywhere.', features:['Boot screen and top bar now say Robox','Shared links use the latest version','Awesome Development listing now says Robox'] },
+    { version:'UPDATE 12', badge:'UPDATE 12', title:'Multiplayer Setup Needed', summary:'Robox now shows the truth when real-player multiplayer is not connected yet.', features:['Sad-face multiplayer setup screen','Play Together buttons do not fake real players','Friends can still be saved, managed, and unfriended'] },
     { version:'UPDATE 11', badge:'UPDATE 11', title:'Robux Store', summary:'Buy in-game Robux bundles for your Robox account without using real money.', features:['New Buy Robux buttons around the app','R 250, R 1,000, and R 5,000 demo bundles','Balances update instantly and save to signed-in accounts'] },
-    { version:'UPDATE 10', badge:'UPDATE 10', title:'Standalone Skin Maker', summary:'Create custom player skins in a separate app, then hand a finished look into Robox 2.0.', features:['Separate full-screen skin creator','Saved 12-skin library with one-click upload','Portable .roboxskin and PNG exports'] },
+    { version:'UPDATE 10', badge:'UPDATE 10', title:'Standalone Skin Maker', summary:'Create custom player skins in a separate app, then hand a finished look into Robox.', features:['Separate full-screen skin creator','Saved 12-skin library with one-click upload','Portable .roboxskin and PNG exports'] },
     { version:'UPDATE 9', badge:'UPDATE 9', title:'Pet Designer', summary:'Design a one-of-a-kind pet with your own name, style, and colors for R 1,000 Robux.', features:['Live custom-pet preview','Choose four styles and two colors','Create and equip for R 1,000'] },
     { version:'UPDATE 8', badge:'UPDATE 8', title:'Pets & Robux Shop', summary:'Unlock pets with in-game Robux and equip a companion that follows you into worlds.', features:['Four pets in the Pet Shop','Pay with saved in-game R currency','Press E in a world to open the shop'] },
     { version:'UPDATE 7', badge:'UPDATE 7', title:'Stay Current & Download', summary:'Robox can detect an older copy, reload every missing feature, and download an offline package.', features:['Automatic latest-version checks','One-tap Reload Latest recovery','Downloadable offline ZIP package'] },
@@ -300,7 +312,7 @@
     if (!list) return;
     list.innerHTML = updateNotes.map((note, index) => {
       const badge = index === 0 ? 'NEW' : note.badge.replace('UPDATE ', '');
-      const summary = index === 0 ? 'Real players need an online server.' : note.summary;
+      const summary = index === 0 ? 'The app name is now just Robox.' : note.summary;
       return `<button class="${index === 0 ? 'active' : ''}" data-update-index="${index}"><span>${escapeHTML(badge)}</span><b>${escapeHTML(note.title)}</b><small>${escapeHTML(summary)}</small></button>`;
     }).join('');
   }
@@ -367,7 +379,7 @@
   }
   function injectRobuxStoreUI() {
     const download = $('#downloadGameButton');
-    if (download) download.href = appConfig.downloadFile || 'robox-2.0-update-12-download.zip';
+    if (download) download.href = appConfig.downloadFile || 'robox-update-13-download.zip';
     const walletPill = $('#walletCoins')?.closest('.coin-pill');
     if (walletPill && !$('#topRobuxButton')) walletPill.insertAdjacentElement('afterend', makeRobuxButton('topRobuxButton', 'robux-store-button top-robux-button', 'BUY'));
     if ($('#downloadGameButton') && !$('#homeRobuxButton')) $('#downloadGameButton').insertAdjacentElement('beforebegin', makeRobuxButton('homeRobuxButton', 'home-robux-button', 'BUY ROBUX'));
@@ -617,7 +629,7 @@
     if (skin.outfit === 'stripe') rounded(305, 255, 30, 185, 0, skin.accent);
     if (skin.outfit === 'hoodie') { ctx.strokeStyle = skin.accent; ctx.lineWidth = 10; ctx.beginPath(); ctx.arc(320, 270, 65, 0, Math.PI); ctx.stroke(); }
     if (skin.outfit === 'cyber') { ctx.strokeStyle = skin.accent; ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(260,340); ctx.lineTo(300,340); ctx.lineTo(320,300); ctx.lineTo(345,380); ctx.lineTo(385,380); ctx.stroke(); }
-    ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.font = '700 18px sans-serif'; ctx.fillText('ROBOX 2.0 • SKIN LAB', 35, 45); ctx.font = '800 29px sans-serif'; ctx.fillText(skin.name, 35, 605);
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.font = '700 18px sans-serif'; ctx.fillText('ROBOX • SKIN LAB', 35, 45); ctx.font = '800 29px sans-serif'; ctx.fillText(skin.name, 35, 605);
     return canvas;
   }
 
@@ -655,8 +667,8 @@
     const record = { ...cleanSkin(skinDraft), id: existing?.id || `skin-${Date.now()}`, updatedAt: new Date().toISOString() };
     profile.customSkins = [record, ...profile.customSkins.filter(item => item.id !== record.id)].slice(0, 12);
     profile.equippedSkin = record.id; applySkinToProfile(record); skinDraft = { ...record }; saveProfile(); syncSkinLab();
-    event.currentTarget.textContent = '✓ UPLOADED & EQUIPPED'; setSkinMessage(`${record.name} is live on your Robox 2.0 profile.`); showToast('Skin uploaded!', `${record.name} is now equipped`); beep(920, .16);
-    setTimeout(() => { event.currentTarget.textContent = 'UPLOAD TO ROBOX 2.0'; }, 1500);
+    event.currentTarget.textContent = '✓ UPLOADED & EQUIPPED'; setSkinMessage(`${record.name} is live on your Robox profile.`); showToast('Skin uploaded!', `${record.name} is now equipped`); beep(920, .16);
+    setTimeout(() => { event.currentTarget.textContent = 'UPLOAD TO ROBOX'; }, 1500);
   });
 
   $('#exportSkin').addEventListener('click', () => {

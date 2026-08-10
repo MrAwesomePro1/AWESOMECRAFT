@@ -1,4 +1,4 @@
-# Robox 2.0
+# Robox
 
 An original browser-based social and world platform prototype.
 
@@ -30,11 +30,13 @@ The home screen now includes a direct Switch Account button. Each saved account 
 
 Update 9 adds a full Pet Designer page. Signed-in players can name a pet, choose a Pup, Kitty, Bot, or Dragon style, select body and accent colors, and preview the result live. Creating the custom pet costs R 1,000 in-game Robux, then saves and equips it to that account.
 
-Update 10 adds the separate Robox Skin Maker app. Players can combine body, shirt, accent, pants, and hair colors with outfit, face, and hair layers; save up to 12 named skins; export a portable `.roboxskin` file; import that file on another device; download a PNG preview; and hand a finished skin into Robox 2.0 for equipping. The original in-game Avatar Studio remains available. Uploading does not send credentials or assets to the official Roblox platform.
+Update 10 adds the separate Robox Skin Maker app. Players can combine body, shirt, accent, pants, and hair colors with outfit, face, and hair layers; save up to 12 named skins; export a portable `.roboxskin` file; import that file on another device; download a PNG preview; and hand a finished skin into Robox for equipping. The original in-game Avatar Studio remains available. Uploading does not send credentials or assets to the official Roblox platform.
 
 Update 11 adds a start-screen device chooser plus a Robux Store. Players can pick iPad/iPhone for touch controls or Computer for keyboard and mouse before entering Robox. The Buy Robux buttons open an in-game-only store with R 250, R 1,000, and R 5,000 demo bundles. Robux is added to the local Robox profile only; no real money, payment card, or official Roblox account is used.
 
 Update 12 adds an honest Multiplayer Setup Needed screen with a sad face. Friends can still be saved, managed, and unfriended, but Play Together now explains that real player multiplayer needs a connected realtime server before live players can join. Robox does not fake real friends as NPCs.
+
+Update 13 renames the visible app to Robox. Existing public links still work, but the boot screen, top bar, profile upload copy, downloadable package, and Awesome Development listing now use the shorter Robox name. Shared links can use `?version=13` to avoid old cached copies.
 
 ## Publishing games
 
