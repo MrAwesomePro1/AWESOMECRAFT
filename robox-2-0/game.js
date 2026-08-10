@@ -392,7 +392,8 @@
   $$('[data-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 
   const updateNotes = [
-    { version:'UPDATE 17 • LATEST', badge:'UPDATE 17', title:'Promo Codes', summary:'Robux Store now has promo codes, and code 2017 gives 100% off.', features:['New promo-code box inside the Robux Store','Code 2017 makes Robux purchases cost K 0','Bundle and custom prices update when the code is active'] },
+    { version:'UPDATE 18 • LATEST', badge:'UPDATE 18', title:'iPad Shop Button', summary:'iPad and iPhone players now have a big touch button to open the in-game shop.', features:['New SHOP button beside BUILD and TALK on touch controls','The button opens the pet shop without needing a keyboard','Works when iPad/iPhone controls are selected'] },
+    { version:'UPDATE 17', badge:'UPDATE 17', title:'Promo Codes', summary:'Robux Store now has promo codes, and code 2017 gives 100% off.', features:['New promo-code box inside the Robux Store','Code 2017 makes Robux purchases cost K 0','Bundle and custom prices update when the code is active'] },
     { version:'UPDATE 16', badge:'UPDATE 16', title:'Infinite Custom Amounts', summary:'Bank deposits now add the exact amount, and custom Robux has no cap.', features:['Pro One Banking deposits use the exact typed amount','Custom Robux amount no longer stops at 100,000','Pro One Banking opens Robox Update 16'] },
     { version:'UPDATE 15', badge:'UPDATE 15', title:'Pro One Banking', summary:'Connect Kidtopia Money to the Pro One Banking website.', features:['Robux Store has Connect Bank and Open Website buttons','Kidtopia Money syncs with the Pro One Banking website wallet','Robux purchases create banking transactions'] },
     { version:'UPDATE 14', badge:'UPDATE 14', title:'Robux Machines', summary:'Place Robux Machines in worlds and buy Robux with Kidtopia Money.', features:['Build mode has a Robux Machine tool','Machines open a shop for boosts and items','Type any Robux amount and pay with Kidtopia Money'] },
@@ -415,7 +416,7 @@
     if (!list) return;
     list.innerHTML = updateNotes.map((note, index) => {
       const badge = index === 0 ? 'NEW' : note.badge.replace('UPDATE ', '');
-      const summary = index === 0 ? 'Use code 2017 for 100% off.' : note.summary;
+      const summary = index === 0 ? 'Touch players get a SHOP button in-game.' : note.summary;
       return `<button class="${index === 0 ? 'active' : ''}" data-update-index="${index}"><span>${escapeHTML(badge)}</span><b>${escapeHTML(note.title)}</b><small>${escapeHTML(summary)}</small></button>`;
     }).join('');
   }
@@ -505,7 +506,7 @@
   }
   function injectRobuxStoreUI() {
     const download = $('#downloadGameButton');
-    if (download) download.href = appConfig.downloadFile || 'robox-update-17-download.zip';
+    if (download) download.href = appConfig.downloadFile || 'robox-update-18-download.zip';
     const walletPill = $('#walletCoins')?.closest('.coin-pill');
     if (walletPill && !$('#topRobuxButton')) walletPill.insertAdjacentElement('afterend', makeRobuxButton('topRobuxButton', 'robux-store-button top-robux-button', 'BUY'));
     if ($('#downloadGameButton') && !$('#homeRobuxButton')) $('#downloadGameButton').insertAdjacentElement('beforebegin', makeRobuxButton('homeRobuxButton', 'home-robux-button', 'BUY ROBUX'));
@@ -1564,6 +1565,7 @@
     button.addEventListener('pointercancel', () => game.keys[key] = false);
   });
   $('#mobileBuild').addEventListener('click', () => setBuildMode(!game.buildMode));
+  $('#mobileShopButton').addEventListener('click', openGameShop);
   $('#mobileInteract').addEventListener('click', () => {
     if (nearRobuxMachine()) { openRobuxMachineShop(); }
     else if (nearNpc()) { showToast('Nova says hello!', 'Keep exploring, Builder!'); game.npc.talk = 2; beep(620); }

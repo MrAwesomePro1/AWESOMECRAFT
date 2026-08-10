@@ -9,3 +9,5 @@ When Robox connects a player, the Pro One Banking website can show the matching 
 Version 2 removes the old 100,000 transfer cap. Deposits add the exact Kidtopia Money amount typed into the banking website.
 
 Version 3 updates the Open Robox shortcut to Robox Update 17.
+
+Version 4 updates the Open Robox shortcut to Robox Update 18.
