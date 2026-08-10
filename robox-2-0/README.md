@@ -44,6 +44,8 @@ Update 15 adds the Pro One Banking website connection. The Robux Store can conne
 
 Update 16 removes the old 100,000 cap from custom amounts. Pro One Banking deposits now add the exact Kidtopia Money amount entered, and the Robux Store custom amount no longer has a fixed maximum. Shared links can use `?version=16` to avoid old cached copies.
 
+Update 17 adds promo codes to the Robux Store. Enter code `2017` and press Apply to make Robux bundle and custom purchases cost K 0 Kidtopia Money for 100% off. Shared links can use `?version=17` to avoid old cached copies.
+
 ## Publishing games
 
 New worlds begin as private drafts. Creators can publish a draft as a game in the shared Published Games list, then use Update Live to push later block changes. Deleting a world removes its draft and published copy permanently; deletion records prevent it from returning after the next login.

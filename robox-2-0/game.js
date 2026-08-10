@@ -50,6 +50,9 @@
     { amount:5000, name:'Mega Builder Vault', note:'Stock up for pets, designs, and future Robox items.' }
   ];
   const kidtopiaRobuxRate = 10;
+  const robuxPromoCodes = {
+    '2017': { code:'2017', name:'2017 Throwback', discount:1, description:'100% off Robux Store purchases' }
+  };
   const defaultKidtopiaMoney = 5000;
   const proOneBankingStorageKey = 'pro-one-banking-wallets-v1';
   const machineShopCatalog = [
@@ -63,7 +66,7 @@
     name, coins: 100, kidtopiaMoney: defaultKidtopiaMoney, xp: 0, level: 1,
     skin: '#f5b640', shirt: '#7557ff', accent: '#55e6ff', pants: '#28325e', hairColor: '#2b1b18', hair: 'spikes', outfit: 'classic', face: 'smile',
     customSkins: [], equippedSkin: null,
-    dailyClaimed: false, streak: 1, friends: [], worlds: [], deletedWorldIds: [], pets: [], customPets: [], equippedPet: null, machineItems: [], proOneBankingConnected: false, proOneBankingId: null, ageVerified: false, ageGroup: null
+    dailyClaimed: false, streak: 1, friends: [], worlds: [], deletedWorldIds: [], pets: [], customPets: [], equippedPet: null, machineItems: [], activeRobuxPromoCode: null, proOneBankingConnected: false, proOneBankingId: null, ageVerified: false, ageGroup: null
   });
   const readSavedAccount = () => {
     try { return JSON.parse(localStorage.getItem('robox-account') || 'null'); }
@@ -389,7 +392,8 @@
   $$('[data-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 
   const updateNotes = [
-    { version:'UPDATE 16 • LATEST', badge:'UPDATE 16', title:'Infinite Custom Amounts', summary:'Bank deposits now add the exact amount, and custom Robux has no cap.', features:['Pro One Banking deposits use the exact typed amount','Custom Robux amount no longer stops at 100,000','Pro One Banking opens Robox Update 16'] },
+    { version:'UPDATE 17 • LATEST', badge:'UPDATE 17', title:'Promo Codes', summary:'Robux Store now has promo codes, and code 2017 gives 100% off.', features:['New promo-code box inside the Robux Store','Code 2017 makes Robux purchases cost K 0','Bundle and custom prices update when the code is active'] },
+    { version:'UPDATE 16', badge:'UPDATE 16', title:'Infinite Custom Amounts', summary:'Bank deposits now add the exact amount, and custom Robux has no cap.', features:['Pro One Banking deposits use the exact typed amount','Custom Robux amount no longer stops at 100,000','Pro One Banking opens Robox Update 16'] },
     { version:'UPDATE 15', badge:'UPDATE 15', title:'Pro One Banking', summary:'Connect Kidtopia Money to the Pro One Banking website.', features:['Robux Store has Connect Bank and Open Website buttons','Kidtopia Money syncs with the Pro One Banking website wallet','Robux purchases create banking transactions'] },
     { version:'UPDATE 14', badge:'UPDATE 14', title:'Robux Machines', summary:'Place Robux Machines in worlds and buy Robux with Kidtopia Money.', features:['Build mode has a Robux Machine tool','Machines open a shop for boosts and items','Type any Robux amount and pay with Kidtopia Money'] },
     { version:'UPDATE 13', badge:'UPDATE 13', title:'Renamed to Robox', summary:'The visible app name is now Robox everywhere.', features:['Boot screen and top bar now say Robox','Shared links use the latest version','Awesome Development listing now says Robox'] },
@@ -411,7 +415,7 @@
     if (!list) return;
     list.innerHTML = updateNotes.map((note, index) => {
       const badge = index === 0 ? 'NEW' : note.badge.replace('UPDATE ', '');
-      const summary = index === 0 ? 'Exact deposits and no custom Robux cap.' : note.summary;
+      const summary = index === 0 ? 'Use code 2017 for 100% off.' : note.summary;
       return `<button class="${index === 0 ? 'active' : ''}" data-update-index="${index}"><span>${escapeHTML(badge)}</span><b>${escapeHTML(note.title)}</b><small>${escapeHTML(summary)}</small></button>`;
     }).join('');
   }
@@ -472,6 +476,24 @@
     return Number.isFinite(amount) && amount > 0 ? amount : 0;
   };
   const robuxCost = amount => Math.max(1, Math.ceil((Number(amount) || 0) / kidtopiaRobuxRate));
+  const normalizePromoCode = value => String(value || '').trim().toUpperCase();
+  function activeRobuxPromo() {
+    return robuxPromoCodes[normalizePromoCode(profile.activeRobuxPromoCode)] || null;
+  }
+  function robuxCostWithPromo(amount) {
+    const baseCost = robuxCost(amount);
+    const promo = activeRobuxPromo();
+    if (!promo) return { baseCost, finalCost:baseCost, saved:0, promo:null };
+    const discount = Math.max(0, Math.min(1, Number(promo.discount) || 0));
+    const finalCost = Math.max(0, Math.ceil(baseCost * (1 - discount)));
+    return { baseCost, finalCost, saved:baseCost - finalCost, promo };
+  }
+  function robuxCostLabel(amount) {
+    const deal = robuxCostWithPromo(amount);
+    if (!deal.promo) return `COSTS K ${formatRobux(deal.baseCost)}`;
+    if (deal.finalCost === 0) return `FREE WITH CODE ${deal.promo.code}`;
+    return `CODE ${deal.promo.code}: K ${formatRobux(deal.finalCost)} (WAS K ${formatRobux(deal.baseCost)})`;
+  }
   function makeRobuxButton(id, className, label, detail = '') {
     const button = document.createElement('button');
     button.type = 'button';
@@ -483,7 +505,7 @@
   }
   function injectRobuxStoreUI() {
     const download = $('#downloadGameButton');
-    if (download) download.href = appConfig.downloadFile || 'robox-update-16-download.zip';
+    if (download) download.href = appConfig.downloadFile || 'robox-update-17-download.zip';
     const walletPill = $('#walletCoins')?.closest('.coin-pill');
     if (walletPill && !$('#topRobuxButton')) walletPill.insertAdjacentElement('afterend', makeRobuxButton('topRobuxButton', 'robux-store-button top-robux-button', 'BUY'));
     if ($('#downloadGameButton') && !$('#homeRobuxButton')) $('#downloadGameButton').insertAdjacentElement('beforebegin', makeRobuxButton('homeRobuxButton', 'home-robux-button', 'BUY ROBUX'));
@@ -498,7 +520,7 @@
     const gameShopCoins = $('#gamePetCoins')?.closest('.coin-pill');
     if (gameShopCoins && !$('#gameRobuxButton')) gameShopCoins.insertAdjacentElement('beforebegin', makeRobuxButton('gameRobuxButton', 'mini-robux-button game-robux-button', 'BUY ROBUX'));
     if (!$('#robuxStoreModal')) {
-      document.body.insertAdjacentHTML('beforeend', `<div class="modal robux-store-modal" id="robuxStoreModal" role="dialog" aria-modal="true" aria-labelledby="robuxStoreTitle"><div class="modal-card robux-store-card"><button class="modal-close" id="closeRobuxStore" aria-label="Close Robux store">×</button><div class="robux-store-hero"><div><p class="eyebrow">KIDTOPIA EXCHANGE</p><h2 id="robuxStoreTitle">Buy Robux</h2><p>Use Kidtopia Money to buy pretend Robux for this Robox profile.</p></div><div class="robux-wallet-stack"><div class="robux-balance-card"><span>YOUR ROBUX</span><strong><i class="coin">R</i> <b id="storeCoins">100</b></strong></div><div class="kidtopia-balance-card"><span>KIDTOPIA MONEY</span><strong>K <b id="storeKidtopiaMoney">5,000</b></strong></div></div></div><div class="robux-bundle-grid" id="robuxBundleGrid"></div><form class="custom-robux-form" id="customRobuxForm"><label for="customRobuxAmount"><span>CUSTOM ROBUX AMOUNT</span><input id="customRobuxAmount" type="number" inputmode="numeric" min="1" step="1" value="100" placeholder="Infinite custom amount"></label><button type="submit">BUY CUSTOM</button><small id="customRobuxCost">No max — costs K 10 Kidtopia Money</small></form><p class="robux-safe-note"><b>Robox-only store:</b> these are pretend in-game purchases. No real money, payment cards, or Roblox account is used. Kidtopia Money is pretend game money too.</p><p class="robux-store-message" id="robuxStoreMessage" aria-live="polite"></p></div></div>`);
+      document.body.insertAdjacentHTML('beforeend', `<div class="modal robux-store-modal" id="robuxStoreModal" role="dialog" aria-modal="true" aria-labelledby="robuxStoreTitle"><div class="modal-card robux-store-card"><button class="modal-close" id="closeRobuxStore" aria-label="Close Robux store">×</button><div class="robux-store-hero"><div><p class="eyebrow">KIDTOPIA EXCHANGE</p><h2 id="robuxStoreTitle">Buy Robux</h2><p>Use Kidtopia Money to buy pretend Robux for this Robox profile.</p></div><div class="robux-wallet-stack"><div class="robux-balance-card"><span>YOUR ROBUX</span><strong><i class="coin">R</i> <b id="storeCoins">100</b></strong></div><div class="kidtopia-balance-card"><span>KIDTOPIA MONEY</span><strong>K <b id="storeKidtopiaMoney">5,000</b></strong></div></div></div><div class="robux-bundle-grid" id="robuxBundleGrid"></div><form class="custom-robux-form" id="customRobuxForm"><label for="customRobuxAmount"><span>CUSTOM ROBUX AMOUNT</span><input id="customRobuxAmount" type="number" inputmode="numeric" min="1" step="1" value="100" placeholder="Infinite custom amount"></label><button type="submit">BUY CUSTOM</button><small id="customRobuxCost">No max — costs K 10 Kidtopia Money</small></form><form class="promo-code-form" id="robuxPromoForm"><label for="robuxPromoCode"><span>PROMO CODE</span><input id="robuxPromoCode" autocomplete="off" inputmode="text" maxlength="20" placeholder="Try 2017"></label><button type="submit">APPLY</button><small id="robuxPromoStatus">Enter code 2017 for 100% off.</small></form><p class="robux-safe-note"><b>Robox-only store:</b> these are pretend in-game purchases. No real money, payment cards, or Roblox account is used. Kidtopia Money is pretend game money too.</p><p class="robux-store-message" id="robuxStoreMessage" aria-live="polite"></p></div></div>`);
     }
     const storeCard = $('#robuxStoreModal .robux-store-card');
     if (storeCard && !$('#proOneBankingCard')) {
@@ -508,12 +530,13 @@
   function renderRobuxStore() {
     const grid = $('#robuxBundleGrid');
     if (!grid) return;
-    grid.innerHTML = robuxBundles.map((bundle, index) => `<button class="robux-bundle ${index === 1 ? 'featured' : ''}" type="button" data-robux-amount="${bundle.amount}"><span class="coin">R</span><strong>${formatRobux(bundle.amount)}</strong><b>${escapeHTML(bundle.name)}</b><small>${escapeHTML(bundle.note)}</small><em>COSTS K ${formatRobux(robuxCost(bundle.amount))}</em></button>`).join('');
+    grid.innerHTML = robuxBundles.map((bundle, index) => `<button class="robux-bundle ${index === 1 ? 'featured' : ''}" type="button" data-robux-amount="${bundle.amount}"><span class="coin">R</span><strong>${formatRobux(bundle.amount)}</strong><b>${escapeHTML(bundle.name)}</b><small>${escapeHTML(bundle.note)}</small><em>${escapeHTML(robuxCostLabel(bundle.amount))}</em></button>`).join('');
     const storeCoins = $('#storeCoins');
     if (storeCoins) storeCoins.textContent = profile.coins;
     const kidtopiaMoney = $('#storeKidtopiaMoney');
     if (kidtopiaMoney) kidtopiaMoney.textContent = formatRobux(profile.kidtopiaMoney);
     updateCustomRobuxCost();
+    renderRobuxPromoCode();
     renderProOneBankingStatus();
   }
   function updateCustomRobuxCost() {
@@ -521,7 +544,33 @@
     const costOutput = $('#customRobuxCost');
     if (!amountInput || !costOutput) return;
     const amount = readWholeAmount(amountInput.value) || 1;
-    costOutput.textContent = `No max — costs K ${formatRobux(robuxCost(amount))} Kidtopia Money`;
+    const deal = robuxCostWithPromo(amount);
+    costOutput.textContent = deal.promo && deal.finalCost === 0 ? `No max - free with code ${deal.promo.code}.` : `No max - costs K ${formatRobux(deal.finalCost)} Kidtopia Money`;
+  }
+  function renderRobuxPromoCode() {
+    const input = $('#robuxPromoCode');
+    const status = $('#robuxPromoStatus');
+    if (!input || !status) return;
+    const promo = activeRobuxPromo();
+    if (promo && document.activeElement !== input) input.value = promo.code;
+    status.textContent = promo ? `Code ${promo.code} active: 100% off.` : 'Enter code 2017 for 100% off.';
+    status.classList.toggle('active', !!promo);
+  }
+  function applyRobuxPromoCode(value) {
+    const code = normalizePromoCode(value);
+    const promo = robuxPromoCodes[code];
+    if (!promo) {
+      $('#robuxPromoStatus').textContent = 'That promo code is not available. Try 2017.';
+      showToast('Promo not found', 'Try code 2017');
+      beep(240, .12);
+      return;
+    }
+    profile.activeRobuxPromoCode = promo.code;
+    saveProfile(`Promo code ${promo.code} applied`);
+    renderRobuxStore();
+    $('#robuxStoreMessage').textContent = `Promo code ${promo.code} applied: 100% off Robux purchases.`;
+    showToast('Promo code applied!', `${promo.code} gives 100% off`);
+    beep(920, .14);
   }
   function buyRobuxWithKidtopia(amount) {
     amount = readWholeAmount(amount);
@@ -529,7 +578,8 @@
       $('#robuxStoreMessage').textContent = 'Enter a custom Robux amount of 1 or more.';
       return;
     }
-    const cost = robuxCost(amount);
+    const deal = robuxCostWithPromo(amount);
+    const cost = deal.finalCost;
     if (profile.kidtopiaMoney < cost) {
       $('#robuxStoreMessage').textContent = `You need K ${formatRobux(cost - profile.kidtopiaMoney)} more Kidtopia Money.`;
       showToast('Not enough Kidtopia Money', `Need K ${formatRobux(cost)}`);
@@ -538,11 +588,13 @@
     }
     profile.kidtopiaMoney -= cost;
     profile.coins += amount;
-    saveProfile(`Bought R ${formatRobux(amount)} Robux with Kidtopia Money`);
+    const purchaseNote = cost ? `Bought R ${formatRobux(amount)} Robux with Kidtopia Money` : `Promo code ${deal.promo?.code || 'FREE'} redeemed for R ${formatRobux(amount)} Robux`;
+    saveProfile(purchaseNote);
     renderRobuxStore();
     const saveNote = sessionMode === 'account' ? 'Saved to your account.' : 'Guest Robux may reset when the guest session ends.';
-    $('#robuxStoreMessage').textContent = `Bought R ${formatRobux(amount)} with K ${formatRobux(cost)} Kidtopia Money. ${saveNote}`;
-    showToast('Robux bought!', `+R ${formatRobux(amount)} - K ${formatRobux(cost)}`);
+    const paidText = cost ? `with K ${formatRobux(cost)} Kidtopia Money` : `free with code ${deal.promo?.code || 'PROMO'}`;
+    $('#robuxStoreMessage').textContent = `Bought R ${formatRobux(amount)} ${paidText}. ${saveNote}`;
+    showToast('Robux bought!', cost ? `+R ${formatRobux(amount)} - K ${formatRobux(cost)}` : `+R ${formatRobux(amount)} - 100% off`);
     beep(1040, .18);
   }
   function openRobuxStore() {
@@ -569,6 +621,10 @@
   $('#customRobuxForm').addEventListener('submit', event => {
     event.preventDefault();
     buyRobuxWithKidtopia($('#customRobuxAmount').value);
+  });
+  $('#robuxPromoForm').addEventListener('submit', event => {
+    event.preventDefault();
+    applyRobuxPromoCode($('#robuxPromoCode').value);
   });
   $('#connectProOneBanking').addEventListener('click', () => connectProOneBanking(false));
   $('#openProOneBanking').addEventListener('click', () => connectProOneBanking(true));
