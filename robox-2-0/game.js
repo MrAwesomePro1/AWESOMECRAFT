@@ -47,12 +47,20 @@
     { amount:1000, name:'Designer Pack', note:'Perfect for making one custom pet right away.' },
     { amount:5000, name:'Mega Builder Vault', note:'Stock up for pets, designs, and future Robox items.' }
   ];
+  const kidtopiaRobuxRate = 10;
+  const defaultKidtopiaMoney = 5000;
+  const machineShopCatalog = [
+    { id:'speed-burst', name:'Speed Burst', price:75, kind:'boost', effect:'speed', duration:90, description:'Move faster in this world for 90 seconds.' },
+    { id:'jump-boots', name:'Jump Boots', price:120, kind:'boost', effect:'jump', duration:90, description:'Jump higher in this world for 90 seconds.' },
+    { id:'coin-magnet', name:'Coin Magnet', price:150, kind:'boost', effect:'magnet', duration:90, description:'Pull nearby Robux coins to you for 90 seconds.' },
+    { id:'builder-spark', name:'Builder Spark', price:200, kind:'item', description:'A saved machine item for your Robox profile.' }
+  ];
 
   const defaultProfile = (name = 'Guest_Player') => ({
-    name, coins: 100, xp: 0, level: 1,
+    name, coins: 100, kidtopiaMoney: defaultKidtopiaMoney, xp: 0, level: 1,
     skin: '#f5b640', shirt: '#7557ff', accent: '#55e6ff', pants: '#28325e', hairColor: '#2b1b18', hair: 'spikes', outfit: 'classic', face: 'smile',
     customSkins: [], equippedSkin: null,
-    dailyClaimed: false, streak: 1, friends: [], worlds: [], deletedWorldIds: [], pets: [], customPets: [], equippedPet: null, ageVerified: false, ageGroup: null
+    dailyClaimed: false, streak: 1, friends: [], worlds: [], deletedWorldIds: [], pets: [], customPets: [], equippedPet: null, machineItems: [], ageVerified: false, ageGroup: null
   });
   const readSavedAccount = () => {
     try { return JSON.parse(localStorage.getItem('robox-account') || 'null'); }
@@ -114,6 +122,7 @@
 
   function updateProfileUI() {
     ['walletCoins', 'avatarCoins', 'petCoins', 'designerCoins', 'gameCoins', 'storeCoins'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = profile.coins; });
+    ['kidtopiaMoney', 'storeKidtopiaMoney'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = Number(profile.kidtopiaMoney || 0).toLocaleString(); });
     $('#profileLevel').textContent = profile.level;
     $('#profileName').textContent = profile.name;
     $('#welcomeName').textContent = profile.name;
@@ -191,6 +200,8 @@
     if (!Array.isArray(profile.pets)) profile.pets = [];
     if (!Array.isArray(profile.customPets)) profile.customPets = [];
     if (!Array.isArray(profile.customSkins)) profile.customSkins = [];
+    if (!Array.isArray(profile.machineItems)) profile.machineItems = [];
+    if (!Number.isFinite(Number(profile.kidtopiaMoney))) profile.kidtopiaMoney = defaultKidtopiaMoney;
     if (incomingSkinPayload) {
       receivedSkin = cleanSkin(incomingSkinPayload);
       const uploaded = { ...receivedSkin, id:`skin-${Date.now()}`, updatedAt:new Date().toISOString() };
@@ -293,7 +304,8 @@
   $$('[data-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 
   const updateNotes = [
-    { version:'UPDATE 13 • LATEST', badge:'UPDATE 13', title:'Renamed to Robox', summary:'The visible app name is now Robox everywhere.', features:['Boot screen and top bar now say Robox','Shared links use the latest version','Awesome Development listing now says Robox'] },
+    { version:'UPDATE 14 • LATEST', badge:'UPDATE 14', title:'Robux Machines', summary:'Place Robux Machines in worlds and buy Robux with Kidtopia Money.', features:['Build mode has a Robux Machine tool','Machines open a shop for boosts and items','Type any Robux amount and pay with Kidtopia Money'] },
+    { version:'UPDATE 13', badge:'UPDATE 13', title:'Renamed to Robox', summary:'The visible app name is now Robox everywhere.', features:['Boot screen and top bar now say Robox','Shared links use the latest version','Awesome Development listing now says Robox'] },
     { version:'UPDATE 12', badge:'UPDATE 12', title:'Multiplayer Setup Needed', summary:'Robox now shows the truth when real-player multiplayer is not connected yet.', features:['Sad-face multiplayer setup screen','Play Together buttons do not fake real players','Friends can still be saved, managed, and unfriended'] },
     { version:'UPDATE 11', badge:'UPDATE 11', title:'Robux Store', summary:'Buy in-game Robux bundles for your Robox account without using real money.', features:['New Buy Robux buttons around the app','R 250, R 1,000, and R 5,000 demo bundles','Balances update instantly and save to signed-in accounts'] },
     { version:'UPDATE 10', badge:'UPDATE 10', title:'Standalone Skin Maker', summary:'Create custom player skins in a separate app, then hand a finished look into Robox.', features:['Separate full-screen skin creator','Saved 12-skin library with one-click upload','Portable .roboxskin and PNG exports'] },
@@ -312,7 +324,7 @@
     if (!list) return;
     list.innerHTML = updateNotes.map((note, index) => {
       const badge = index === 0 ? 'NEW' : note.badge.replace('UPDATE ', '');
-      const summary = index === 0 ? 'The app name is now just Robox.' : note.summary;
+      const summary = index === 0 ? 'Place machines and buy Robux with Kidtopia Money.' : note.summary;
       return `<button class="${index === 0 ? 'active' : ''}" data-update-index="${index}"><span>${escapeHTML(badge)}</span><b>${escapeHTML(note.title)}</b><small>${escapeHTML(summary)}</small></button>`;
     }).join('');
   }
@@ -368,6 +380,7 @@
   setTimeout(() => checkForUpdates(false), 1800);
 
   const formatRobux = value => Number(value || 0).toLocaleString();
+  const robuxCost = amount => Math.max(1, Math.ceil((Number(amount) || 0) / kidtopiaRobuxRate));
   function makeRobuxButton(id, className, label, detail = '') {
     const button = document.createElement('button');
     button.type = 'button';
@@ -379,7 +392,7 @@
   }
   function injectRobuxStoreUI() {
     const download = $('#downloadGameButton');
-    if (download) download.href = appConfig.downloadFile || 'robox-update-13-download.zip';
+    if (download) download.href = appConfig.downloadFile || 'robox-update-14-download.zip';
     const walletPill = $('#walletCoins')?.closest('.coin-pill');
     if (walletPill && !$('#topRobuxButton')) walletPill.insertAdjacentElement('afterend', makeRobuxButton('topRobuxButton', 'robux-store-button top-robux-button', 'BUY'));
     if ($('#downloadGameButton') && !$('#homeRobuxButton')) $('#downloadGameButton').insertAdjacentElement('beforebegin', makeRobuxButton('homeRobuxButton', 'home-robux-button', 'BUY ROBUX'));
@@ -394,15 +407,43 @@
     const gameShopCoins = $('#gamePetCoins')?.closest('.coin-pill');
     if (gameShopCoins && !$('#gameRobuxButton')) gameShopCoins.insertAdjacentElement('beforebegin', makeRobuxButton('gameRobuxButton', 'mini-robux-button game-robux-button', 'BUY ROBUX'));
     if (!$('#robuxStoreModal')) {
-      document.body.insertAdjacentHTML('beforeend', `<div class="modal robux-store-modal" id="robuxStoreModal" role="dialog" aria-modal="true" aria-labelledby="robuxStoreTitle"><div class="modal-card robux-store-card"><button class="modal-close" id="closeRobuxStore" aria-label="Close Robux store">×</button><div class="robux-store-hero"><div><p class="eyebrow">ROBOX WALLET</p><h2 id="robuxStoreTitle">Buy Robux</h2><p>Pick a bundle and the in-game Robux is added to this Robox profile.</p></div><div class="robux-balance-card"><span>YOUR BALANCE</span><strong><i class="coin">R</i> <b id="storeCoins">100</b></strong></div></div><div class="robux-bundle-grid" id="robuxBundleGrid"></div><p class="robux-safe-note"><b>Robox-only store:</b> these are pretend in-game purchases. No real money, payment cards, or Roblox account is used.</p><p class="robux-store-message" id="robuxStoreMessage" aria-live="polite"></p></div></div>`);
+      document.body.insertAdjacentHTML('beforeend', `<div class="modal robux-store-modal" id="robuxStoreModal" role="dialog" aria-modal="true" aria-labelledby="robuxStoreTitle"><div class="modal-card robux-store-card"><button class="modal-close" id="closeRobuxStore" aria-label="Close Robux store">×</button><div class="robux-store-hero"><div><p class="eyebrow">KIDTOPIA EXCHANGE</p><h2 id="robuxStoreTitle">Buy Robux</h2><p>Use Kidtopia Money to buy pretend Robux for this Robox profile.</p></div><div class="robux-wallet-stack"><div class="robux-balance-card"><span>YOUR ROBUX</span><strong><i class="coin">R</i> <b id="storeCoins">100</b></strong></div><div class="kidtopia-balance-card"><span>KIDTOPIA MONEY</span><strong>K <b id="storeKidtopiaMoney">5,000</b></strong></div></div></div><div class="robux-bundle-grid" id="robuxBundleGrid"></div><form class="custom-robux-form" id="customRobuxForm"><label for="customRobuxAmount"><span>CUSTOM ROBUX AMOUNT</span><input id="customRobuxAmount" type="number" inputmode="numeric" min="1" max="100000" step="1" value="100"></label><button type="submit">BUY CUSTOM</button><small id="customRobuxCost">Costs K 10 Kidtopia Money</small></form><p class="robux-safe-note"><b>Robox-only store:</b> these are pretend in-game purchases. No real money, payment cards, or Roblox account is used. Kidtopia Money is pretend game money too.</p><p class="robux-store-message" id="robuxStoreMessage" aria-live="polite"></p></div></div>`);
     }
   }
   function renderRobuxStore() {
     const grid = $('#robuxBundleGrid');
     if (!grid) return;
-    grid.innerHTML = robuxBundles.map((bundle, index) => `<button class="robux-bundle ${index === 1 ? 'featured' : ''}" type="button" data-robux-amount="${bundle.amount}"><span class="coin">R</span><strong>${formatRobux(bundle.amount)}</strong><b>${escapeHTML(bundle.name)}</b><small>${escapeHTML(bundle.note)}</small><em>DEMO BUY</em></button>`).join('');
+    grid.innerHTML = robuxBundles.map((bundle, index) => `<button class="robux-bundle ${index === 1 ? 'featured' : ''}" type="button" data-robux-amount="${bundle.amount}"><span class="coin">R</span><strong>${formatRobux(bundle.amount)}</strong><b>${escapeHTML(bundle.name)}</b><small>${escapeHTML(bundle.note)}</small><em>COSTS K ${formatRobux(robuxCost(bundle.amount))}</em></button>`).join('');
     const storeCoins = $('#storeCoins');
     if (storeCoins) storeCoins.textContent = profile.coins;
+    const kidtopiaMoney = $('#storeKidtopiaMoney');
+    if (kidtopiaMoney) kidtopiaMoney.textContent = formatRobux(profile.kidtopiaMoney);
+    updateCustomRobuxCost();
+  }
+  function updateCustomRobuxCost() {
+    const amountInput = $('#customRobuxAmount');
+    const costOutput = $('#customRobuxCost');
+    if (!amountInput || !costOutput) return;
+    const amount = Math.max(1, Math.floor(Number(amountInput.value) || 1));
+    costOutput.textContent = `Costs K ${formatRobux(robuxCost(amount))} Kidtopia Money`;
+  }
+  function buyRobuxWithKidtopia(amount) {
+    amount = Math.max(1, Math.min(100000, Math.floor(Number(amount) || 0)));
+    const cost = robuxCost(amount);
+    if (profile.kidtopiaMoney < cost) {
+      $('#robuxStoreMessage').textContent = `You need K ${formatRobux(cost - profile.kidtopiaMoney)} more Kidtopia Money.`;
+      showToast('Not enough Kidtopia Money', `Need K ${formatRobux(cost)}`);
+      beep(240, .12);
+      return;
+    }
+    profile.kidtopiaMoney -= cost;
+    profile.coins += amount;
+    saveProfile();
+    renderRobuxStore();
+    const saveNote = sessionMode === 'account' ? 'Saved to your account.' : 'Guest Robux may reset when the guest session ends.';
+    $('#robuxStoreMessage').textContent = `Bought R ${formatRobux(amount)} with K ${formatRobux(cost)} Kidtopia Money. ${saveNote}`;
+    showToast('Robux bought!', `+R ${formatRobux(amount)} - K ${formatRobux(cost)}`);
+    beep(1040, .18);
   }
   function openRobuxStore() {
     renderRobuxStore();
@@ -422,15 +463,12 @@
   $('#robuxBundleGrid').addEventListener('click', event => {
     const button = event.target.closest('[data-robux-amount]');
     if (!button) return;
-    const amount = Number(button.dataset.robuxAmount) || 0;
-    if (amount <= 0) return;
-    profile.coins += amount;
-    saveProfile();
-    renderRobuxStore();
-    const saveNote = sessionMode === 'account' ? 'Saved to your account.' : 'Guest Robux may reset when the guest session ends.';
-    $('#robuxStoreMessage').textContent = `Added R ${formatRobux(amount)} to ${profile.name}. ${saveNote}`;
-    showToast('Robux added!', `+R ${formatRobux(amount)} demo purchase`);
-    beep(1040, .18);
+    buyRobuxWithKidtopia(button.dataset.robuxAmount);
+  });
+  $('#customRobuxAmount').addEventListener('input', updateCustomRobuxCost);
+  $('#customRobuxForm').addEventListener('submit', event => {
+    event.preventDefault();
+    buyRobuxWithKidtopia($('#customRobuxAmount').value);
   });
 
   $('#soundToggle').addEventListener('click', event => {
@@ -1202,7 +1240,7 @@
   const canvas = $('#gameCanvas');
   const ctx = canvas.getContext('2d');
   const game = {
-    active: false, paused: false, world: null, userWorldId: null, publishedWorldId: null, canBuild: false, isWorldOwner: false, loadedBlocks: null, worldSize: 12, last: 0, time: 0, keys: {}, buildMode: false, selectedBlock: 1,
+    active: false, paused: false, world: null, userWorldId: null, publishedWorldId: null, canBuild: false, isWorldOwner: false, loadedBlocks: null, worldSize: 12, last: 0, time: 0, keys: {}, buildMode: false, selectedBlock: 1, boosts: { speed:0, jump:0, magnet:0 },
     player: { x: 5, y: 5, z: 0, vz: 0, angle: 0 }, camera: { x: 0, y: 0 }, collected: 0,
     coins: [], blocks: [], particles: [], pet: { x: 4.3, y: 5.5, z: 0 }, npc: { x: 7.5, y: 5.5, name: 'Nova' }
   };
@@ -1224,7 +1262,7 @@
   window.addEventListener('resize', resize); resize();
 
   function generateWorld() {
-    game.player = { x: 5, y: 5, z: 0, vz: 0, angle: 0 }; game.camera = { x: 0, y: 0 }; game.pet = { x: 4.3, y: 5.5, z: 0 }; game.collected = 0; game.coins = []; game.blocks = []; game.particles = [];
+    game.player = { x: 5, y: 5, z: 0, vz: 0, angle: 0 }; game.camera = { x: 0, y: 0 }; game.pet = { x: 4.3, y: 5.5, z: 0 }; game.collected = 0; game.coins = []; game.blocks = []; game.particles = []; game.boosts = { speed:0, jump:0, magnet:0 };
     const fixed = [[2,2,2,2],[2,3,2,2],[3,2,1,3],[8,3,1,2],[9,3,2,2],[8,4,1,2],[3,8,1,1],[7,8,2,3],[8,8,1,3],[10,7,1,2],[1,7,1,1]];
     if (Array.isArray(game.loadedBlocks)) game.blocks = game.loadedBlocks.map(block => ({ ...block }));
     else fixed.forEach(([x,y,h,type]) => game.blocks.push({ x,y,h,type }));
@@ -1255,7 +1293,7 @@
   $$('.game-card').forEach(card => card.addEventListener('dblclick', () => launchGame($('.card-play', card).dataset.game)));
 
   function leaveGame() {
-    game.active = false; game.paused = false; $('#gameScreen').classList.remove('active'); $('#gameShopModal').classList.remove('show'); document.body.style.overflow = ''; beep(280, .08);
+    game.active = false; game.paused = false; $('#gameScreen').classList.remove('active'); $('#gameShopModal').classList.remove('show'); $('#robuxMachineModal').classList.remove('show'); document.body.style.overflow = ''; beep(280, .08);
   }
   function togglePause(force) {
     game.paused = typeof force === 'boolean' ? force : !game.paused;
@@ -1282,6 +1320,57 @@
   $('#closeGameShop').addEventListener('click', closeGameShop);
   $('#gameShopModal').addEventListener('click', event => { if (event.target === $('#gameShopModal')) closeGameShop(); });
 
+  function renderRobuxMachineShop() {
+    const grid = $('#machineShopGrid');
+    if (!grid) return;
+    $('#machineCoins').textContent = profile.coins;
+    grid.innerHTML = machineShopCatalog.map(item => {
+      const owned = item.kind === 'item' && profile.machineItems.includes(item.id);
+      const boostTime = item.effect ? Math.ceil(game.boosts[item.effect] || 0) : 0;
+      const label = owned ? 'OWNED' : boostTime > 0 ? `${boostTime}s LEFT` : `BUY FOR R ${item.price}`;
+      return `<button class="machine-shop-card ${owned || boostTime > 0 ? 'owned' : ''}" type="button" data-machine-item="${item.id}" ${owned ? 'disabled' : ''}><span>${item.kind === 'boost' ? '⚡' : '✦'}</span><b>${escapeHTML(item.name)}</b><small>${escapeHTML(item.description)}</small><em>${label}</em></button>`;
+    }).join('');
+  }
+  function openRobuxMachineShop() {
+    if (!game.active) return;
+    game.paused = true;
+    $('#pausePanel').classList.remove('show');
+    $('#machineShopMessage').textContent = '';
+    renderRobuxMachineShop();
+    $('#robuxMachineModal').classList.add('show');
+    beep(860, .09);
+  }
+  function closeRobuxMachineShop() {
+    $('#robuxMachineModal').classList.remove('show');
+    if (game.active) game.paused = false;
+  }
+  function buyMachineItem(itemId) {
+    const item = machineShopCatalog.find(entry => entry.id === itemId);
+    if (!item) return;
+    if (item.kind === 'item' && profile.machineItems.includes(item.id)) return;
+    if (profile.coins < item.price) {
+      $('#machineShopMessage').textContent = `You need R ${formatRobux(item.price - profile.coins)} more Robux for ${item.name}.`;
+      showToast('Not enough Robux', `Need R ${formatRobux(item.price)}`);
+      beep(240, .12);
+      return;
+    }
+    profile.coins -= item.price;
+    if (item.kind === 'boost') game.boosts[item.effect] = Math.max(game.boosts[item.effect] || 0, item.duration);
+    else profile.machineItems.push(item.id);
+    saveProfile();
+    renderRobuxMachineShop();
+    $('#machineShopMessage').textContent = `${item.name} bought for R ${formatRobux(item.price)}.`;
+    showToast(`${item.name} bought!`, item.kind === 'boost' ? 'Boost active in this world' : 'Saved to your profile');
+    spawnParticles(game.player.x, game.player.y, game.player.z + .5, '#ffd35a', 24);
+    beep(1120, .18);
+  }
+  $('#closeRobuxMachine').addEventListener('click', closeRobuxMachineShop);
+  $('#robuxMachineModal').addEventListener('click', event => { if (event.target === $('#robuxMachineModal')) closeRobuxMachineShop(); });
+  $('#machineShopGrid').addEventListener('click', event => {
+    const button = event.target.closest('[data-machine-item]');
+    if (button && !button.disabled) buyMachineItem(button.dataset.machineItem);
+  });
+
   function setBuildMode(enabled) {
     if (enabled && !game.canBuild) { showToast('Build permission required', 'The world owner has not allowed you to build'); beep(260, .1); return; }
     game.buildMode = enabled;
@@ -1292,11 +1381,12 @@
 
   window.addEventListener('keydown', event => {
     if (!game.active) return;
+    if (['input','textarea','select'].includes(document.activeElement?.tagName?.toLowerCase())) return;
     const key = event.key.toLowerCase(); game.keys[key] = true;
     if ([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(key)) event.preventDefault();
-    if (key === 'escape') { if ($('#gameShopModal').classList.contains('show')) closeGameShop(); else togglePause(); }
+    if (key === 'escape') { if ($('#robuxMachineModal').classList.contains('show')) closeRobuxMachineShop(); else if ($('#gameShopModal').classList.contains('show')) closeGameShop(); else togglePause(); }
     if (key === 'b' && !event.repeat) setBuildMode(!game.buildMode);
-    if (key === 'e' && !event.repeat) openGameShop();
+    if (key === 'e' && !event.repeat) { if (nearRobuxMachine()) openRobuxMachineShop(); else openGameShop(); }
     if (key === 'f' && nearNpc()) { showToast('Nova says hello!', 'Keep exploring, Builder!'); game.npc.talk = 2; }
   });
   window.addEventListener('keyup', event => { game.keys[event.key.toLowerCase()] = false; });
@@ -1308,7 +1398,8 @@
   });
   $('#mobileBuild').addEventListener('click', () => setBuildMode(!game.buildMode));
   $('#mobileInteract').addEventListener('click', () => {
-    if (nearNpc()) { showToast('Nova says hello!', 'Keep exploring, Builder!'); game.npc.talk = 2; beep(620); }
+    if (nearRobuxMachine()) { openRobuxMachineShop(); }
+    else if (nearNpc()) { showToast('Nova says hello!', 'Keep exploring, Builder!'); game.npc.talk = 2; beep(620); }
     else showToast('Nobody nearby', 'Move closer to another player');
   });
   $$('#buildToolbar button[data-block]').forEach(button => button.addEventListener('click', () => { $$('#buildToolbar button[data-block]').forEach(b => b.classList.toggle('active', b === button)); game.selectedBlock = +button.dataset.block; beep(620); }));
@@ -1356,6 +1447,8 @@
     const removing = event.pointerType === 'mouse' ? event.button === 0 : game.selectedBlock === 0;
     const placementType = game.selectedBlock === 0 ? 1 : game.selectedBlock;
     if (removing) { if (index >= 0) game.blocks.splice(index, 1); }
+    else if (index >= 0 && placementType === 4) game.blocks[index] = { x: tile.x, y: tile.y, h: 1, type: 4 };
+    else if (index >= 0 && game.blocks[index].type === 4) game.blocks[index] = { x: tile.x, y: tile.y, h: 1, type: placementType };
     else if (index >= 0) game.blocks[index].h = Math.min(4, game.blocks[index].h + 1);
     else game.blocks.push({ x: tile.x, y: tile.y, h: 1, type: placementType });
     saveWorldBlocks();
@@ -1366,12 +1459,30 @@
     const tx = Math.floor(x), ty = Math.floor(y), block = game.blocks.find(item => item.x === tx && item.y === ty);
     return block ? block.h : 0;
   }
+  function nearRobuxMachine() {
+    return game.blocks.find(block => block.type === 4 && Math.hypot(game.player.x - (block.x + .5), game.player.y - (block.y + .5)) < 1.35);
+  }
   function nearNpc() { return Math.hypot(game.player.x - game.npc.x, game.player.y - game.npc.y) < 1.45; }
+  function updateInteractPrompt() {
+    const prompt = $('#interactPrompt');
+    const machine = nearRobuxMachine();
+    const nova = nearNpc();
+    if (machine || nova) {
+      $('kbd', prompt).textContent = machine ? 'E' : 'F';
+      $('span', prompt).textContent = machine ? 'Use Robux Machine' : 'Talk to Nova';
+      prompt.classList.add('show');
+      $('#mobileInteract').textContent = machine ? 'MACHINE' : 'TALK';
+      return;
+    }
+    prompt.classList.remove('show');
+    $('#mobileInteract').textContent = 'USE';
+  }
 
   function update(dt) {
     if (game.paused) return;
     game.time += dt;
-    const p = game.player, speed = (game.keys.shift ? 4.4 : 3.2) * dt;
+    Object.keys(game.boosts).forEach(key => { game.boosts[key] = Math.max(0, (game.boosts[key] || 0) - dt); });
+    const p = game.player, speed = (game.keys.shift ? 4.4 : 3.2) * (game.boosts.speed > 0 ? 1.45 : 1) * dt;
     let dx = 0, dy = 0;
     if (game.keys.w || game.keys.arrowup) { dx -= speed; dy -= speed; }
     if (game.keys.s || game.keys.arrowdown) { dx += speed; dy += speed; }
@@ -1382,7 +1493,7 @@
     const currentFloor = highestBlockAt(p.x, p.y), nextFloor = highestBlockAt(nx, ny);
     if (nextFloor <= currentFloor + 1 || p.z > nextFloor * .9) { p.x = nx; p.y = ny; }
     const floor = highestBlockAt(p.x, p.y);
-    if ((game.keys[' '] || game.keys.space) && p.z <= floor + .01) { p.vz = 7.4; beep(360, .05, .012); }
+    if ((game.keys[' '] || game.keys.space) && p.z <= floor + .01) { p.vz = game.boosts.jump > 0 ? 9.6 : 7.4; beep(360, .05, .012); }
     p.vz -= 18 * dt; p.z += p.vz * dt;
     if (p.z < floor) { p.z = floor; p.vz = 0; }
     const target = project(p.x, p.y, p.z);
@@ -1397,7 +1508,7 @@
       game.pet.z = highestBlockAt(game.pet.x, game.pet.y);
     }
     game.coins.forEach(coin => {
-      if (!coin.got && Math.hypot(p.x-coin.x,p.y-coin.y) < .52 && Math.abs(p.z-coin.z) < 1.2) {
+      if (!coin.got && Math.hypot(p.x-coin.x,p.y-coin.y) < (game.boosts.magnet > 0 ? 1.7 : .52) && Math.abs(p.z-coin.z) < 1.2) {
         coin.got = true; game.collected++; profile.coins += 5; profile.xp = Math.min(500, profile.xp + 18); saveProfile();
         spawnParticles(coin.x,coin.y,coin.z,game.world.accent,18); showToast(game.world.name === 'CRYSTAL CAVERNS' ? 'Crystal recovered!' : 'Coin collected!', '+5 R • +18 XP'); updateQuest(); beep(920,.1,.035);
         if (game.collected === 5) setTimeout(() => { showToast('Quest complete!', '+50 R reward'); profile.coins += 50; saveProfile(); beep(1100,.2,.04); }, 500);
@@ -1406,7 +1517,7 @@
     game.particles.forEach(particle => { particle.z += particle.vz*dt; particle.x += particle.vx*dt; particle.y += particle.vy*dt; particle.vz -= 5*dt; particle.life -= dt; });
     game.particles = game.particles.filter(particle => particle.life > 0);
     if (game.npc.talk) game.npc.talk -= dt;
-    $('#interactPrompt').classList.toggle('show', nearNpc());
+    updateInteractPrompt();
   }
 
   function updateQuest() {
@@ -1426,7 +1537,36 @@
     if(height>0){const bottom=project(x,y,0);ctx.fillStyle=left;ctx.beginPath();ctx.moveTo(p.x-w,p.y);ctx.lineTo(p.x,p.y+h);ctx.lineTo(bottom.x,bottom.y+h);ctx.lineTo(bottom.x-w,bottom.y);ctx.closePath();ctx.fill();ctx.fillStyle=right;ctx.beginPath();ctx.moveTo(p.x+w,p.y);ctx.lineTo(p.x,p.y+h);ctx.lineTo(bottom.x,bottom.y+h);ctx.lineTo(bottom.x+w,bottom.y);ctx.closePath();ctx.fill();}
   }
 
+  function drawRobuxMachine(block) {
+    drawDiamond(block.x + .5, block.y + .5, '#ffd75f', '#c28723', '#935b16', .18);
+    const p = project(block.x + .5, block.y + .5, .35);
+    ctx.save();
+    ctx.translate(p.x, p.y - 42);
+    ctx.shadowColor = '#ffd35a';
+    ctx.shadowBlur = 18;
+    ctx.fillStyle = '#1a2238';
+    ctx.fillRect(-18, -8, 36, 47);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#31405f';
+    ctx.fillRect(-14, -4, 28, 20);
+    ctx.fillStyle = '#ffe57b';
+    ctx.beginPath();
+    ctx.arc(0, 6, 9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#6c4300';
+    ctx.font = '900 11px Chakra Petch';
+    ctx.textAlign = 'center';
+    ctx.fillText('R', 0, 10);
+    ctx.fillStyle = '#7557ff';
+    ctx.fillRect(-14, 20, 28, 8);
+    ctx.fillStyle = '#f8fbff';
+    ctx.font = '800 6px Chakra Petch';
+    ctx.fillText('SHOP', 0, 27);
+    ctx.restore();
+  }
+
   function drawBlock(block) {
+    if (block.type === 4) { drawRobuxMachine(block); return; }
     const colors = block.type===3 ? ['#68ebff','#2a9bad','#1a748a'] : block.type===2 ? ['#99a3af','#69737e','#505966'] : [game.world.ground,shade(game.world.ground,-30),shade(game.world.ground,-45)];
     const p=project(block.x+.5,block.y+.5,block.h), w=tileW/2,h=tileH/2,b=project(block.x+.5,block.y+.5,0);
     ctx.fillStyle=colors[0];ctx.beginPath();ctx.moveTo(p.x,p.y-h);ctx.lineTo(p.x+w,p.y);ctx.lineTo(p.x,p.y+h);ctx.lineTo(p.x-w,p.y);ctx.closePath();ctx.fill();
