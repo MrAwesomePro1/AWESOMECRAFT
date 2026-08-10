@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0c1020">
   <title>Robox 2.0 — Play Beyond</title>
-  <link rel="stylesheet" href="styles.css?v=11">
+  <link rel="stylesheet" href="styles.css?v=12">
   <style>.avatar-page-actions{display:flex;align-items:center;gap:10px}.open-skin-maker{border:1px solid #8069f36e;border-radius:10px;background:#7557ff20;color:#c9c0ff;padding:11px 14px;text-decoration:none;font:700 8px "Chakra Petch";letter-spacing:.7px}@media(max-width:680px){.avatar-page-actions{width:100%}.open-skin-maker{flex:1;text-align:center}}</style>
 </head>
 <body>
@@ -133,7 +133,7 @@
             <h2>Welcome back, <span id="welcomeName">Player</span></h2>
             <p>Your world library is empty and ready for whatever comes next.</p>
           </div>
-        <div class="home-quick-actions"><button class="home-account-button" id="homeSwitchAccountButton"><span>♙</span> SWITCH ACCOUNT</button><button class="home-controls-button" id="homeControlsButton"><span>⌨</span> CONTROLS</button><button class="home-update-button" id="checkUpdatesButton"><span>↻</span> CHECK UPDATE</button><a class="home-download-button" id="downloadGameButton" href="robox-2.0-update-11-download.zip" download><span>⇩</span> DOWNLOAD</a></div>
+        <div class="home-quick-actions"><button class="home-account-button" id="homeSwitchAccountButton"><span>♙</span> SWITCH ACCOUNT</button><button class="home-controls-button" id="homeControlsButton"><span>⌨</span> CONTROLS</button><button class="home-update-button" id="checkUpdatesButton"><span>↻</span> CHECK UPDATE</button><a class="home-download-button" id="downloadGameButton" href="robox-2.0-update-12-download.zip" download><span>⇩</span> DOWNLOAD</a></div>
         </div>
 
         <div class="worlds-toolbar"><div><p class="eyebrow">MY CREATIONS</p><h3>Your worlds</h3></div><button id="createWorldBtn">＋ CREATE WORLD</button></div>
@@ -222,7 +222,7 @@
       </section>
 
       <section class="view" id="friendsView">
-        <div class="page-heading"><div><p class="eyebrow">BETTER TOGETHER</p><h2>Friends</h2><p id="friendSummary">You have no friends yet. Find some players and start a crew!</p></div><button class="add-friend" id="addFriendBtn">＋ Add friend</button></div>
+        <div class="page-heading"><div><p class="eyebrow">BETTER TOGETHER</p><h2>Friends</h2><p id="friendSummary">You have no friends yet. Find some players and start a crew!</p></div><div class="friend-page-actions"><button class="play-together-main" id="playTogetherBtn">☹ PLAY TOGETHER</button><button class="add-friend" id="addFriendBtn">＋ Add friend</button></div></div>
         <div class="friend-list" id="friendList">
           <div class="friends-empty">
             <div class="empty-crew-icon"><span>♙</span><span>♙</span><span>♙</span></div>
@@ -253,27 +253,28 @@
       </section>
 
       <section class="view" id="updatesView">
-        <div class="page-heading"><div><p class="eyebrow">WHAT'S NEW</p><h2>Robox Updates</h2><p>Move through earlier releases and see what changed.</p></div><span class="update-version" id="updateVersion">UPDATE 11</span></div>
+        <div class="page-heading"><div><p class="eyebrow">WHAT'S NEW</p><h2>Robox Updates</h2><p>Move through earlier releases and see what changed.</p></div><span class="update-version" id="updateVersion">UPDATE 12</span></div>
         <div class="updates-layout">
           <div class="updates-list" id="updatesList">
-            <button class="active" data-update-index="0"><span>NEW</span><b>Robux Store</b><small>Buy in-game Robux bundles.</small></button>
-            <button data-update-index="1"><span>10</span><b>Standalone Skin Maker</b><small>Create skins in a separate app, then upload them.</small></button>
-            <button data-update-index="2"><span>9</span><b>Pet Designer</b><small>Make a custom pet for R 1,000.</small></button>
-            <button data-update-index="3"><span>8</span><b>Pets & Robux Shop</b><small>Buy pets and bring one into every world.</small></button>
-            <button data-update-index="4"><span>7</span><b>Stay Current & Download</b><small>Reload missing features or download Robox.</small></button>
-            <button data-update-index="5"><span>6</span><b>Control Switcher</b><small>Choose Auto, Keyboard, or Touch.</small></button>
-            <button data-update-index="6"><span>5</span><b>Multiple Accounts</b><small>Switch between saved player profiles.</small></button>
-            <button data-update-index="7"><span>4</span><b>Invites & Permissions</b><small>Invite players and choose who can build.</small></button>
-            <button data-update-index="8"><span>3</span><b>Expandable Worlds</b><small>Grow platforms and publish games.</small></button>
-            <button data-update-index="9"><span>2</span><b>World Creator</b><small>Create, save, and delete your own worlds.</small></button>
-            <button data-update-index="10"><span>1</span><b>Accounts & Friends</b><small>Age checks, friends, and daily Day 1.</small></button>
+            <button class="active" data-update-index="0"><span>NEW</span><b>Multiplayer Setup Needed</b><small>Real players need an online server.</small></button>
+            <button data-update-index="1"><span>11</span><b>Robux Store</b><small>Buy in-game Robux bundles.</small></button>
+            <button data-update-index="2"><span>10</span><b>Standalone Skin Maker</b><small>Create skins in a separate app, then upload them.</small></button>
+            <button data-update-index="3"><span>9</span><b>Pet Designer</b><small>Make a custom pet for R 1,000.</small></button>
+            <button data-update-index="4"><span>8</span><b>Pets & Robux Shop</b><small>Buy pets and bring one into every world.</small></button>
+            <button data-update-index="5"><span>7</span><b>Stay Current & Download</b><small>Reload missing features or download Robox.</small></button>
+            <button data-update-index="6"><span>6</span><b>Control Switcher</b><small>Choose Auto, Keyboard, or Touch.</small></button>
+            <button data-update-index="7"><span>5</span><b>Multiple Accounts</b><small>Switch between saved player profiles.</small></button>
+            <button data-update-index="8"><span>4</span><b>Invites & Permissions</b><small>Invite players and choose who can build.</small></button>
+            <button data-update-index="9"><span>3</span><b>Expandable Worlds</b><small>Grow platforms and publish games.</small></button>
+            <button data-update-index="10"><span>2</span><b>World Creator</b><small>Create, save, and delete your own worlds.</small></button>
+            <button data-update-index="11"><span>1</span><b>Accounts & Friends</b><small>Age checks, friends, and daily Day 1.</small></button>
           </div>
           <article class="update-detail" id="updateDetail">
-            <p class="eyebrow" id="updateKicker">UPDATE 11 • LATEST</p>
-            <h3 id="updateTitle">Robux Store</h3>
-            <p id="updateSummary">Buy in-game Robux bundles for your Robox account without using real money.</p>
-            <ul id="updateFeatures"><li>New Buy Robux buttons around the app</li><li>R 250, R 1,000, and R 5,000 demo bundles</li><li>Balances update instantly and save to signed-in accounts</li></ul>
-            <div class="update-navigation"><button id="previousUpdate" disabled>← PREVIOUS</button><span id="updatePosition">1 / 11</span><button id="nextUpdate">NEXT →</button></div>
+            <p class="eyebrow" id="updateKicker">UPDATE 12 • LATEST</p>
+            <h3 id="updateTitle">Multiplayer Setup Needed</h3>
+            <p id="updateSummary">Robox now tells the truth: real player multiplayer needs an online realtime server before friends can join live.</p>
+            <ul id="updateFeatures"><li>Sad-face multiplayer setup screen</li><li>Play Together buttons no longer fake real players</li><li>Friends can still be saved and managed</li></ul>
+            <div class="update-navigation"><button id="previousUpdate" disabled>← PREVIOUS</button><span id="updatePosition">1 / 12</span><button id="nextUpdate">NEXT →</button></div>
           </article>
         </div>
       </section>
@@ -366,6 +367,19 @@
     </div>
   </div>
 
+  <div class="modal" id="multiplayerSetupModal" role="dialog" aria-modal="true" aria-labelledby="multiplayerSetupTitle">
+    <div class="modal-card multiplayer-setup-card">
+      <button class="modal-close" data-close-multiplayer aria-label="Close multiplayer setup">×</button>
+      <div class="sad-face" aria-hidden="true">☹</div>
+      <p class="eyebrow">REAL MULTIPLAYER</p>
+      <h2 id="multiplayerSetupTitle">Multiplayer setup needed</h2>
+      <p id="multiplayerSetupCopy">Friends are saved on this device, but actual live players need an online realtime server before they can join your world.</p>
+      <div class="multiplayer-needs"><span>Realtime server</span><span>Player rooms</span><span>Live position sync</span></div>
+      <p class="multiplayer-honest-note">Robox will not turn friends into NPCs. Once a multiplayer server is connected, this screen can become real joining.</p>
+      <button class="multiplayer-ok" data-close-multiplayer>OK</button>
+    </div>
+  </div>
+
   <div class="modal" id="createWorldModal" role="dialog" aria-modal="true" aria-labelledby="createWorldTitle">
     <div class="modal-card world-creator-card">
       <button class="modal-close" data-close-world aria-label="Close world creator">×</button>
@@ -422,7 +436,7 @@
     </div>
   </div>
 
-  <script src="config.js?v=11"></script>
-  <script src="game.js?v=11"></script>
+  <script src="config.js?v=12"></script>
+  <script src="game.js?v=12"></script>
 </body>
 </html>

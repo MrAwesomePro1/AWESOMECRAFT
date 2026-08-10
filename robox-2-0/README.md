@@ -34,6 +34,8 @@ Update 10 adds the separate Robox Skin Maker app. Players can combine body, shir
 
 Update 11 adds a start-screen device chooser plus a Robux Store. Players can pick iPad/iPhone for touch controls or Computer for keyboard and mouse before entering Robox. The Buy Robux buttons open an in-game-only store with R 250, R 1,000, and R 5,000 demo bundles. Robux is added to the local Robox profile only; no real money, payment card, or official Roblox account is used.
 
+Update 12 adds an honest Multiplayer Setup Needed screen with a sad face. Friends can still be saved, managed, and unfriended, but Play Together now explains that real player multiplayer needs a connected realtime server before live players can join. Robox does not fake real friends as NPCs.
+
 ## Publishing games
 
 New worlds begin as private drafts. Creators can publish a draft as a game in the shared Published Games list, then use Update Live to push later block changes. Deleting a world removes its draft and published copy permanently; deletion records prevent it from returning after the next login.

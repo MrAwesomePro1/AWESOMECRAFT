@@ -282,7 +282,8 @@
   $$('[data-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 
   const updateNotes = [
-    { version:'UPDATE 11 • LATEST', badge:'UPDATE 11', title:'Robux Store', summary:'Buy in-game Robux bundles for your Robox account without using real money.', features:['New Buy Robux buttons around the app','R 250, R 1,000, and R 5,000 demo bundles','Balances update instantly and save to signed-in accounts'] },
+    { version:'UPDATE 12 • LATEST', badge:'UPDATE 12', title:'Multiplayer Setup Needed', summary:'Robox now shows the truth when real-player multiplayer is not connected yet.', features:['Sad-face multiplayer setup screen','Play Together buttons do not fake real players','Friends can still be saved, managed, and unfriended'] },
+    { version:'UPDATE 11', badge:'UPDATE 11', title:'Robux Store', summary:'Buy in-game Robux bundles for your Robox account without using real money.', features:['New Buy Robux buttons around the app','R 250, R 1,000, and R 5,000 demo bundles','Balances update instantly and save to signed-in accounts'] },
     { version:'UPDATE 10', badge:'UPDATE 10', title:'Standalone Skin Maker', summary:'Create custom player skins in a separate app, then hand a finished look into Robox 2.0.', features:['Separate full-screen skin creator','Saved 12-skin library with one-click upload','Portable .roboxskin and PNG exports'] },
     { version:'UPDATE 9', badge:'UPDATE 9', title:'Pet Designer', summary:'Design a one-of-a-kind pet with your own name, style, and colors for R 1,000 Robux.', features:['Live custom-pet preview','Choose four styles and two colors','Create and equip for R 1,000'] },
     { version:'UPDATE 8', badge:'UPDATE 8', title:'Pets & Robux Shop', summary:'Unlock pets with in-game Robux and equip a companion that follows you into worlds.', features:['Four pets in the Pet Shop','Pay with saved in-game R currency','Press E in a world to open the shop'] },
@@ -299,7 +300,7 @@
     if (!list) return;
     list.innerHTML = updateNotes.map((note, index) => {
       const badge = index === 0 ? 'NEW' : note.badge.replace('UPDATE ', '');
-      const summary = index === 0 ? 'Buy in-game Robux bundles.' : note.summary;
+      const summary = index === 0 ? 'Real players need an online server.' : note.summary;
       return `<button class="${index === 0 ? 'active' : ''}" data-update-index="${index}"><span>${escapeHTML(badge)}</span><b>${escapeHTML(note.title)}</b><small>${escapeHTML(summary)}</small></button>`;
     }).join('');
   }
@@ -366,7 +367,7 @@
   }
   function injectRobuxStoreUI() {
     const download = $('#downloadGameButton');
-    if (download) download.href = appConfig.downloadFile || 'robox-2.0-update-11-download.zip';
+    if (download) download.href = appConfig.downloadFile || 'robox-2.0-update-12-download.zip';
     const walletPill = $('#walletCoins')?.closest('.coin-pill');
     if (walletPill && !$('#topRobuxButton')) walletPill.insertAdjacentElement('afterend', makeRobuxButton('topRobuxButton', 'robux-store-button top-robux-button', 'BUY'));
     if ($('#downloadGameButton') && !$('#homeRobuxButton')) $('#downloadGameButton').insertAdjacentElement('beforebegin', makeRobuxButton('homeRobuxButton', 'home-robux-button', 'BUY ROBUX'));
@@ -726,7 +727,7 @@
   studioAvatar.addEventListener('pointerup', () => dragStart = null);
 
   function emptyFriendsMarkup() {
-    return `<div class="friends-empty"><div class="empty-crew-icon"><span>♙</span><span>♙</span><span>♙</span></div><p class="eyebrow">YOUR CREW AWAITS</p><h3>No friends yet</h3><p>Type a player's username to add them. Your friends will appear here so you can manage your crew.</p></div>`;
+    return `<div class="friends-empty"><div class="empty-crew-icon"><span>♙</span><span>☹</span><span>♙</span></div><p class="eyebrow">YOUR CREW AWAITS</p><h3>No friends yet</h3><p>Type a player's username to add them. Real play-together joining will need multiplayer setup first.</p></div>`;
   }
 
   function renderFriends() {
@@ -738,7 +739,7 @@
       const name = friend.name || 'Player';
       const id = friend.id || name.toLowerCase();
       const color = friend.color || 'violet';
-      return `<article class="offline" data-friend-id="${id}"><span class="friend-avatar ${color}">${name.charAt(0).toUpperCase()}</span><div><h3>${name}</h3><p>Friend • Offline</p></div><div class="friend-card-actions"><button class="unfriend-btn" data-friend-action="unfriend">UNFRIEND</button></div></article>`;
+      return `<article class="saved" data-friend-id="${id}"><span class="friend-avatar ${color}">${name.charAt(0).toUpperCase()}</span><div><h3>${name}</h3><p>Friend • Saved player</p></div><div class="friend-card-actions"><button class="play-together-btn" data-friend-action="play-together">PLAY TOGETHER</button><button class="unfriend-btn" data-friend-action="unfriend">UNFRIEND</button></div></article>`;
     }).join('');
   }
 
@@ -1060,7 +1061,20 @@
 
   const addFriendModal = $('#addFriendModal');
   const unfriendModal = $('#unfriendModal');
+  const multiplayerSetupModal = $('#multiplayerSetupModal');
   let pendingUnfriendId = null;
+  function openMultiplayerSetup(friendName = '') {
+    const copy = $('#multiplayerSetupCopy');
+    copy.textContent = friendName
+      ? `${friendName} is saved as your friend, but actual live players need an online realtime server before they can join your world.`
+      : 'Friends are saved on this device, but actual live players need an online realtime server before they can join your world.';
+    multiplayerSetupModal.classList.add('show');
+    beep(240, .12);
+  }
+  function closeMultiplayerSetup() { multiplayerSetupModal.classList.remove('show'); }
+  $('#playTogetherBtn').addEventListener('click', () => openMultiplayerSetup());
+  $$('[data-close-multiplayer]').forEach(button => button.addEventListener('click', closeMultiplayerSetup));
+  multiplayerSetupModal.addEventListener('click', event => { if (event.target === multiplayerSetupModal) closeMultiplayerSetup(); });
   function closeFriendFinder() {
     addFriendModal.classList.remove('show');
     $('#friendUsernameInput').value = '';
@@ -1092,11 +1106,17 @@
     beep(880, .12);
   });
   $('#friendList').addEventListener('click', event => {
-    const button = event.target.closest('[data-friend-action="unfriend"]');
+    const button = event.target.closest('[data-friend-action]');
     if (!button) return;
     const card = button.closest('[data-friend-id]');
-    pendingUnfriendId = card.dataset.friendId;
-    const friend = profile.friends.find(item => (item.id || item.name.toLowerCase()) === pendingUnfriendId);
+    const friendId = card.dataset.friendId;
+    const friend = profile.friends.find(item => (item.id || item.name.toLowerCase()) === friendId);
+    if (button.dataset.friendAction === 'play-together') {
+      openMultiplayerSetup(friend?.name || 'This friend');
+      return;
+    }
+    if (button.dataset.friendAction !== 'unfriend') return;
+    pendingUnfriendId = friendId;
     $('#unfriendPlayerName').textContent = friend ? friend.name : 'This player';
     unfriendModal.classList.add('show');
   });

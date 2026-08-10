@@ -669,6 +669,58 @@ h1 {
   background: #f45b69;
 }
 
+.robox-scene {
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.12) 1px, transparent 1px),
+    linear-gradient(rgba(255,255,255,.12) 1px, transparent 1px),
+    radial-gradient(circle at 50% 28%, #8a72ff, transparent 34%),
+    #111827;
+  background-size: 28px 28px, 28px 28px, auto, auto;
+}
+
+.robox-cube {
+  display: grid;
+  place-items: center;
+  width: 82px;
+  height: 82px;
+  border: 4px solid #1f2430;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #8d71ff, #5135e8);
+  color: #fffdf8;
+  font: 800 44px "Arial", sans-serif;
+  box-shadow: 12px 12px 0 rgba(31,36,48,.2);
+  transform: rotate(-8deg);
+}
+
+.robox-player {
+  position: absolute;
+  width: 30px;
+  height: 42px;
+  border: 3px solid #1f2430;
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 50% 22%, #f0b24d 0 8px, transparent 9px),
+    linear-gradient(#7557ff 0 58%, #2c365e 58%);
+}
+
+.robox-player.one { left: 22%; bottom: 24%; transform: rotate(-8deg); }
+.robox-player.two { right: 22%; bottom: 29%; background: radial-gradient(circle at 50% 22%, #df9b64 0 8px, transparent 9px), linear-gradient(#35c7c2 0 58%, #2c365e 58%); transform: rotate(7deg); }
+
+.robox-sad {
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 3px solid #1f2430;
+  border-radius: 12px;
+  background: #ffcc4d;
+  color: #1f2430;
+  font: 900 24px "Arial", sans-serif;
+}
+
 .street-scene {
   background: #ffe08a;
 }
