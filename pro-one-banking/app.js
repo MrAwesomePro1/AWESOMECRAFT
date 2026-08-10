@@ -5,6 +5,10 @@
   const $ = selector => document.querySelector(selector);
   const escapeHTML = value => String(value).replace(/[&<>'"]/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' })[character]);
   const format = value => Number(value || 0).toLocaleString();
+  const readWholeAmount = value => {
+    const amount = Math.floor(Number(value));
+    return Number.isFinite(amount) && amount > 0 ? amount : 0;
+  };
   let activeWalletId = new URLSearchParams(location.search).get('wallet') || '';
   const requestedPlayer = new URLSearchParams(location.search).get('player') || '';
 
@@ -64,7 +68,7 @@
     $('#walletBalance').textContent = format(wallet?.balance || 0);
     $('#walletOwner').textContent = wallet ? `${wallet.owner} • ${wallet.currency}` : 'Open from Robox or create a wallet.';
     $('#walletName').value = wallet?.owner || requestedPlayer || '';
-    $('#openRoboxLink').href = `../robox-2-0/?version=15${wallet ? `&bankWallet=${encodeURIComponent(wallet.id)}` : ''}`;
+    $('#openRoboxLink').href = `../robox-2-0/?version=16${wallet ? `&bankWallet=${encodeURIComponent(wallet.id)}` : ''}`;
 
     const transactions = Array.isArray(wallet?.transactions) ? wallet.transactions : [];
     $('#transactionList').innerHTML = transactions.length ? transactions.map(item => `
@@ -85,14 +89,20 @@
 
   function adjustWallet(direction) {
     const wallet = getOrCreateWallet($('#walletName').value || requestedPlayer || 'ProOnePlayer');
-    const amount = Math.max(1, Math.min(100000, Math.floor(Number($('#transferAmount').value) || 0)));
+    const amount = readWholeAmount($('#transferAmount').value);
+    if (!amount) {
+      showToast('Enter an amount of 1 or more');
+      return;
+    }
     const change = direction === 'withdraw' ? -amount : amount;
     const bank = readBank();
     const current = bank.wallets[wallet.id];
-    current.balance = Math.max(0, Number(current.balance || 0) + change);
+    const startingBalance = Number(current.balance || 0);
+    current.balance = direction === 'deposit' ? startingBalance + amount : Math.max(0, startingBalance - amount);
     current.updatedAt = new Date().toISOString();
     current.connectedApps = [...new Set([...(current.connectedApps || []), 'Pro One Banking'])];
-    current.transactions = [transaction(current.balance === 0 && change < 0 ? -Number(wallet.balance || 0) : change, $('#transferNote').value || 'Website adjustment', current.balance), ...(current.transactions || [])].slice(0, 60);
+    const actualChange = direction === 'deposit' ? amount : current.balance - startingBalance;
+    current.transactions = [transaction(actualChange, $('#transferNote').value || (direction === 'deposit' ? 'Exact deposit' : 'Website withdrawal'), current.balance), ...(current.transactions || [])].slice(0, 60);
     writeBank(bank);
     render();
     showToast(direction === 'withdraw' ? 'Withdrawal saved' : 'Deposit saved');

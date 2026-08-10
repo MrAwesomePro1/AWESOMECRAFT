@@ -42,6 +42,8 @@ Update 14 adds Robux Machines and Kidtopia Money. Build mode includes a Robux Ma
 
 Update 15 adds the Pro One Banking website connection. The Robux Store can connect Kidtopia Money to the public Pro One Banking website, open that banking page, and write transactions when Kidtopia Money is spent to buy Robux. Shared links can use `?version=15` to avoid old cached copies.
 
+Update 16 removes the old 100,000 cap from custom amounts. Pro One Banking deposits now add the exact Kidtopia Money amount entered, and the Robux Store custom amount no longer has a fixed maximum. Shared links can use `?version=16` to avoid old cached copies.
+
 ## Publishing games
 
 New worlds begin as private drafts. Creators can publish a draft as a game in the shared Published Games list, then use Update Live to push later block changes. Deleting a world removes its draft and published copy permanently; deletion records prevent it from returning after the next login.

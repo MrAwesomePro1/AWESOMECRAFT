@@ -389,7 +389,8 @@
   $$('[data-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 
   const updateNotes = [
-    { version:'UPDATE 15 • LATEST', badge:'UPDATE 15', title:'Pro One Banking', summary:'Connect Kidtopia Money to the Pro One Banking website.', features:['Robux Store has Connect Bank and Open Website buttons','Kidtopia Money syncs with the Pro One Banking website wallet','Robux purchases create banking transactions'] },
+    { version:'UPDATE 16 • LATEST', badge:'UPDATE 16', title:'Infinite Custom Amounts', summary:'Bank deposits now add the exact amount, and custom Robux has no cap.', features:['Pro One Banking deposits use the exact typed amount','Custom Robux amount no longer stops at 100,000','Pro One Banking opens Robox Update 16'] },
+    { version:'UPDATE 15', badge:'UPDATE 15', title:'Pro One Banking', summary:'Connect Kidtopia Money to the Pro One Banking website.', features:['Robux Store has Connect Bank and Open Website buttons','Kidtopia Money syncs with the Pro One Banking website wallet','Robux purchases create banking transactions'] },
     { version:'UPDATE 14', badge:'UPDATE 14', title:'Robux Machines', summary:'Place Robux Machines in worlds and buy Robux with Kidtopia Money.', features:['Build mode has a Robux Machine tool','Machines open a shop for boosts and items','Type any Robux amount and pay with Kidtopia Money'] },
     { version:'UPDATE 13', badge:'UPDATE 13', title:'Renamed to Robox', summary:'The visible app name is now Robox everywhere.', features:['Boot screen and top bar now say Robox','Shared links use the latest version','Awesome Development listing now says Robox'] },
     { version:'UPDATE 12', badge:'UPDATE 12', title:'Multiplayer Setup Needed', summary:'Robox now shows the truth when real-player multiplayer is not connected yet.', features:['Sad-face multiplayer setup screen','Play Together buttons do not fake real players','Friends can still be saved, managed, and unfriended'] },
@@ -410,7 +411,7 @@
     if (!list) return;
     list.innerHTML = updateNotes.map((note, index) => {
       const badge = index === 0 ? 'NEW' : note.badge.replace('UPDATE ', '');
-      const summary = index === 0 ? 'Connect Kidtopia Money to the banking website.' : note.summary;
+      const summary = index === 0 ? 'Exact deposits and no custom Robux cap.' : note.summary;
       return `<button class="${index === 0 ? 'active' : ''}" data-update-index="${index}"><span>${escapeHTML(badge)}</span><b>${escapeHTML(note.title)}</b><small>${escapeHTML(summary)}</small></button>`;
     }).join('');
   }
@@ -466,6 +467,10 @@
   setTimeout(() => checkForUpdates(false), 1800);
 
   const formatRobux = value => Number(value || 0).toLocaleString();
+  const readWholeAmount = value => {
+    const amount = Math.floor(Number(value));
+    return Number.isFinite(amount) && amount > 0 ? amount : 0;
+  };
   const robuxCost = amount => Math.max(1, Math.ceil((Number(amount) || 0) / kidtopiaRobuxRate));
   function makeRobuxButton(id, className, label, detail = '') {
     const button = document.createElement('button');
@@ -478,7 +483,7 @@
   }
   function injectRobuxStoreUI() {
     const download = $('#downloadGameButton');
-    if (download) download.href = appConfig.downloadFile || 'robox-update-15-download.zip';
+    if (download) download.href = appConfig.downloadFile || 'robox-update-16-download.zip';
     const walletPill = $('#walletCoins')?.closest('.coin-pill');
     if (walletPill && !$('#topRobuxButton')) walletPill.insertAdjacentElement('afterend', makeRobuxButton('topRobuxButton', 'robux-store-button top-robux-button', 'BUY'));
     if ($('#downloadGameButton') && !$('#homeRobuxButton')) $('#downloadGameButton').insertAdjacentElement('beforebegin', makeRobuxButton('homeRobuxButton', 'home-robux-button', 'BUY ROBUX'));
@@ -493,7 +498,7 @@
     const gameShopCoins = $('#gamePetCoins')?.closest('.coin-pill');
     if (gameShopCoins && !$('#gameRobuxButton')) gameShopCoins.insertAdjacentElement('beforebegin', makeRobuxButton('gameRobuxButton', 'mini-robux-button game-robux-button', 'BUY ROBUX'));
     if (!$('#robuxStoreModal')) {
-      document.body.insertAdjacentHTML('beforeend', `<div class="modal robux-store-modal" id="robuxStoreModal" role="dialog" aria-modal="true" aria-labelledby="robuxStoreTitle"><div class="modal-card robux-store-card"><button class="modal-close" id="closeRobuxStore" aria-label="Close Robux store">×</button><div class="robux-store-hero"><div><p class="eyebrow">KIDTOPIA EXCHANGE</p><h2 id="robuxStoreTitle">Buy Robux</h2><p>Use Kidtopia Money to buy pretend Robux for this Robox profile.</p></div><div class="robux-wallet-stack"><div class="robux-balance-card"><span>YOUR ROBUX</span><strong><i class="coin">R</i> <b id="storeCoins">100</b></strong></div><div class="kidtopia-balance-card"><span>KIDTOPIA MONEY</span><strong>K <b id="storeKidtopiaMoney">5,000</b></strong></div></div></div><div class="robux-bundle-grid" id="robuxBundleGrid"></div><form class="custom-robux-form" id="customRobuxForm"><label for="customRobuxAmount"><span>CUSTOM ROBUX AMOUNT</span><input id="customRobuxAmount" type="number" inputmode="numeric" min="1" max="100000" step="1" value="100"></label><button type="submit">BUY CUSTOM</button><small id="customRobuxCost">Costs K 10 Kidtopia Money</small></form><p class="robux-safe-note"><b>Robox-only store:</b> these are pretend in-game purchases. No real money, payment cards, or Roblox account is used. Kidtopia Money is pretend game money too.</p><p class="robux-store-message" id="robuxStoreMessage" aria-live="polite"></p></div></div>`);
+      document.body.insertAdjacentHTML('beforeend', `<div class="modal robux-store-modal" id="robuxStoreModal" role="dialog" aria-modal="true" aria-labelledby="robuxStoreTitle"><div class="modal-card robux-store-card"><button class="modal-close" id="closeRobuxStore" aria-label="Close Robux store">×</button><div class="robux-store-hero"><div><p class="eyebrow">KIDTOPIA EXCHANGE</p><h2 id="robuxStoreTitle">Buy Robux</h2><p>Use Kidtopia Money to buy pretend Robux for this Robox profile.</p></div><div class="robux-wallet-stack"><div class="robux-balance-card"><span>YOUR ROBUX</span><strong><i class="coin">R</i> <b id="storeCoins">100</b></strong></div><div class="kidtopia-balance-card"><span>KIDTOPIA MONEY</span><strong>K <b id="storeKidtopiaMoney">5,000</b></strong></div></div></div><div class="robux-bundle-grid" id="robuxBundleGrid"></div><form class="custom-robux-form" id="customRobuxForm"><label for="customRobuxAmount"><span>CUSTOM ROBUX AMOUNT</span><input id="customRobuxAmount" type="number" inputmode="numeric" min="1" step="1" value="100" placeholder="Infinite custom amount"></label><button type="submit">BUY CUSTOM</button><small id="customRobuxCost">No max — costs K 10 Kidtopia Money</small></form><p class="robux-safe-note"><b>Robox-only store:</b> these are pretend in-game purchases. No real money, payment cards, or Roblox account is used. Kidtopia Money is pretend game money too.</p><p class="robux-store-message" id="robuxStoreMessage" aria-live="polite"></p></div></div>`);
     }
     const storeCard = $('#robuxStoreModal .robux-store-card');
     if (storeCard && !$('#proOneBankingCard')) {
@@ -515,11 +520,15 @@
     const amountInput = $('#customRobuxAmount');
     const costOutput = $('#customRobuxCost');
     if (!amountInput || !costOutput) return;
-    const amount = Math.max(1, Math.floor(Number(amountInput.value) || 1));
-    costOutput.textContent = `Costs K ${formatRobux(robuxCost(amount))} Kidtopia Money`;
+    const amount = readWholeAmount(amountInput.value) || 1;
+    costOutput.textContent = `No max — costs K ${formatRobux(robuxCost(amount))} Kidtopia Money`;
   }
   function buyRobuxWithKidtopia(amount) {
-    amount = Math.max(1, Math.min(100000, Math.floor(Number(amount) || 0)));
+    amount = readWholeAmount(amount);
+    if (!amount) {
+      $('#robuxStoreMessage').textContent = 'Enter a custom Robux amount of 1 or more.';
+      return;
+    }
     const cost = robuxCost(amount);
     if (profile.kidtopiaMoney < cost) {
       $('#robuxStoreMessage').textContent = `You need K ${formatRobux(cost - profile.kidtopiaMoney)} more Kidtopia Money.`;

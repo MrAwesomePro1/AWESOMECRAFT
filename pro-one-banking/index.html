@@ -10,14 +10,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700;800;900&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=1">
+  <link rel="stylesheet" href="styles.css?v=2">
 </head>
 <body>
   <main class="bank-shell">
     <section class="hero">
       <nav class="bank-nav">
         <a class="brand" href="./"><span>P1</span><b>Pro One Banking</b></a>
-        <a class="nav-link" id="openRoboxLink" href="../robox-2-0/?version=15">Open Robox</a>
+        <a class="nav-link" id="openRoboxLink" href="../robox-2-0/?version=16">Open Robox</a>
       </nav>
       <div class="hero-grid">
         <div class="hero-copy">
@@ -58,11 +58,11 @@
         </div>
         <form class="transfer-form" id="transferForm">
           <label for="transferAmount">Amount</label>
-          <input id="transferAmount" type="number" inputmode="numeric" min="1" max="100000" step="1" value="100">
+          <input id="transferAmount" type="number" inputmode="numeric" min="1" step="1" value="100" placeholder="No max">
           <label for="transferNote">Note</label>
           <input id="transferNote" maxlength="60" value="Website adjustment">
           <div class="transfer-actions">
-            <button type="button" data-transfer="deposit">DEPOSIT</button>
+            <button type="button" data-transfer="deposit">DEPOSIT EXACT AMOUNT</button>
             <button type="button" data-transfer="withdraw">WITHDRAW</button>
           </div>
         </form>
@@ -87,6 +87,6 @@
   </main>
 
   <div class="toast" id="toast">Wallet synced</div>
-  <script src="app.js?v=1"></script>
+  <script src="app.js?v=2"></script>
 </body>
 </html>
