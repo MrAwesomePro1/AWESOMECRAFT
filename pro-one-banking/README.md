@@ -13,3 +13,5 @@ Version 3 updates the Open Robox shortcut to Robox Update 17.
 Version 4 updates the Open Robox shortcut to Robox Update 18.
 
 Version 5 updates the Open Robox shortcut to Robox Update 19.
+
+Version 6 updates the Open Robox shortcut to Robox Update 21.

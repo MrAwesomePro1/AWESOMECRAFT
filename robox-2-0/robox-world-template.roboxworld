@@ -1,0 +1,16 @@
+{
+  "format": "robox-world",
+  "version": 1,
+  "instructions": "Edit the world values, save this as .roboxworld, then import it in Robox to create a draft world.",
+  "world": {
+    "name": "My File World",
+    "description": "A world made from a file.",
+    "theme": "grass",
+    "size": 12,
+    "blocks": [
+      { "x": 5, "y": 5, "h": 2, "type": 3 },
+      { "x": 6, "y": 5, "h": 1, "type": 4 },
+      { "x": 5, "y": 6, "h": 1, "type": 2 }
+    ]
+  }
+}

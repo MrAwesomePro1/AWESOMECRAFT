@@ -607,7 +607,8 @@
   $$('[data-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 
   const updateNotes = [
-    { version:'UPDATE 20 • LATEST', badge:'UPDATE 20', title:'Public World Rooms', summary:'Published worlds now have real shared rooms for players on different devices.', features:['Create a public room from a published world','Join the first open room or choose a visible room code','See up to 12 live players moving inside the same world'] },
+    { version:'UPDATE 21 • LATEST', badge:'UPDATE 21', title:'World Files', summary:'You can now make a .roboxworld file and import it to create a draft world.', features:['Download a starter world-file template','Import .roboxworld or JSON files as saved draft worlds','Export any world you made as a reusable file'] },
+    { version:'UPDATE 20', badge:'UPDATE 20', title:'Public World Rooms', summary:'Published worlds now have real shared rooms for players on different devices.', features:['Create a public room from a published world','Join the first open room or choose a visible room code','See up to 12 live players moving inside the same world'] },
     { version:'UPDATE 19', badge:'UPDATE 19', title:'Shop Item Maker', summary:'Players can now make custom things and put them inside the in-game shop.', features:['Create custom shop items from the Pets page','Choose item type, color, description, and Robux price','Created items appear in the in-game shop for players to buy'] },
     { version:'UPDATE 18', badge:'UPDATE 18', title:'iPad Shop Button', summary:'iPad and iPhone players now have a big touch button to open the in-game shop.', features:['New SHOP button beside BUILD and TALK on touch controls','The button opens the pet shop without needing a keyboard','Works when iPad/iPhone controls are selected'] },
     { version:'UPDATE 17', badge:'UPDATE 17', title:'Promo Codes', summary:'Robux Store now has promo codes, and code 2017 gives 100% off.', features:['New promo-code box inside the Robux Store','Code 2017 makes Robux purchases cost K 0','Bundle and custom prices update when the code is active'] },
@@ -633,7 +634,7 @@
     if (!list) return;
     list.innerHTML = updateNotes.map((note, index) => {
       const badge = index === 0 ? 'NEW' : note.badge.replace('UPDATE ', '');
-      const summary = index === 0 ? 'Create things to sell in the shop.' : note.summary;
+      const summary = index === 0 ? 'Import a file to make a world.' : note.summary;
       return `<button class="${index === 0 ? 'active' : ''}" data-update-index="${index}"><span>${escapeHTML(badge)}</span><b>${escapeHTML(note.title)}</b><small>${escapeHTML(summary)}</small></button>`;
     }).join('');
   }
@@ -718,7 +719,7 @@
   }
   function injectRobuxStoreUI() {
     const download = $('#downloadGameButton');
-    if (download) download.href = appConfig.downloadFile || 'robox-update-20-download.zip';
+    if (download) download.href = appConfig.downloadFile || 'robox-update-21-download.zip';
     const walletPill = $('#walletCoins')?.closest('.coin-pill');
     if (walletPill && !$('#topRobuxButton')) walletPill.insertAdjacentElement('afterend', makeRobuxButton('topRobuxButton', 'robux-store-button top-robux-button', 'BUY'));
     if ($('#downloadGameButton') && !$('#homeRobuxButton')) $('#downloadGameButton').insertAdjacentElement('beforebegin', makeRobuxButton('homeRobuxButton', 'home-robux-button', 'BUY ROBUX'));
@@ -1377,6 +1378,110 @@
       quest: 'Your First Adventure', text: 'Collect 5 builder tokens'
     };
   }
+  function cleanWorldFileBlock(block, size) {
+    const x = Math.floor(Number(block?.x));
+    const y = Math.floor(Number(block?.y));
+    const h = Math.max(1, Math.min(4, Math.floor(Number(block?.h) || 1)));
+    const type = Math.max(1, Math.min(4, Math.floor(Number(block?.type) || 1)));
+    if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || y < 0 || x >= size || y >= size) return null;
+    return { x, y, h, type };
+  }
+  function worldFileTemplateData() {
+    return {
+      format:'robox-world',
+      version:1,
+      instructions:'Edit this file, save it as .roboxworld, then import it in Robox to create a world.',
+      world:{
+        name:'My File World',
+        description:'A world made from a file.',
+        theme:'grass',
+        size:12,
+        blocks:[
+          { x:5, y:5, h:2, type:3 },
+          { x:6, y:5, h:1, type:4 },
+          { x:5, y:6, h:1, type:2 }
+        ]
+      }
+    };
+  }
+  function worldFileFromRecord(world) {
+    return {
+      format:'robox-world',
+      version:1,
+      exportedAt:new Date().toISOString(),
+      world:{
+        name:world.name,
+        description:world.description || '',
+        theme:worldThemes[world.theme] ? world.theme : 'grass',
+        size:Math.max(12, Math.min(32, Math.floor(Number(world.size) || 12))),
+        blocks:Array.isArray(world.blocks) ? world.blocks.map(block => ({ x:block.x, y:block.y, h:block.h, type:block.type })) : []
+      }
+    };
+  }
+  function worldRecordFromFileData(data, fileName = 'world file') {
+    const source = data?.format === 'robox-world' && data.world ? data.world : data;
+    if (!source || typeof source !== 'object') throw new Error('This is not a Robox world file.');
+    const name = String(source.name || '').trim().slice(0, 32);
+    if (name.length < 3) throw new Error('World files need a name with at least 3 characters.');
+    const description = String(source.description || `Imported from ${fileName}`).trim().slice(0, 100);
+    const theme = worldThemes[source.theme] ? source.theme : 'grass';
+    const size = Math.max(12, Math.min(32, Math.floor(Number(source.size) || 12)));
+    const blocks = Array.isArray(source.blocks)
+      ? source.blocks.map(block => cleanWorldFileBlock(block, size)).filter(Boolean).slice(0, size * size)
+      : [];
+    return {
+      id:`world-file-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+      name,
+      description,
+      theme,
+      visits:0,
+      blocks:blocks.length ? blocks : null,
+      size,
+      invites:[],
+      published:false,
+      importedFrom:fileName,
+      createdAt:new Date().toISOString()
+    };
+  }
+  function downloadWorldTemplateFile() {
+    downloadBlob(new Blob([JSON.stringify(worldFileTemplateData(), null, 2)], { type:'application/json' }), 'robox-world-template.roboxworld');
+    showToast('World file template downloaded', 'Edit it, then import it into Robox');
+    beep(780, .12);
+  }
+  function exportWorldFile(worldId) {
+    const world = profile.worlds.find(item => item.id === worldId);
+    if (!world) return;
+    downloadBlob(new Blob([JSON.stringify(worldFileFromRecord(world), null, 2)], { type:'application/json' }), `${fileSafeName(world.name)}.roboxworld`);
+    showToast('World file exported', `${world.name} downloaded`);
+    beep(780, .12);
+  }
+  function importWorldFile(file) {
+    if (!file) return;
+    if (file.size > 1000000) { showToast('World file too large', 'Keep world files under 1 MB'); $('#worldFileInput').value = ''; return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const importedWorld = worldRecordFromFileData(JSON.parse(reader.result), file.name || 'world file');
+        if (!Array.isArray(profile.worlds)) profile.worlds = [];
+        profile.worlds.unshift(importedWorld);
+        profile.deletedWorldIds = profile.deletedWorldIds.filter(id => id !== importedWorld.id);
+        saveProfile();
+        switchView('discover');
+        showToast('World file imported!', `${importedWorld.name} is now a draft`);
+        beep(980, .18);
+      } catch (error) {
+        showToast('Could not import world', error.message || 'Check the file and try again');
+        beep(240, .12);
+      } finally {
+        $('#worldFileInput').value = '';
+      }
+    };
+    reader.onerror = () => {
+      showToast('Could not read file', 'Try saving it again as .roboxworld');
+      $('#worldFileInput').value = '';
+    };
+    reader.readAsText(file);
+  }
 
   function emptyWorldsMarkup() {
     if (sessionMode === 'guest') {
@@ -1409,6 +1514,11 @@
       accessButton.dataset.worldAccess = world.id;
       accessButton.textContent = 'INVITE PLAYERS';
       card.append(accessButton);
+      const fileButton = document.createElement('button');
+      fileButton.className = 'world-file-btn';
+      fileButton.dataset.worldExport = world.id;
+      fileButton.textContent = 'EXPORT FILE';
+      card.append(fileButton);
       if (world.published) {
         const roomButton = document.createElement('button');
         roomButton.className = 'world-room-owner-btn';
@@ -1502,6 +1612,9 @@
     $('#worldNameInput').focus();
     beep(720);
   });
+  $('#downloadWorldTemplateBtn').addEventListener('click', downloadWorldTemplateFile);
+  $('#importWorldFileBtn').addEventListener('click', () => $('#worldFileInput').click());
+  $('#worldFileInput').addEventListener('change', event => importWorldFile(event.target.files?.[0]));
   $$('[data-close-world]').forEach(button => button.addEventListener('click', closeWorldCreator));
   createWorldModal.addEventListener('click', event => { if (event.target === createWorldModal) closeWorldCreator(); });
   $('#createWorldForm').addEventListener('submit', event => {
@@ -1518,6 +1631,8 @@
     if (roomButton) { enterPublicRoom(roomButton.dataset.createRoom, 'create'); return; }
     const accessButton = event.target.closest('[data-world-access]');
     if (accessButton) { openWorldAccess(accessButton.dataset.worldAccess); return; }
+    const exportButton = event.target.closest('[data-world-export]');
+    if (exportButton) { exportWorldFile(exportButton.dataset.worldExport); return; }
     const publishButton = event.target.closest('[data-world-publish]');
     if (publishButton) {
       pendingPublishWorldId = publishButton.dataset.worldPublish;
