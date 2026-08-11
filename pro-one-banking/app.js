@@ -68,7 +68,7 @@
     $('#walletBalance').textContent = format(wallet?.balance || 0);
     $('#walletOwner').textContent = wallet ? `${wallet.owner} • ${wallet.currency}` : 'Open from Robox or create a wallet.';
     $('#walletName').value = wallet?.owner || requestedPlayer || '';
-    $('#openRoboxLink').href = `../robox-2-0/?version=22${wallet ? `&bankWallet=${encodeURIComponent(wallet.id)}` : ''}`;
+    $('#openRoboxLink').href = `../robox-2-0/?version=23${wallet ? `&bankWallet=${encodeURIComponent(wallet.id)}` : ''}`;
 
     const transactions = Array.isArray(wallet?.transactions) ? wallet.transactions : [];
     $('#transactionList').innerHTML = transactions.length ? transactions.map(item => `

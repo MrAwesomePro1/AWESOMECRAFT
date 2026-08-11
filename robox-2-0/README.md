@@ -56,6 +56,8 @@ Update 21 adds world files. Players can download a starter `.roboxworld` file, e
 
 Update 22 adds Brainrot Bases and the new main screen photo. Worlds with Brainrot in the name or description now spawn collectible brainrots, show YOUR BASE in-game, let players carry brainrots home, and reward stored brainrots with in-game Robux. Shared links can use `?version=22` to avoid old cached copies.
 
+Update 23 adds the behind-the-player 3D obby view for Brainrot/base worlds and removes the old 32 x 32 expansion stop. The renderer now draws only the visible part of huge platforms, so creators can keep expanding their world size without a fixed maximum. Shared links can use `?version=23` to avoid old cached copies.
+
 ## Publishing games
 
 New worlds begin as private drafts. Creators can publish a draft as a game in the shared Published Games list, then use Update Live to push later block changes. Deleting a world removes its draft and published copy permanently; deletion records prevent it from returning after the next login.
