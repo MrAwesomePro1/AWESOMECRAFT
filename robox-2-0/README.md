@@ -54,6 +54,8 @@ Update 20 adds public multiplayer rooms for published worlds. Players can create
 
 Update 21 adds world files. Players can download a starter `.roboxworld` file, edit it as JSON, import it to create a saved draft world, and export any world they made as a reusable `.roboxworld` file. Shared links can use `?version=21` to avoid old cached copies.
 
+Update 22 adds Brainrot Bases and the new main screen photo. Worlds with Brainrot in the name or description now spawn collectible brainrots, show YOUR BASE in-game, let players carry brainrots home, and reward stored brainrots with in-game Robux. Shared links can use `?version=22` to avoid old cached copies.
+
 ## Publishing games
 
 New worlds begin as private drafts. Creators can publish a draft as a game in the shared Published Games list, then use Update Live to push later block changes. Deleting a world removes its draft and published copy permanently; deletion records prevent it from returning after the next login.

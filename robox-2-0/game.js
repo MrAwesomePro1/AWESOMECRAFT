@@ -607,7 +607,8 @@
   $$('[data-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 
   const updateNotes = [
-    { version:'UPDATE 21 • LATEST', badge:'UPDATE 21', title:'World Files', summary:'You can now make a .roboxworld file and import it to create a draft world.', features:['Download a starter world-file template','Import .roboxworld or JSON files as saved draft worlds','Export any world you made as a reusable file'] },
+    { version:'UPDATE 22 • LATEST', badge:'UPDATE 22', title:'Brainrot Bases', summary:'Brainrot worlds now have a real base game: grab brainrots, carry them home, and score rewards.', features:['Brainrot worlds automatically turn on base-game mode','Glowing brainrots spawn in the world for players to collect','Bring a brainrot to YOUR BASE to store it and earn Robux'] },
+    { version:'UPDATE 21', badge:'UPDATE 21', title:'World Files', summary:'You can now make a .roboxworld file and import it to create a draft world.', features:['Download a starter world-file template','Import .roboxworld or JSON files as saved draft worlds','Export any world you made as a reusable file'] },
     { version:'UPDATE 20', badge:'UPDATE 20', title:'Public World Rooms', summary:'Published worlds now have real shared rooms for players on different devices.', features:['Create a public room from a published world','Join the first open room or choose a visible room code','See up to 12 live players moving inside the same world'] },
     { version:'UPDATE 19', badge:'UPDATE 19', title:'Shop Item Maker', summary:'Players can now make custom things and put them inside the in-game shop.', features:['Create custom shop items from the Pets page','Choose item type, color, description, and Robux price','Created items appear in the in-game shop for players to buy'] },
     { version:'UPDATE 18', badge:'UPDATE 18', title:'iPad Shop Button', summary:'iPad and iPhone players now have a big touch button to open the in-game shop.', features:['New SHOP button beside BUILD and TALK on touch controls','The button opens the pet shop without needing a keyboard','Works when iPad/iPhone controls are selected'] },
@@ -719,7 +720,7 @@
   }
   function injectRobuxStoreUI() {
     const download = $('#downloadGameButton');
-    if (download) download.href = appConfig.downloadFile || 'robox-update-21-download.zip';
+    if (download) download.href = appConfig.downloadFile || 'robox-update-22-download.zip';
     const walletPill = $('#walletCoins')?.closest('.coin-pill');
     if (walletPill && !$('#topRobuxButton')) walletPill.insertAdjacentElement('afterend', makeRobuxButton('topRobuxButton', 'robux-store-button top-robux-button', 'BUY'));
     if ($('#downloadGameButton') && !$('#homeRobuxButton')) $('#downloadGameButton').insertAdjacentElement('beforebegin', makeRobuxButton('homeRobuxButton', 'home-robux-button', 'BUY ROBUX'));
@@ -1396,6 +1397,11 @@
         description:'A world made from a file.',
         theme:'grass',
         size:12,
+        brainrotMode:false,
+        baseGame:false,
+        brainrots:[
+          { name:'Example Brainrot', tag:'EB', color:'#ffcf5a', accent:'#54edff', value:1 }
+        ],
         blocks:[
           { x:5, y:5, h:2, type:3 },
           { x:6, y:5, h:1, type:4 },
@@ -1414,6 +1420,16 @@
         description:world.description || '',
         theme:worldThemes[world.theme] ? world.theme : 'grass',
         size:Math.max(12, Math.min(32, Math.floor(Number(world.size) || 12))),
+        brainrotMode:!!world.brainrotMode || isBrainrotWorldRecord(world),
+        baseGame:!!world.baseGame || isBrainrotWorldRecord(world),
+        brainrotScore:Math.max(0, Math.floor(Number(world.brainrotScore) || 0)),
+        brainrots:Array.isArray(world.brainrots) ? world.brainrots.map(item => ({
+          name:String(item.name || 'Brainrot').slice(0, 24),
+          tag:String(item.tag || item.name || 'BR').replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase() || 'BR',
+          color:item.color || '#ffcf5a',
+          accent:item.accent || '#54edff',
+          value:Math.max(1, Math.min(10, Math.floor(Number(item.value) || 1)))
+        })) : [],
         blocks:Array.isArray(world.blocks) ? world.blocks.map(block => ({ x:block.x, y:block.y, h:block.h, type:block.type })) : []
       }
     };
@@ -1429,6 +1445,16 @@
     const blocks = Array.isArray(source.blocks)
       ? source.blocks.map(block => cleanWorldFileBlock(block, size)).filter(Boolean).slice(0, size * size)
       : [];
+    const brainrots = Array.isArray(source.brainrots)
+      ? source.brainrots.filter(item => item && item.name).map(item => ({
+        name:String(item.name || 'Brainrot').slice(0, 24),
+        tag:String(item.tag || item.name || 'BR').replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase() || 'BR',
+        color:item.color || '#ffcf5a',
+        accent:item.accent || '#54edff',
+        value:Math.max(1, Math.min(10, Math.floor(Number(item.value) || 1)))
+      })).slice(0, 12)
+      : [];
+    const brainrotMode = !!source.brainrotMode || !!source.baseGame || `${name} ${description}`.toLowerCase().includes('brainrot');
     return {
       id:`world-file-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
       name,
@@ -1437,6 +1463,10 @@
       visits:0,
       blocks:blocks.length ? blocks : null,
       size,
+      brainrotMode,
+      baseGame:brainrotMode,
+      brainrots,
+      brainrotScore:0,
       invites:[],
       published:false,
       importedFrom:fileName,
@@ -1623,7 +1653,8 @@
     const description = $('#worldDescriptionInput').value.trim();
     const theme = $('input[name="worldTheme"]:checked').value;
     if (name.length < 3) { $('#worldCreateMessage').textContent = 'World names need at least 3 characters.'; return; }
-    profile.worlds.push({ id:`world-${Date.now().toString(36)}`, name, description, theme, visits:0, blocks:null, size:12, invites:[], published:false, createdAt:new Date().toISOString() });
+    const brainrotMode = `${name} ${description}`.toLowerCase().includes('brainrot');
+    profile.worlds.push({ id:`world-${Date.now().toString(36)}`, name, description, theme, visits:0, blocks:null, size:12, brainrotMode, baseGame:brainrotMode, brainrots:brainrotMode ? brainrotCatalog.map(item => ({ ...item })) : [], brainrotScore:0, invites:[], published:false, createdAt:new Date().toISOString() });
     saveProfile(); closeWorldCreator(); switchView('discover'); beep(920, .15);
   });
   $('#gameGrid').addEventListener('click', event => {
@@ -1882,10 +1913,18 @@
 
   const canvas = $('#gameCanvas');
   const ctx = canvas.getContext('2d');
+  const brainrotCatalog = [
+    { name:'Noobini Nugget', tag:'NN', color:'#ffcf5a', accent:'#ff7a90', value:1 },
+    { name:'Cappuccino Cat', tag:'CC', color:'#c7955c', accent:'#54edff', value:2 },
+    { name:'Pixel Goblin', tag:'PG', color:'#55e082', accent:'#7557ff', value:3 },
+    { name:'Baller Banana', tag:'BB', color:'#ffe65c', accent:'#ff9f43', value:4 },
+    { name:'Sigma Cube', tag:'SC', color:'#9b7cff', accent:'#34e1a1', value:5 }
+  ];
   const game = {
-    active: false, paused: false, world: null, userWorldId: null, publishedWorldId: null, canBuild: false, isWorldOwner: false, loadedBlocks: null, worldSize: 12, last: 0, time: 0, keys: {}, buildMode: false, selectedBlock: 1, boosts: { speed:0, jump:0, magnet:0 },
+    active: false, paused: false, world: null, worldRecord: null, userWorldId: null, publishedWorldId: null, canBuild: false, isWorldOwner: false, loadedBlocks: null, worldSize: 12, last: 0, time: 0, keys: {}, buildMode: false, selectedBlock: 1, boosts: { speed:0, jump:0, magnet:0 },
     player: { x: 5, y: 5, z: 0, vz: 0, angle: 0 }, camera: { x: 0, y: 0 }, collected: 0,
-    coins: [], blocks: [], particles: [], pet: { x: 4.3, y: 5.5, z: 0 }, npc: { x: 7.5, y: 5.5, name: 'Nova' }
+    coins: [], blocks: [], particles: [], pet: { x: 4.3, y: 5.5, z: 0 }, npc: { x: 7.5, y: 5.5, name: 'Nova' },
+    brainrotMode: false, brainrotBase: null, brainrotEnemyBase: null, brainrots: [], carriedBrainrot: null, brainrotScore: 0, brainrotWave: 1, brainrotSpawnCooldown: 0
   };
 
   const tileW = 72, tileH = 36, blockH = 33;
@@ -1904,12 +1943,82 @@
   }
   window.addEventListener('resize', resize); resize();
 
+  function isBrainrotWorldRecord(record) {
+    if (!record) return false;
+    const text = `${record.name || ''} ${record.description || ''}`.toLowerCase();
+    return !!record.brainrotMode || !!record.baseGame || text.includes('brainrot');
+  }
+  function clampWorld(value, min = .25, max = game.worldSize - .25) {
+    return Math.max(min, Math.min(max, value));
+  }
+  function brainrotBaseForWorld(size) {
+    const baseSize = Math.min(5, Math.max(4, Math.floor(size / 5)));
+    const centeredX = Math.max(1, Math.floor(size / 2 - baseSize / 2));
+    return {
+      home: { x:centeredX, y:Math.max(1, size - baseSize - 1), w:baseSize, h:baseSize, label:'YOUR BASE', color:'#34e1a1' },
+      enemy: { x:centeredX, y:1, w:baseSize, h:baseSize, label:'BRAINROT DEN', color:'#ff5fd2' }
+    };
+  }
+  function resetPlayerToSpawn() {
+    if (game.brainrotMode && game.brainrotBase) {
+      game.player = { x:game.brainrotBase.x + game.brainrotBase.w / 2, y:game.brainrotBase.y + game.brainrotBase.h / 2, z:0, vz:0, angle:0 };
+      game.pet = { x:clampWorld(game.player.x - .7), y:clampWorld(game.player.y + .5), z:0 };
+      return;
+    }
+    game.player = { x:5, y:5, z:0, vz:0, angle:0 };
+    game.pet = { x:4.3, y:5.5, z:0 };
+  }
+  function sourceBrainrotsForWorld(record) {
+    const custom = Array.isArray(record?.brainrots) ? record.brainrots.filter(item => item && item.name) : [];
+    return custom.length ? custom : brainrotCatalog;
+  }
+  function spawnBrainrotWave(record = game.worldRecord) {
+    const source = sourceBrainrotsForWorld(record);
+    const count = Math.min(5, Math.max(3, source.length || 3));
+    const size = game.worldSize;
+    const center = (size - 1) / 2;
+    const startY = Math.min(size - 3, Math.max(2, (game.brainrotEnemyBase?.y || 1) + (game.brainrotEnemyBase?.h || 4) + 1));
+    const endY = Math.max(startY, Math.min(size - 3, (game.brainrotBase?.y || size - 5) - 2));
+    game.brainrots = Array.from({ length:count }, (_, index) => {
+      const item = source[index % source.length] || brainrotCatalog[index % brainrotCatalog.length];
+      const fallbackX = center + ((index % 3) - 1) * 1.25;
+      const fallbackY = count === 1 ? (startY + endY) / 2 : startY + (endY - startY) * (index / Math.max(1, count - 1));
+      const x = Number.isFinite(Number(item.x)) ? Number(item.x) : fallbackX;
+      const y = Number.isFinite(Number(item.y)) ? Number(item.y) : fallbackY;
+      return {
+        id:`brainrot-${game.brainrotWave}-${index}`,
+        name:String(item.name || brainrotCatalog[index % brainrotCatalog.length].name).slice(0, 24),
+        tag:String(item.tag || item.name || 'BR').replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase() || 'BR',
+        color:item.color || brainrotCatalog[index % brainrotCatalog.length].color,
+        accent:item.accent || brainrotCatalog[index % brainrotCatalog.length].accent,
+        value:Math.max(1, Math.min(10, Math.floor(Number(item.value) || (index + 1)))),
+        x:clampWorld(x), y:clampWorld(y), z:0, carried:false, delivered:false, phase:index * .9
+      };
+    });
+    game.brainrotWave += 1;
+  }
+  function setupBrainrotMode(record) {
+    if (!game.brainrotMode) { updateBrainrotHud(); return; }
+    const zones = brainrotBaseForWorld(game.worldSize);
+    game.brainrotBase = zones.home;
+    game.brainrotEnemyBase = zones.enemy;
+    game.carriedBrainrot = null;
+    game.brainrotSpawnCooldown = 0;
+    game.brainrotWave = 1;
+    game.brainrotScore = game.userWorldId ? Math.max(0, Math.floor(Number(record?.brainrotScore) || 0)) : 0;
+    resetPlayerToSpawn();
+    spawnBrainrotWave(record);
+    $('#questTitle').textContent = 'Brainrot Base Run';
+    $('#questText').textContent = 'Grab a brainrot and bring it to YOUR BASE';
+    updateBrainrotHud();
+  }
   function generateWorld() {
-    game.player = { x: 5, y: 5, z: 0, vz: 0, angle: 0 }; game.camera = { x: 0, y: 0 }; game.pet = { x: 4.3, y: 5.5, z: 0 }; game.collected = 0; game.coins = []; game.blocks = []; game.particles = []; game.boosts = { speed:0, jump:0, magnet:0 };
+    game.player = { x: 5, y: 5, z: 0, vz: 0, angle: 0 }; game.camera = { x: 0, y: 0 }; game.pet = { x: 4.3, y: 5.5, z: 0 }; game.collected = 0; game.coins = []; game.blocks = []; game.particles = []; game.boosts = { speed:0, jump:0, magnet:0 }; game.brainrotBase = null; game.brainrotEnemyBase = null; game.brainrots = []; game.carriedBrainrot = null; game.brainrotSpawnCooldown = 0;
     const fixed = [[2,2,2,2],[2,3,2,2],[3,2,1,3],[8,3,1,2],[9,3,2,2],[8,4,1,2],[3,8,1,1],[7,8,2,3],[8,8,1,3],[10,7,1,2],[1,7,1,1]];
     if (Array.isArray(game.loadedBlocks)) game.blocks = game.loadedBlocks.map(block => ({ ...block }));
     else fixed.forEach(([x,y,h,type]) => game.blocks.push({ x,y,h,type }));
     [[3.5,5.5],[6.5,2.6],[9.3,6.1],[4.2,9.1],[8.3,9.5],[1.8,3.8],[10.2,3.1],[6.1,8.1]].forEach(([x,y], index) => game.coins.push({ x,y,z:.45,got:false,phase:index }));
+    setupBrainrotMode(game.worldRecord);
     updateQuest();
   }
 
@@ -1918,12 +2027,13 @@
     const publishedGames = readPublishedGames();
     const publishedWorld = publishedGames.find(world => world.id === key);
     const worldRecord = publishedLaunch ? publishedWorld : ownedWorld;
+    const recordAccess = worldRecord || {};
     const selectedWorld = worldRecord ? worldConfigFromRecord(worldRecord) : worlds[key];
     if (!selectedWorld) return;
     const signedInPlayer = sessionMode === 'account';
-    const isWorldOwner = (!!ownedWorld && !publishedLaunch) || (signedInPlayer && String(worldRecord.owner || '').toLowerCase() === profile.name.toLowerCase());
-    const invite = (Array.isArray(worldRecord.invites) ? worldRecord.invites : []).find(item => String(item.username || '').toLowerCase() === profile.name.toLowerCase());
-    game.world = selectedWorld; game.userWorldId = !publishedLaunch && ownedWorld ? ownedWorld.id : null; game.publishedWorldId = publishedLaunch && publishedWorld ? publishedWorld.id : null; game.isWorldOwner = isWorldOwner; game.canBuild = isWorldOwner || signedInPlayer && !!invite?.canBuild; game.loadedBlocks = Array.isArray(worldRecord.blocks) ? worldRecord.blocks.map(block => ({ ...block })) : null; game.worldSize = Math.max(12, Math.min(32, Number(worldRecord.size) || 12)); game.active = true; game.paused = false; game.buildMode = false; game.time = 0;
+    const isWorldOwner = (!!ownedWorld && !publishedLaunch) || (signedInPlayer && String(recordAccess.owner || '').toLowerCase() === profile.name.toLowerCase());
+    const invite = (Array.isArray(recordAccess.invites) ? recordAccess.invites : []).find(item => String(item.username || '').toLowerCase() === profile.name.toLowerCase());
+    game.world = selectedWorld; game.worldRecord = recordAccess; game.userWorldId = !publishedLaunch && ownedWorld ? ownedWorld.id : null; game.publishedWorldId = publishedLaunch && publishedWorld ? publishedWorld.id : null; game.isWorldOwner = isWorldOwner; game.canBuild = isWorldOwner || signedInPlayer && !!invite?.canBuild; game.loadedBlocks = Array.isArray(recordAccess.blocks) ? recordAccess.blocks.map(block => ({ ...block })) : null; game.worldSize = Math.max(12, Math.min(32, Number(recordAccess.size) || 12)); game.brainrotMode = isBrainrotWorldRecord(worldRecord || selectedWorld); game.active = true; game.paused = false; game.buildMode = false; game.time = 0;
     if (publishedLaunch && publishedWorld) { publishedWorld.plays = (publishedWorld.plays || 0) + 1; writePublishedGames(publishedGames); renderPublishedGames(); if (publicWorldApi) fetch(publicWorldApi,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'play',worldId:publishedWorld.id})}).catch(()=>{}); }
     else if (ownedWorld) { ownedWorld.visits = (ownedWorld.visits || 0) + 1; saveProfile(); }
     $('#worldName').textContent = game.world.name; $('#worldIcon').textContent = game.world.icon; $('#serverName').textContent = game.canBuild ? (game.isWorldOwner ? 'Owner build access' : 'Builder permission granted') : 'Play-only access';
@@ -1936,7 +2046,7 @@
   $$('.game-card').forEach(card => card.addEventListener('dblclick', () => launchGame($('.card-play', card).dataset.game)));
 
   function leaveGame() {
-    leavePublicRoom(); game.active = false; game.paused = false; $('#gameScreen').classList.remove('active'); $('#gameShopModal').classList.remove('show'); $('#robuxMachineModal').classList.remove('show'); document.body.style.overflow = ''; refreshPublicRoomCards(); beep(280, .08);
+    leavePublicRoom(); game.active = false; game.paused = false; game.brainrotMode = false; updateBrainrotHud(); $('#gameScreen').classList.remove('active'); $('#gameShopModal').classList.remove('show'); $('#robuxMachineModal').classList.remove('show'); document.body.style.overflow = ''; refreshPublicRoomCards(); beep(280, .08);
   }
   function togglePause(force) {
     game.paused = typeof force === 'boolean' ? force : !game.paused;
@@ -1945,7 +2055,7 @@
   $('#exitGame').addEventListener('click', () => togglePause());
   $('#resumeGame').addEventListener('click', () => togglePause(false));
   $('#leaveGame').addEventListener('click', leaveGame);
-  $('#resetPlayer').addEventListener('click', () => { game.player = { x: 5, y: 5, z: 0, vz: 0, angle: 0 }; togglePause(false); showToast('Character reset', 'Back at spawn'); });
+  $('#resetPlayer').addEventListener('click', () => { dropCarriedBrainrot(); resetPlayerToSpawn(); togglePause(false); showToast('Character reset', game.brainrotMode ? 'Back at your base' : 'Back at spawn'); });
 
   function openGameShop() {
     if (!game.active) return;
@@ -2124,6 +2234,96 @@
     $('#mobileInteract').textContent = 'USE';
   }
 
+  function pointInBase(point, zone) {
+    return !!zone && point.x >= zone.x && point.x <= zone.x + zone.w && point.y >= zone.y && point.y <= zone.y + zone.h;
+  }
+  function carriedBrainrot() {
+    return game.brainrots.find(item => item.id === game.carriedBrainrot);
+  }
+  function dropCarriedBrainrot() {
+    const brainrot = carriedBrainrot();
+    if (brainrot && !brainrot.delivered) {
+      brainrot.carried = false;
+      brainrot.x = clampWorld(game.player.x + .65);
+      brainrot.y = clampWorld(game.player.y + .65);
+      brainrot.z = highestBlockAt(brainrot.x, brainrot.y);
+    }
+    game.carriedBrainrot = null;
+    updateBrainrotHud();
+  }
+  function saveBrainrotProgress() {
+    if (!game.userWorldId) return;
+    const record = profile.worlds.find(world => world.id === game.userWorldId);
+    if (!record) return;
+    record.brainrotMode = true;
+    record.baseGame = true;
+    record.brainrotScore = game.brainrotScore;
+  }
+  function pickUpBrainrot(brainrot) {
+    if (!brainrot || brainrot.delivered || game.carriedBrainrot) return;
+    brainrot.carried = true;
+    game.carriedBrainrot = brainrot.id;
+    spawnParticles(brainrot.x, brainrot.y, .6, brainrot.accent || game.world.accent, 18);
+    showToast(`Got ${brainrot.name}!`, 'Bring it back to YOUR BASE');
+    beep(980, .12, .035);
+    updateBrainrotHud();
+  }
+  function deliverBrainrot(brainrot) {
+    if (!brainrot || brainrot.delivered) return;
+    brainrot.delivered = true;
+    brainrot.carried = false;
+    game.carriedBrainrot = null;
+    game.brainrotScore += 1;
+    const reward = Math.max(10, brainrot.value * 25);
+    profile.coins += reward;
+    profile.xp = Math.min(500, profile.xp + 20 + brainrot.value * 4);
+    saveBrainrotProgress();
+    saveProfile(`Stored ${brainrot.name} in your Brainrot base`);
+    spawnParticles(game.player.x, game.player.y, game.player.z + .7, brainrot.accent || '#34e1a1', 32);
+    showToast(`${brainrot.name} stored!`, `+${reward} R for your base`);
+    beep(1180, .2, .04);
+    if (game.brainrots.every(item => item.delivered)) game.brainrotSpawnCooldown = 1.5;
+    updateBrainrotHud();
+    updateQuest();
+  }
+  function updateBrainrotMode(dt) {
+    if (!game.brainrotMode) return;
+    if (game.brainrotSpawnCooldown > 0) {
+      game.brainrotSpawnCooldown = Math.max(0, game.brainrotSpawnCooldown - dt);
+      if (game.brainrotSpawnCooldown === 0) {
+        spawnBrainrotWave(game.worldRecord);
+        showToast('New brainrots spawned!', 'Go steal another one');
+      }
+    }
+    const p = game.player;
+    const carried = carriedBrainrot();
+    if (carried) {
+      carried.x = p.x;
+      carried.y = p.y;
+      carried.z = p.z + 1.15;
+      if (pointInBase(p, game.brainrotBase)) deliverBrainrot(carried);
+    } else {
+      const nearby = game.brainrots.find(item => !item.delivered && !item.carried && Math.hypot(p.x - item.x, p.y - item.y) < .85 && Math.abs(p.z - highestBlockAt(item.x, item.y)) < 1.5);
+      if (nearby) pickUpBrainrot(nearby);
+    }
+    updateBrainrotHud();
+  }
+  function updateBrainrotHud() {
+    const card = document.getElementById('brainrotCard');
+    if (!card) return;
+    if (!game.brainrotMode) { card.hidden = true; return; }
+    card.hidden = false;
+    const carried = carriedBrainrot();
+    const storedText = `${game.brainrotScore} stored`;
+    const activeLeft = game.brainrots.filter(item => !item.delivered).length;
+    $('#brainrotScore').textContent = storedText;
+    $('#brainrotStatus').textContent = carried
+      ? `Carrying ${carried.name}. Run to YOUR BASE!`
+      : game.brainrotSpawnCooldown > 0
+        ? 'New brainrots are spawning...'
+        : `${activeLeft} brainrot${activeLeft === 1 ? '' : 's'} out there. Touch one to grab it.`;
+  }
+
   function update(dt) {
     if (game.paused) return;
     game.time += dt;
@@ -2163,10 +2363,16 @@
     game.particles.forEach(particle => { particle.z += particle.vz*dt; particle.x += particle.vx*dt; particle.y += particle.vy*dt; particle.vz -= 5*dt; particle.life -= dt; });
     game.particles = game.particles.filter(particle => particle.life > 0);
     if (game.npc.talk) game.npc.talk -= dt;
+    updateBrainrotMode(dt);
     updateInteractPrompt();
   }
 
   function updateQuest() {
+    if (game.brainrotMode) {
+      $('#questCount').textContent = `${game.brainrotScore}`;
+      $('#questProgress').style.width = `${Math.min(100, game.brainrotScore * 20)}%`;
+      return;
+    }
     $('#questCount').textContent = `${Math.min(5,game.collected)}/5`;
     $('#questProgress').style.width = `${Math.min(100,game.collected/5*100)}%`;
   }
@@ -2181,6 +2387,59 @@
     const p = project(x,y,height), w=tileW/2,h=tileH/2;
     ctx.fillStyle=top;ctx.beginPath();ctx.moveTo(p.x,p.y-h);ctx.lineTo(p.x+w,p.y);ctx.lineTo(p.x,p.y+h);ctx.lineTo(p.x-w,p.y);ctx.closePath();ctx.fill();
     if(height>0){const bottom=project(x,y,0);ctx.fillStyle=left;ctx.beginPath();ctx.moveTo(p.x-w,p.y);ctx.lineTo(p.x,p.y+h);ctx.lineTo(bottom.x,bottom.y+h);ctx.lineTo(bottom.x-w,bottom.y);ctx.closePath();ctx.fill();ctx.fillStyle=right;ctx.beginPath();ctx.moveTo(p.x+w,p.y);ctx.lineTo(p.x,p.y+h);ctx.lineTo(bottom.x,bottom.y+h);ctx.lineTo(bottom.x+w,bottom.y);ctx.closePath();ctx.fill();}
+  }
+
+  function drawBrainrotBaseZone(zone) {
+    if (!zone) return;
+    ctx.save();
+    ctx.globalAlpha = .32;
+    for (let x = zone.x; x < zone.x + zone.w; x++) {
+      for (let y = zone.y; y < zone.y + zone.h; y++) drawDiamond(x + .5, y + .5, zone.color, shade(zone.color, -45), shade(zone.color, -65), .03);
+    }
+    ctx.globalAlpha = 1;
+    const p = project(zone.x + zone.w / 2, zone.y + zone.h / 2, .28);
+    ctx.fillStyle = '#07111bcc';
+    ctx.fillRect(p.x - 56, p.y - 34, 112, 18);
+    ctx.strokeStyle = zone.color;
+    ctx.strokeRect(p.x - 56, p.y - 34, 112, 18);
+    ctx.fillStyle = '#f8fbff';
+    ctx.font = '900 8px Chakra Petch';
+    ctx.textAlign = 'center';
+    ctx.fillText(zone.label, p.x, p.y - 22);
+    ctx.restore();
+  }
+  function drawBrainrotBaseZones() {
+    if (!game.brainrotMode) return;
+    drawBrainrotBaseZone(game.brainrotEnemyBase);
+    drawBrainrotBaseZone(game.brainrotBase);
+  }
+
+  function drawBrainrot(brainrot) {
+    const float = Math.sin(game.time * 4 + brainrot.phase) * .12;
+    const p = project(brainrot.x, brainrot.y, (brainrot.z || highestBlockAt(brainrot.x, brainrot.y)) + float + .42);
+    ctx.save();
+    ctx.translate(p.x, p.y - 28);
+    ctx.shadowColor = brainrot.accent || game.world.accent;
+    ctx.shadowBlur = 18;
+    ctx.fillStyle = brainrot.color || '#ffcf5a';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 19, 17, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#101728';
+    ctx.fillRect(-12, -7, 24, 14);
+    ctx.fillStyle = '#f8fbff';
+    ctx.font = '900 9px Chakra Petch';
+    ctx.textAlign = 'center';
+    ctx.fillText(brainrot.tag || 'BR', 0, 3);
+    const label = String(brainrot.name || 'Brainrot').toUpperCase().slice(0, 14);
+    const labelWidth = Math.max(62, ctx.measureText(label).width + 14);
+    ctx.fillStyle = '#101728dd';
+    ctx.fillRect(-labelWidth / 2, -39, labelWidth, 15);
+    ctx.fillStyle = brainrot.accent || '#54edff';
+    ctx.font = '800 7px Inter';
+    ctx.fillText(label, 0, -29);
+    ctx.restore();
   }
 
   function drawRobuxMachine(block) {
@@ -2280,7 +2539,16 @@
     const groundTop=game.world.ground,groundLeft=shade(groundTop,-35),groundRight=shade(groundTop,-50);
     const size=game.worldSize;
     for(let sum=0;sum<=2*(size-1);sum++)for(let x=0;x<size;x++){const y=sum-x;if(y<0||y>=size)continue;const p=project(x+.5,y+.5,0),tw=tileW/2,th=tileH/2;ctx.fillStyle=(x+y)%2?groundTop:shade(groundTop,5);ctx.beginPath();ctx.moveTo(p.x,p.y-th);ctx.lineTo(p.x+tw,p.y);ctx.lineTo(p.x,p.y+th);ctx.lineTo(p.x-tw,p.y);ctx.closePath();ctx.fill();ctx.strokeStyle='#ffffff0b';ctx.stroke();if(x===size-1||y===size-1){ctx.fillStyle=x===size-1?groundRight:groundLeft;ctx.beginPath();ctx.moveTo(p.x+(x===size-1?tw:-tw),p.y);ctx.lineTo(p.x,p.y+th);ctx.lineTo(p.x,p.y+th+35);ctx.lineTo(p.x+(x===size-1?tw:-tw),p.y+35);ctx.closePath();ctx.fill();}}
-    const drawables=[];game.blocks.forEach(block=>drawables.push({sort:block.x+block.y+.1,fn:()=>drawBlock(block)}));game.coins.filter(c=>!c.got).forEach(c=>drawables.push({sort:c.x+c.y,fn:()=>drawCoin(c)}));drawables.push({sort:game.npc.x+game.npc.y,fn:()=>drawAvatar(game.npc.x,game.npc.y,0,true)});multiplayer.players.forEach(player=>drawables.push({sort:player.x+player.y,fn:()=>drawAvatar(player.x,player.y,player.z,false,player,player.username)}));if(profile.equippedPet)drawables.push({sort:game.pet.x+game.pet.y+.05,fn:drawPet});drawables.push({sort:game.player.x+game.player.y,fn:()=>drawAvatar(game.player.x,game.player.y,game.player.z,false,profile,profile.name)});drawables.sort((a,b)=>a.sort-b.sort).forEach(d=>d.fn());
+    drawBrainrotBaseZones();
+    const drawables=[];
+    game.blocks.forEach(block=>drawables.push({sort:block.x+block.y+.1,fn:()=>drawBlock(block)}));
+    game.coins.filter(c=>!c.got).forEach(c=>drawables.push({sort:c.x+c.y,fn:()=>drawCoin(c)}));
+    if (game.brainrotMode) game.brainrots.filter(item=>!item.delivered).forEach(item=>drawables.push({sort:item.x+item.y+.08,fn:()=>drawBrainrot(item)}));
+    drawables.push({sort:game.npc.x+game.npc.y,fn:()=>drawAvatar(game.npc.x,game.npc.y,0,true)});
+    multiplayer.players.forEach(player=>drawables.push({sort:player.x+player.y,fn:()=>drawAvatar(player.x,player.y,player.z,false,player,player.username)}));
+    if(profile.equippedPet)drawables.push({sort:game.pet.x+game.pet.y+.05,fn:drawPet});
+    drawables.push({sort:game.player.x+game.player.y,fn:()=>drawAvatar(game.player.x,game.player.y,game.player.z,false,profile,profile.name)});
+    drawables.sort((a,b)=>a.sort-b.sort).forEach(d=>d.fn());
     drawDecor();
     game.particles.forEach(particle=>{const p=project(particle.x,particle.y,particle.z);ctx.globalAlpha=Math.max(0,particle.life*1.5);ctx.fillStyle=particle.color;ctx.fillRect(p.x-3,p.y-3,6,6);ctx.globalAlpha=1;});
   }

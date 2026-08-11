@@ -7,6 +7,11 @@
     "description": "A world made from a file.",
     "theme": "grass",
     "size": 12,
+    "brainrotMode": false,
+    "baseGame": false,
+    "brainrots": [
+      { "name": "Example Brainrot", "tag": "EB", "color": "#ffcf5a", "accent": "#54edff", "value": 1 }
+    ],
     "blocks": [
       { "x": 5, "y": 5, "h": 2, "type": 3 },
       { "x": 6, "y": 5, "h": 1, "type": 4 },

@@ -7,6 +7,15 @@
     "description": "A neon base game where players race down the center lane, grab silly brainrot treasures, and bring them back to base.",
     "theme": "neon",
     "size": 24,
+    "brainrotMode": true,
+    "baseGame": true,
+    "brainrots": [
+      { "name": "Noobini Nugget", "tag": "NN", "color": "#ffcf5a", "accent": "#ff7a90", "value": 1 },
+      { "name": "Cappuccino Cat", "tag": "CC", "color": "#c7955c", "accent": "#54edff", "value": 2 },
+      { "name": "Pixel Goblin", "tag": "PG", "color": "#55e082", "accent": "#7557ff", "value": 3 },
+      { "name": "Baller Banana", "tag": "BB", "color": "#ffe65c", "accent": "#ff9f43", "value": 4 },
+      { "name": "Sigma Cube", "tag": "SC", "color": "#9b7cff", "accent": "#34e1a1", "value": 5 }
+    ],
     "blocks": [
       { "x": 8, "y": 2, "h": 1, "type": 2 },
       { "x": 9, "y": 2, "h": 1, "type": 2 },
