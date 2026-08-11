@@ -58,6 +58,8 @@ Update 22 adds Brainrot Bases and the new main screen photo. Worlds with Brainro
 
 Update 23 adds the behind-the-player 3D obby view for Brainrot/base worlds and removes the old 32 x 32 expansion stop. The renderer now draws only the visible part of huge platforms, so creators can keep expanding their world size without a fixed maximum. Shared links can use `?version=23` to avoid old cached copies.
 
+Update 24 adds mouse look to 3D Brainrot worlds. Click inside the game to lock the mouse, move the mouse to look around, press Esc to release it, and use WASD to move based on the direction you are looking. Touch players can drag on the game view to look around. Shared links can use `?version=24` to avoid old cached copies.
+
 ## Publishing games
 
 New worlds begin as private drafts. Creators can publish a draft as a game in the shared Published Games list, then use Update Live to push later block changes. Deleting a world removes its draft and published copy permanently; deletion records prevent it from returning after the next login.

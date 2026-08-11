@@ -607,7 +607,8 @@
   $$('[data-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 
   const updateNotes = [
-    { version:'UPDATE 23 • LATEST', badge:'UPDATE 23', title:'3D Brainrot Obby', summary:'Brainrot worlds now use a behind-the-player 3D obby camera, and platforms can grow without the old 32 × 32 stop.', features:['Brainrot base games look like forward-running 3D platform worlds','WASD moves like an obby: forward, back, left, and right','Expand keeps growing your creator platform with no fixed max size'] },
+    { version:'UPDATE 24 • LATEST', badge:'UPDATE 24', title:'Mouse Look', summary:'3D Brainrot worlds now let you move the mouse to look around while you play.', features:['Click the 3D game to lock mouse look','Move the mouse to look left, right, up, and down','WASD movement follows the camera direction in 3D Brainrot worlds'] },
+    { version:'UPDATE 23', badge:'UPDATE 23', title:'3D Brainrot Obby', summary:'Brainrot worlds now use a behind-the-player 3D obby camera, and platforms can grow without the old 32 × 32 stop.', features:['Brainrot base games look like forward-running 3D platform worlds','WASD moves like an obby: forward, back, left, and right','Expand keeps growing your creator platform with no fixed max size'] },
     { version:'UPDATE 22', badge:'UPDATE 22', title:'Brainrot Bases', summary:'Brainrot worlds now have a real base game: grab brainrots, carry them home, and score rewards.', features:['Brainrot worlds automatically turn on base-game mode','Glowing brainrots spawn in the world for players to collect','Bring a brainrot to YOUR BASE to store it and earn Robux'] },
     { version:'UPDATE 21', badge:'UPDATE 21', title:'World Files', summary:'You can now make a .roboxworld file and import it to create a draft world.', features:['Download a starter world-file template','Import .roboxworld or JSON files as saved draft worlds','Export any world you made as a reusable file'] },
     { version:'UPDATE 20', badge:'UPDATE 20', title:'Public World Rooms', summary:'Published worlds now have real shared rooms for players on different devices.', features:['Create a public room from a published world','Join the first open room or choose a visible room code','See up to 12 live players moving inside the same world'] },
@@ -636,7 +637,7 @@
     if (!list) return;
     list.innerHTML = updateNotes.map((note, index) => {
       const badge = index === 0 ? 'NEW' : note.badge.replace('UPDATE ', '');
-      const summary = index === 0 ? 'Import a file to make a world.' : note.summary;
+      const summary = note.summary;
       return `<button class="${index === 0 ? 'active' : ''}" data-update-index="${index}"><span>${escapeHTML(badge)}</span><b>${escapeHTML(note.title)}</b><small>${escapeHTML(summary)}</small></button>`;
     }).join('');
   }
@@ -721,7 +722,7 @@
   }
   function injectRobuxStoreUI() {
     const download = $('#downloadGameButton');
-    if (download) download.href = appConfig.downloadFile || 'robox-update-23-download.zip';
+    if (download) download.href = appConfig.downloadFile || 'robox-update-24-download.zip';
     const walletPill = $('#walletCoins')?.closest('.coin-pill');
     if (walletPill && !$('#topRobuxButton')) walletPill.insertAdjacentElement('afterend', makeRobuxButton('topRobuxButton', 'robux-store-button top-robux-button', 'BUY'));
     if ($('#downloadGameButton') && !$('#homeRobuxButton')) $('#downloadGameButton').insertAdjacentElement('beforebegin', makeRobuxButton('homeRobuxButton', 'home-robux-button', 'BUY ROBUX'));
@@ -1929,7 +1930,8 @@
     active: false, paused: false, world: null, worldRecord: null, userWorldId: null, publishedWorldId: null, canBuild: false, isWorldOwner: false, loadedBlocks: null, worldSize: 12, last: 0, time: 0, keys: {}, buildMode: false, selectedBlock: 1, boosts: { speed:0, jump:0, magnet:0 },
     player: { x: 5, y: 5, z: 0, vz: 0, angle: 0 }, camera: { x: 0, y: 0 }, collected: 0,
     coins: [], blocks: [], particles: [], pet: { x: 4.3, y: 5.5, z: 0 }, npc: { x: 7.5, y: 5.5, name: 'Nova' },
-    brainrotMode: false, brainrotBase: null, brainrotEnemyBase: null, brainrots: [], carriedBrainrot: null, brainrotScore: 0, brainrotWave: 1, brainrotSpawnCooldown: 0
+    brainrotMode: false, brainrotBase: null, brainrotEnemyBase: null, brainrots: [], carriedBrainrot: null, brainrotScore: 0, brainrotWave: 1, brainrotSpawnCooldown: 0,
+    look: { yaw:0, pitch:0, locked:false, dragging:false, pointerId:null, lastX:0, lastY:0, sensitivity:.0032 }
   };
 
   const tileW = 72, tileH = 36, blockH = 33;
@@ -1941,6 +1943,44 @@
   function project(x, y, z = 0) {
     return { x: canvas.width / 2 + (x - y) * tileW / 2 - game.camera.x, y: canvas.height * .37 + (x + y) * tileH / 2 - z * blockH - game.camera.y };
   }
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+  function resetMouseLook() {
+    game.look.yaw = 0;
+    game.look.pitch = 0;
+    game.look.locked = false;
+    game.look.dragging = false;
+    game.look.pointerId = null;
+    game.look.lastX = 0;
+    game.look.lastY = 0;
+  }
+  function applyMouseLook(deltaX, deltaY) {
+    if (!game.active || !game.brainrotMode || game.paused) return;
+    game.look.yaw += deltaX * game.look.sensitivity;
+    game.look.pitch = clamp(game.look.pitch + deltaY * game.look.sensitivity, -.55, .65);
+  }
+  function requestMouseLook() {
+    if (!game.active || !game.brainrotMode || game.paused) return;
+    if (canvas.requestPointerLock && document.pointerLockElement !== canvas) {
+      const lockRequest = canvas.requestPointerLock();
+      lockRequest?.catch?.(() => showToast('Mouse look ready', 'Drag on the game to look around'));
+      showToast('Mouse look on', 'Move mouse to look around • Esc releases');
+      return;
+    }
+    showToast('Mouse look ready', 'Drag on the game to look around');
+  }
+  function stopMouseLook() {
+    game.look.dragging = false;
+    game.look.pointerId = null;
+    if (document.pointerLockElement === canvas && document.exitPointerLock) document.exitPointerLock();
+  }
+  document.addEventListener('pointerlockchange', () => {
+    game.look.locked = document.pointerLockElement === canvas;
+  });
+  document.addEventListener('mousemove', event => {
+    if (game.look.locked) applyMouseLook(event.movementX || 0, event.movementY || 0);
+  });
 
   function resize() {
     canvas.width = innerWidth; canvas.height = innerHeight;
@@ -2011,6 +2051,7 @@
     game.brainrotSpawnCooldown = 0;
     game.brainrotWave = 1;
     game.brainrotScore = game.userWorldId ? Math.max(0, Math.floor(Number(record?.brainrotScore) || 0)) : 0;
+    resetMouseLook();
     resetPlayerToSpawn();
     spawnBrainrotWave(record);
     $('#questTitle').textContent = 'Brainrot Base Run';
@@ -2051,10 +2092,11 @@
   $$('.game-card').forEach(card => card.addEventListener('dblclick', () => launchGame($('.card-play', card).dataset.game)));
 
   function leaveGame() {
-    leavePublicRoom(); game.active = false; game.paused = false; game.brainrotMode = false; updateBrainrotHud(); $('#gameScreen').classList.remove('active'); $('#gameShopModal').classList.remove('show'); $('#robuxMachineModal').classList.remove('show'); document.body.style.overflow = ''; refreshPublicRoomCards(); beep(280, .08);
+    stopMouseLook(); leavePublicRoom(); game.active = false; game.paused = false; game.brainrotMode = false; updateBrainrotHud(); $('#gameScreen').classList.remove('active'); $('#gameShopModal').classList.remove('show'); $('#robuxMachineModal').classList.remove('show'); document.body.style.overflow = ''; refreshPublicRoomCards(); beep(280, .08);
   }
   function togglePause(force) {
     game.paused = typeof force === 'boolean' ? force : !game.paused;
+    if (game.paused) stopMouseLook();
     $('#pausePanel').classList.toggle('show', game.paused);
   }
   $('#exitGame').addEventListener('click', () => togglePause());
@@ -2133,6 +2175,7 @@
 
   function setBuildMode(enabled) {
     if (enabled && !game.canBuild) { showToast('Build permission required', 'The world owner has not allowed you to build'); beep(260, .1); return; }
+    if (enabled) stopMouseLook();
     game.buildMode = enabled;
     $('#buildToolbar').classList.toggle('show', enabled);
     $('#mobileBuild').classList.toggle('active', enabled);
@@ -2144,7 +2187,7 @@
     if (['input','textarea','select'].includes(document.activeElement?.tagName?.toLowerCase())) return;
     const key = event.key.toLowerCase(); game.keys[key] = true;
     if ([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(key)) event.preventDefault();
-    if (key === 'escape') { if ($('#robuxMachineModal').classList.contains('show')) closeRobuxMachineShop(); else if ($('#gameShopModal').classList.contains('show')) closeGameShop(); else togglePause(); }
+    if (key === 'escape') { const hadLook = game.look.locked || game.look.dragging; stopMouseLook(); if (hadLook) return; if ($('#robuxMachineModal').classList.contains('show')) closeRobuxMachineShop(); else if ($('#gameShopModal').classList.contains('show')) closeGameShop(); else togglePause(); }
     if (key === 'b' && !event.repeat) setBuildMode(!game.buildMode);
     if (key === 'e' && !event.repeat) { if (nearRobuxMachine()) openRobuxMachineShop(); else openGameShop(); }
     if (key === 'f' && nearNpc()) { showToast('Nova says hello!', 'Keep exploring, Builder!'); game.npc.talk = 2; }
@@ -2179,13 +2222,18 @@
     if (game.brainrotMode) {
       const sx = clientX - rect.left;
       const sy = clientY - rect.top;
-      const horizon = canvas.clientHeight * .18;
-      const bottom = canvas.clientHeight * .82;
+      const horizon = canvas.clientHeight * (.17 - game.look.pitch * .16);
+      const bottom = canvas.clientHeight * (.91 - game.look.pitch * .1);
       const rawScale = (sy - horizon) / Math.max(1, bottom - horizon);
-      const scale = Math.max(.08, Math.min(1.55, rawScale));
-      const forward = (1 / scale - 1) / .45;
-      const lane = Math.min(112, Math.max(72, canvas.clientWidth * .18));
-      return { x:Math.round(game.player.x + (sx - canvas.clientWidth / 2) / Math.max(1, lane * scale)), y:Math.round(game.player.y - forward) };
+      const scale = Math.max(.08, Math.min(1.25, rawScale));
+      const forwardDistance = 1 / scale;
+      const lane = Math.min(220, Math.max(115, canvas.clientWidth * .24));
+      const side = (sx - canvas.clientWidth / 2) / Math.max(1, lane * scale);
+      const camera = brainrotCameraBasis();
+      return {
+        x:Math.round(camera.x + camera.forward.x * forwardDistance + camera.right.x * side),
+        y:Math.round(camera.y + camera.forward.y * forwardDistance + camera.right.y * side)
+      };
     }
     const sx = clientX - rect.left - canvas.clientWidth/2 + game.camera.x;
     const sy = clientY - rect.top - canvas.clientHeight*.37 + game.camera.y;
@@ -2212,6 +2260,19 @@
   }
   canvas.addEventListener('contextmenu', event => event.preventDefault());
   canvas.addEventListener('pointerdown', event => {
+    if (game.brainrotMode && !game.paused && !game.buildMode) {
+      event.preventDefault();
+      if (event.pointerType === 'mouse') requestMouseLook();
+      else {
+        game.look.dragging = true;
+        game.look.pointerId = event.pointerId;
+        game.look.lastX = event.clientX;
+        game.look.lastY = event.clientY;
+        canvas.setPointerCapture?.(event.pointerId);
+        showToast('Touch look on', 'Drag to look around');
+      }
+      return;
+    }
     if (!game.buildMode || game.paused || !game.canBuild) return;
     const tile = screenToTile(event.clientX, event.clientY);
     if (tile.x < 0 || tile.y < 0 || tile.x >= game.worldSize || tile.y >= game.worldSize) return;
@@ -2226,6 +2287,19 @@
     saveWorldBlocks();
     spawnParticles(tile.x + .5, tile.y + .5, .4, game.world.accent, 10); beep(removing ? 300 : 540);
   });
+  canvas.addEventListener('pointermove', event => {
+    if (!game.look.dragging || game.look.pointerId !== event.pointerId) return;
+    event.preventDefault();
+    applyMouseLook(event.clientX - game.look.lastX, event.clientY - game.look.lastY);
+    game.look.lastX = event.clientX;
+    game.look.lastY = event.clientY;
+  });
+  ['pointerup','pointercancel','lostpointercapture'].forEach(type => canvas.addEventListener(type, event => {
+    if (game.look.pointerId === event.pointerId || type === 'lostpointercapture') {
+      game.look.dragging = false;
+      game.look.pointerId = null;
+    }
+  }));
 
   function highestBlockAt(x, y) {
     const tx = Math.floor(x), ty = Math.floor(y), block = game.blocks.find(item => item.x === tx && item.y === ty);
@@ -2347,11 +2421,16 @@
     const p = game.player, speed = (game.keys.shift ? 4.4 : 3.2) * (game.boosts.speed > 0 ? 1.45 : 1) * dt;
     let dx = 0, dy = 0;
     if (game.brainrotMode) {
-      if (game.keys.w || game.keys.arrowup) dy -= speed;
-      if (game.keys.s || game.keys.arrowdown) dy += speed;
-      if (game.keys.a || game.keys.arrowleft) dx -= speed;
-      if (game.keys.d || game.keys.arrowright) dx += speed;
-      if (dx && dy) { dx *= Math.SQRT1_2; dy *= Math.SQRT1_2; }
+      let forwardMove = 0, sideMove = 0;
+      if (game.keys.w || game.keys.arrowup) forwardMove += 1;
+      if (game.keys.s || game.keys.arrowdown) forwardMove -= 1;
+      if (game.keys.a || game.keys.arrowleft) sideMove -= 1;
+      if (game.keys.d || game.keys.arrowright) sideMove += 1;
+      if (forwardMove && sideMove) { forwardMove *= Math.SQRT1_2; sideMove *= Math.SQRT1_2; }
+      const forward = { x:Math.sin(game.look.yaw), y:-Math.cos(game.look.yaw) };
+      const right = { x:Math.cos(game.look.yaw), y:Math.sin(game.look.yaw) };
+      dx = (forward.x * forwardMove + right.x * sideMove) * speed;
+      dy = (forward.y * forwardMove + right.y * sideMove) * speed;
       if (dx || dy) p.angle = Math.atan2(dy, dx);
     } else {
       if (game.keys.w || game.keys.arrowup) { dx -= speed; dy -= speed; }
@@ -2557,16 +2636,29 @@
     });
   }
 
+  function brainrotCameraBasis() {
+    const forward = { x:Math.sin(game.look.yaw), y:-Math.cos(game.look.yaw) };
+    const right = { x:Math.cos(game.look.yaw), y:Math.sin(game.look.yaw) };
+    return {
+      forward,
+      right,
+      x:game.player.x - forward.x * 1.18,
+      y:game.player.y - forward.y * 1.18
+    };
+  }
   function projectBrainrot3D(x, y, z = 0) {
-    const cameraY = game.player.y + 1.18;
-    const depth = cameraY - y;
+    const camera = brainrotCameraBasis();
+    const dx = x - camera.x;
+    const dy = y - camera.y;
+    const depth = dx * camera.forward.x + dy * camera.forward.y;
     if (depth <= .18) return null;
     const scale = Math.min(1.25, 1 / depth);
-    const horizon = canvas.height * .17;
-    const floorLine = canvas.height * .91;
+    const side = dx * camera.right.x + dy * camera.right.y;
+    const horizon = canvas.height * (.17 - game.look.pitch * .16);
+    const floorLine = canvas.height * (.91 - game.look.pitch * .1);
     const laneWidth = Math.min(220, Math.max(115, canvas.width * .24));
     return {
-      x: canvas.width / 2 + (x - game.player.x) * laneWidth * scale,
+      x: canvas.width / 2 + side * laneWidth * scale,
       y: horizon + (floorLine - horizon) * scale - z * 76 * scale,
       scale,
       depth
@@ -2779,20 +2871,27 @@
       ctx.fill();
     }
     const size = game.worldSize;
-    const ahead = Math.max(34, Math.min(72, Math.ceil(h / 10)));
-    const side = Math.max(6, Math.min(12, Math.ceil(w / 135)));
-    const minY = Math.max(0, Math.floor(game.player.y - ahead));
-    const maxY = Math.min(size - 1, Math.ceil(game.player.y + 1));
-    const minX = Math.max(0, Math.floor(game.player.x - side));
-    const maxX = Math.min(size - 1, Math.ceil(game.player.x + side));
+    const reach = Math.max(28, Math.min(48, Math.ceil(h / 16)));
+    const minY = Math.max(0, Math.floor(game.player.y - reach));
+    const maxY = Math.min(size - 1, Math.ceil(game.player.y + reach));
+    const minX = Math.max(0, Math.floor(game.player.x - reach));
+    const maxX = Math.min(size - 1, Math.ceil(game.player.x + reach));
+    const visibleTiles = [];
     for (let y = minY; y <= maxY; y++) {
-      for (let x = minX; x <= maxX; x++) draw3DPlatformTile(x, y, brainrotTileColor(x, y), 0, .18);
+      for (let x = minX; x <= maxX; x++) {
+        const p = projectBrainrot3D(x + .5, y + .5, 0);
+        if (p && p.scale > .018) visibleTiles.push({ x, y, depth:p.depth });
+      }
     }
+    visibleTiles.sort((a, b) => b.depth - a.depth).forEach(tile => draw3DPlatformTile(tile.x, tile.y, brainrotTileColor(tile.x, tile.y), 0, .18));
     draw3DText(game.brainrotEnemyBase?.label || 'BRAINROT DEN', game.brainrotEnemyBase?.x + game.brainrotEnemyBase?.w / 2 || size / 2, game.brainrotEnemyBase?.y || 1, .35, '#ff89d9');
     draw3DText(game.brainrotBase?.label || 'YOUR BASE', game.brainrotBase?.x + game.brainrotBase?.w / 2 || size / 2, game.brainrotBase?.y || size - 4, .35, '#8df4cc');
     game.blocks
       .filter(block => block.x >= minX - 1 && block.x <= maxX + 1 && block.y >= minY - 1 && block.y <= maxY + 1)
-      .sort((a, b) => a.y - b.y)
+      .map(block => ({ block, p:projectBrainrot3D(block.x + .5, block.y + .5, block.h * .38) }))
+      .filter(item => item.p && item.p.scale > .025)
+      .sort((a, b) => b.p.depth - a.p.depth)
+      .map(item => item.block)
       .forEach(draw3DBlock);
     game.coins.filter(c => !c.got).forEach(coin => {
       const p = projectBrainrot3D(coin.x, coin.y, coin.z + .25);
@@ -2808,7 +2907,10 @@
       ctx.fill();
       ctx.restore();
     });
-    game.brainrots.filter(item => !item.delivered).sort((a, b) => a.y - b.y).forEach(draw3DBrainrot);
+    game.brainrots.filter(item => !item.delivered).sort((a, b) => {
+      const pa = projectBrainrot3D(a.x, a.y, .75), pb = projectBrainrot3D(b.x, b.y, .75);
+      return (pb?.depth || -1) - (pa?.depth || -1);
+    }).forEach(draw3DBrainrot);
     multiplayer.players.forEach(player => {
       const p = projectBrainrot3D(player.x, player.y, player.z);
       if (p && p.scale > .06) drawAvatar3DAt(p.x, p.y, p.scale * .9, player, player.username);
@@ -2829,7 +2931,7 @@
     ctx.fillStyle = '#ffffffcc';
     ctx.font = '900 10px Chakra Petch';
     ctx.textAlign = 'center';
-    ctx.fillText('3D BRAINROT OBBY MODE', w / 2, h * .965);
+    ctx.fillText(game.look.locked ? 'MOUSE LOOK ON • ESC RELEASES' : 'CLICK GAME TO LOOK AROUND', w / 2, h * .965);
   }
 
   function render() {
