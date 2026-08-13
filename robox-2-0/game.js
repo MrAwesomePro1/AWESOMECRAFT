@@ -607,7 +607,8 @@
   $$('[data-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 
   const updateNotes = [
-    { version:'UPDATE 24 • LATEST', badge:'UPDATE 24', title:'Mouse Look', summary:'3D Brainrot worlds now let you move the mouse to look around while you play.', features:['Click the 3D game to lock mouse look','Move the mouse to look left, right, up, and down','WASD movement follows the camera direction in 3D Brainrot worlds'] },
+    { version:'UPDATE 25 • LATEST', badge:'UPDATE 25', title:'Platform Guide', summary:'Robox now has a Platform page for the game hub, creator tools, Robux economy, safety, genres, history notes, and future roadmap ideas.', features:['New Platform button on the sidebar and home screen','Core features, creator tools, popular genres, safety, and economy sections','Roadmap cards for engine, discovery, marketplace, audio, identity, and trust upgrades'] },
+    { version:'UPDATE 24', badge:'UPDATE 24', title:'Mouse Look', summary:'3D Brainrot worlds now let you move the mouse to look around while you play.', features:['Click the 3D game to lock mouse look','Move the mouse to look left, right, up, and down','WASD movement follows the camera direction in 3D Brainrot worlds'] },
     { version:'UPDATE 23', badge:'UPDATE 23', title:'3D Brainrot Obby', summary:'Brainrot worlds now use a behind-the-player 3D obby camera, and platforms can grow without the old 32 × 32 stop.', features:['Brainrot base games look like forward-running 3D platform worlds','WASD moves like an obby: forward, back, left, and right','Expand keeps growing your creator platform with no fixed max size'] },
     { version:'UPDATE 22', badge:'UPDATE 22', title:'Brainrot Bases', summary:'Brainrot worlds now have a real base game: grab brainrots, carry them home, and score rewards.', features:['Brainrot worlds automatically turn on base-game mode','Glowing brainrots spawn in the world for players to collect','Bring a brainrot to YOUR BASE to store it and earn Robux'] },
     { version:'UPDATE 21', badge:'UPDATE 21', title:'World Files', summary:'You can now make a .roboxworld file and import it to create a draft world.', features:['Download a starter world-file template','Import .roboxworld or JSON files as saved draft worlds','Export any world you made as a reusable file'] },
@@ -722,7 +723,7 @@
   }
   function injectRobuxStoreUI() {
     const download = $('#downloadGameButton');
-    if (download) download.href = appConfig.downloadFile || 'robox-update-24-download.zip';
+    if (download) download.href = appConfig.downloadFile || 'robox-update-25-download.zip';
     const walletPill = $('#walletCoins')?.closest('.coin-pill');
     if (walletPill && !$('#topRobuxButton')) walletPill.insertAdjacentElement('afterend', makeRobuxButton('topRobuxButton', 'robux-store-button top-robux-button', 'BUY'));
     if ($('#downloadGameButton') && !$('#homeRobuxButton')) $('#downloadGameButton').insertAdjacentElement('beforebegin', makeRobuxButton('homeRobuxButton', 'home-robux-button', 'BUY ROBUX'));
