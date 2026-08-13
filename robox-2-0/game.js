@@ -607,7 +607,8 @@
   $$('[data-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 
   const updateNotes = [
-    { version:'UPDATE 26 • LATEST', badge:'UPDATE 26', title:'Offline App', summary:'Robox now caches the app shell, core files, main image, world templates, and download package so it can reopen after the first online visit.', features:['New web app manifest for installing or saving Robox','Service worker caches the main game, styles, scripts, image, templates, and ZIP','Offline reload support after opening the public link once while online'] },
+    { version:'UPDATE 27 • LATEST', badge:'UPDATE 27', title:'All Systems Lab', summary:'The Platform page now includes an interactive lab for every system you asked for, from game creation and Robux economy to safety, discovery, engine upgrades, social audio, commerce, and data tools.', features:['Filter every requested feature by Core, Creator, Economy, Safety, Engine, Discovery, Social, Commerce, Data, and History','Click any system to boot its simulator and see whether it is ready, simulated, or roadmap','Includes the full pasted list without pretending external real-money or biometric systems are already connected'] },
+    { version:'UPDATE 26', badge:'UPDATE 26', title:'Offline App', summary:'Robox now caches the app shell, core files, main image, world templates, and download package so it can reopen after the first online visit.', features:['New web app manifest for installing or saving Robox','Service worker caches the main game, styles, scripts, image, templates, and ZIP','Offline reload support after opening the public link once while online'] },
     { version:'UPDATE 25', badge:'UPDATE 25', title:'Platform Guide', summary:'Robox now has a Platform page for the game hub, creator tools, Robux economy, safety, genres, history notes, and future roadmap ideas.', features:['New Platform button on the sidebar and home screen','Core features, creator tools, popular genres, safety, and economy sections','Roadmap cards for engine, discovery, marketplace, audio, identity, and trust upgrades'] },
     { version:'UPDATE 24', badge:'UPDATE 24', title:'Mouse Look', summary:'3D Brainrot worlds now let you move the mouse to look around while you play.', features:['Click the 3D game to lock mouse look','Move the mouse to look left, right, up, and down','WASD movement follows the camera direction in 3D Brainrot worlds'] },
     { version:'UPDATE 23', badge:'UPDATE 23', title:'3D Brainrot Obby', summary:'Brainrot worlds now use a behind-the-player 3D obby camera, and platforms can grow without the old 32 × 32 stop.', features:['Brainrot base games look like forward-running 3D platform worlds','WASD moves like an obby: forward, back, left, and right','Expand keeps growing your creator platform with no fixed max size'] },
@@ -666,12 +667,68 @@
   $('#nextUpdate').addEventListener('click', () => renderUpdate(activeUpdateIndex + 1));
   renderUpdate(0);
 
+  function systems(category, state, detail, items) {
+    return items.map(name => ({ category, state, detail, name }));
+  }
+  const platformSystems = [
+    ...systems('core', 'READY', 'This is already part of Robox on this site.', ['Online platform: a huge hub for games', 'Game creation tools', 'Virtual world hangouts', 'Cross-platform phone, iPad, and computer play', 'User-generated worlds and shop items', 'Social hub with friends and invites', 'Avatar shop and skin maker', 'Popular game genres: Tycoon, Simulator, Roleplay, Survival, and Obby']),
+    ...systems('creator', 'SIM', 'This boots as a Robox creator-system simulator inside the Platform lab.', ['Robox Studio-style creator tools', 'Lua and Luau-style game logic', 'Free engine workspace', 'Asset Library for 3D models, audio tracks, and scripts', 'Team Create collaboration', 'Cloud Hosting plan', 'Rojo Syncing with code editors', 'Git Version Control', 'Wally Package Manager', 'Continuous Integration', 'Custom Engine Extensions', 'External Version Control', 'Centralized Patch Notes Feed']),
+    ...systems('economy', 'SIM', 'This is simulated with Robox-only currency unless it says real service required.', ['Premium Currency: Robux', 'Kidtopia Money to buy pretend Robux', 'Real-Money Value plan', 'Developer Exchange (DevEx)', 'Avatar Marketplace', 'Game Passes', 'Paid Access', 'Developer Products', 'Premium Payouts', 'Ad Portal', 'Higher Developer Revenue Splits', 'Fairer UGC Commission Structures', 'Lower DevEx Exchange Thresholds', 'Dynamic Price Caps for Limiteds', 'Native Multi-Currency Regional Pricing', 'In-Experience Creator-to-Creator Gifting', 'Anti-Monopoly Ad Bidding Protection', 'Streamlined Subscription API', 'Transparent Item Trading Escrows', 'Unified Premium Payout Analytics']),
+    ...systems('safety', 'SIM', 'These are safety simulator cards. Real enforcement would require a real moderation service.', ['Text Filters', 'Parental Controls', 'Experience Guidelines', 'Report System', 'Server-Side Asset Encryption', 'Biometric Age Verification', 'Context-Aware Text Filtering', 'Granular Privacy Controls for Teens', 'Exploit-Resistant Remote Events', 'Anti-Phishing Catalog Verification', 'Real-Time Voice Toxicity Alerts', 'Hardware-Level Account Bans', 'Secure Off-Platform Data Linking', 'Clear Asset Takedown Reports', 'Lua Sandboxing', 'Rate Limits']),
+    ...systems('engine', 'ROADMAP', 'This needs engine/server work beyond a static browser game, so it is saved as a roadmap system.', ['True Physics Standardization and Determinism', 'Server-Authoritative Physics', 'Deterministic Physics Toggles', 'Native Vector Graphics (.svg) Support', 'Full Multi-Threaded Luau Execution', 'Hardware-Accelerated Ray Tracing', 'Decoupled Local Memory Storage', 'Advanced PBR Material Layers', 'Custom Shading Language Access', 'Built-In Volumetric Fog Physics', 'Global Mesh Decimation Tools', 'Polygonal Limits', 'Memory Management', 'Dynamic Client Graphics Scaling', 'Advanced Performance Diagnostic Overlays']),
+    ...systems('discovery', 'SIM', 'This runs as a discovery and search roadmap simulator for Robox.', ['AI-Generated Spam Filter', 'Algorithmic Engagement Transparency', 'A/B Testing Frameworks inside Studio', 'Niche Genre Sort Categorization', 'Localized Discovery Sorting', 'Anti-Bot Traffic Detection', 'Hidden Gem Promotional Grants', 'Dead-Game De-indexing Pipeline', 'Customizable Search Filters', 'Community Review Score Overhaul']),
+    ...systems('social', 'SIM', 'This is represented as social, identity, audio, and VR simulator cards.', ['Roblox Connect-style avatar calls', 'Facial Animation', 'Spatial Audio', 'Platform Expansion to PlayStation and VR', 'Adaptive Voice Filters', 'Universal Avatar Identity', 'On-Device Face Capture', 'Procedural Sound Design', 'Native Master Audio Mixer', 'Universal Key-Binding Re-mapping', 'Standardized Interactive Tutorials', 'Platform-Wide Offline Sandbox Mode', 'Cross-Game Inventory Interoperability', 'Custom Avatar Outfit Presets Folder', 'Integrated LFG System']),
+    ...systems('commerce', 'ROADMAP', 'This requires real payments, brands, shipping, ads, and legal review, so Robox keeps it as a roadmap card.', ['Virtual Storefronts', 'Limited Edition Drops', 'Immersive Ads', 'Music Concerts', 'Immersive Shopping Hubs', 'Dynamic Brand Integrations', 'Dynamic Pricing Models', 'Retail physical merchandise shipping']),
+    ...systems('data', 'SIM', 'This is a data-system simulator. Real cloud saves require connected backend infrastructure.', ['DataStore Backups', 'HttpService', 'MessagingService', 'Server hosting infrastructure', 'Multiplayer networking backend', 'Real-world data fetchers', 'Custom game analytics logging']),
+    ...systems('history', 'READY', 'These are reference notes shown inside the Platform guide.', ['2004 DynaBlocks history note', '2006 Roblox launch note', '2017 Robux trade growth note', '2021 public company note', '2023-present PlayStation and VR expansion note', 'Adopt Me!-style pet roleplay note', 'Blox Fruits-style combat adventure note', 'Brookhaven RP-style town roleplay note'])
+  ];
+  let activePlatformFilter = 'all';
+  function platformStateText(state) {
+    return state === 'READY' ? 'READY' : state === 'SIM' ? 'SIMULATOR' : 'ROADMAP';
+  }
+  function renderPlatformSystems(filter = activePlatformFilter) {
+    const grid = $('#platformSystemsGrid');
+    if (!grid) return;
+    activePlatformFilter = filter;
+    const visible = platformSystems.filter(item => filter === 'all' || item.category === filter);
+    grid.innerHTML = visible.map(item => {
+      const index = platformSystems.indexOf(item);
+      return `<article class="platform-system-card ${item.state.toLowerCase()}" data-platform-system="${index}"><span>${escapeHTML(item.category)}</span><h4>${escapeHTML(item.name)}</h4><p>${escapeHTML(item.detail)}</p><button type="button" data-platform-activate="${index}">${item.state === 'READY' ? 'OPEN' : 'BOOT'}</button><em>${platformStateText(item.state)}</em></article>`;
+    }).join('');
+    const ready = platformSystems.filter(item => item.state === 'READY').length;
+    const sim = platformSystems.filter(item => item.state === 'SIM').length;
+    const roadmap = platformSystems.filter(item => item.state === 'ROADMAP').length;
+    const count = $('#platformLabCount');
+    if (count) count.textContent = `${visible.length} of ${platformSystems.length} systems`;
+    if ($('#platformReadyCount')) $('#platformReadyCount').textContent = ready;
+    if ($('#platformSimCount')) $('#platformSimCount').textContent = sim;
+    if ($('#platformRoadmapCount')) $('#platformRoadmapCount').textContent = roadmap;
+    $$('#platformLabFilters [data-platform-filter]').forEach(button => button.classList.toggle('active', button.dataset.platformFilter === filter));
+  }
+  function activatePlatformSystem(index) {
+    const item = platformSystems[index];
+    if (!item) return;
+    const consoleBox = $('#platformConsole');
+    const result = item.state === 'READY' ? 'Ready in Robox now.' : item.state === 'SIM' ? 'Simulator booted in the Platform Lab.' : 'Roadmap card saved. This needs real external infrastructure.';
+    if (consoleBox) consoleBox.textContent = `${item.name}: ${result} ${item.detail}`;
+    showToast(platformStateText(item.state), item.name);
+  }
+  $('#platformLabFilters')?.addEventListener('click', event => {
+    const button = event.target.closest('[data-platform-filter]');
+    if (button) renderPlatformSystems(button.dataset.platformFilter);
+  });
+  $('#platformSystemsGrid')?.addEventListener('click', event => {
+    const button = event.target.closest('[data-platform-activate]');
+    if (button) activatePlatformSystem(Number(button.dataset.platformActivate));
+  });
+  renderPlatformSystems('all');
+
   function registerOfflineApp() {
     if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js').then(() => {
         navigator.storage?.persist?.().catch(() => {});
-        const flag = 'robox-offline-ready-v26';
+        const flag = 'robox-offline-ready-v27';
         if (!localStorage.getItem(flag)) {
           localStorage.setItem(flag, 'yes');
           showToast('Offline ready', 'Robox can reopen after this first online visit');
@@ -740,7 +797,7 @@
   }
   function injectRobuxStoreUI() {
     const download = $('#downloadGameButton');
-    if (download) download.href = appConfig.downloadFile || 'robox-update-26-download.zip';
+    if (download) download.href = appConfig.downloadFile || 'robox-update-27-download.zip';
     const walletPill = $('#walletCoins')?.closest('.coin-pill');
     if (walletPill && !$('#topRobuxButton')) walletPill.insertAdjacentElement('afterend', makeRobuxButton('topRobuxButton', 'robux-store-button top-robux-button', 'BUY'));
     if ($('#downloadGameButton') && !$('#homeRobuxButton')) $('#downloadGameButton').insertAdjacentElement('beforebegin', makeRobuxButton('homeRobuxButton', 'home-robux-button', 'BUY ROBUX'));

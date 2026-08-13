@@ -1,17 +1,17 @@
-const ROBOX_CACHE = 'robox-offline-v26';
+const ROBOX_CACHE = 'robox-offline-v27';
 const ROBOX_CORE_ASSETS = [
   './',
   './index.html',
-  './styles.css?v=26',
-  './update-26.css?v=26',
-  './config.js?v=26',
-  './game.js?v=26',
+  './styles.css?v=27',
+  './update-27.css?v=27',
+  './config.js?v=27',
+  './game.js?v=27',
   './version.json',
   './manifest.webmanifest',
   './assets/robox-main-screen.png',
   './robox-world-template.roboxworld',
   './steal-a-brainrot.roboxworld',
-  './robox-update-26-download.zip'
+  './robox-update-27-download.zip'
 ];
 
 self.addEventListener('install', event => {

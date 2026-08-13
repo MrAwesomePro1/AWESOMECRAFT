@@ -64,6 +64,8 @@ Update 25 adds the Robox Platform Guide. The new Platform page explains the onli
 
 Update 26 makes the public Robox app available offline after the first online visit. It adds a web app manifest, registers a service worker, and caches the app shell, styles, scripts, main screen image, world templates, version file, and Update 26 download package. Shared links can use `?version=26` to avoid old cached copies.
 
+Update 27 adds the All Systems Lab to the Platform page. It sorts the full requested platform list into Core, Creator, Economy, Safety, Engine, Discovery, Social, Commerce, Data, and History systems, lets players click each system to boot a simulator card, and clearly labels what is ready, simulated, or roadmap-only because it would need real servers, payments, devices, moderation, or company-level services. Shared links can use `?version=27` to avoid old cached copies.
+
 ## Publishing games
 
 New worlds begin as private drafts. Creators can publish a draft as a game in the shared Published Games list, then use Update Live to push later block changes. Deleting a world removes its draft and published copy permanently; deletion records prevent it from returning after the next login.

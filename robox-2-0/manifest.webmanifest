@@ -1,8 +1,8 @@
 {
   "name": "Robox",
   "short_name": "Robox",
-  "description": "Create, play, build worlds, and open Robox offline after the first visit.",
-  "start_url": "./?version=26",
+  "description": "Create, play, build worlds, explore Robox systems, and open offline after the first visit.",
+  "start_url": "./?version=27",
   "scope": "./",
   "display": "standalone",
   "background_color": "#090d19",

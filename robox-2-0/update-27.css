@@ -1,0 +1,35 @@
+/* Update 27: All Systems Lab + offline app shell */
+.offline-ready-pill{display:inline-flex;align-items:center;gap:7px;border:1px solid #34e1a160;border-radius:999px;background:#34e1a112;color:#9ff4d4;padding:7px 10px;font:900 8px "Chakra Petch";letter-spacing:.8px}
+.offline-ready-pill:before{content:"";width:7px;height:7px;border-radius:50%;background:#34e1a1;box-shadow:0 0 10px #34e1a1}
+.home-download-button:after{content:"OFFLINE";margin-left:2px;padding:3px 5px;border-radius:999px;background:#34e1a120;color:#b9ffe7;font-size:6px;letter-spacing:.8px}
+.platform-lab{margin-top:22px;padding:22px;border:1px solid #55e6ff42;border-radius:22px;background:radial-gradient(circle at 90% 0,#55e6ff1f,transparent 31%),linear-gradient(145deg,#101729,#0b1120);box-shadow:0 22px 60px #0006}
+.platform-lab-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:16px}
+.platform-lab-head h3{margin:5px 0 7px;font:900 26px "Chakra Petch"}
+.platform-lab-head p:not(.eyebrow){max-width:800px;margin:0;color:#91a0b8;font-size:11px;line-height:1.6}
+.platform-lab-head>span{white-space:nowrap;padding:9px 11px;border:1px solid #34e1a160;border-radius:10px;background:#34e1a112;color:#8ef4cf;font:900 8px "Chakra Petch";letter-spacing:.8px}
+.platform-lab-filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.platform-lab-filters button{border:1px solid #303a52;border-radius:999px;background:#151d30;color:#93a0b6;padding:8px 11px;font:900 8px "Chakra Petch";letter-spacing:.7px;cursor:pointer}
+.platform-lab-filters button:hover,.platform-lab-filters button.active{border-color:#55e6ff;background:#55e6ff1d;color:#d5fbff}
+.platform-lab-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.platform-lab-summary article{padding:14px;border:1px solid #303a52;border-radius:14px;background:#0d1424}
+.platform-lab-summary b{display:block;font:900 32px "Chakra Petch";color:#fff}
+.platform-lab-summary span{color:#8996ab;font:800 8px "Chakra Petch";letter-spacing:.8px}
+.platform-system-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;max-height:620px;overflow:auto;padding-right:4px;scrollbar-width:thin}
+.platform-system-card{position:relative;display:flex;min-height:202px;flex-direction:column;gap:8px;padding:14px;border:1px solid #303a52;border-radius:15px;background:#121a2d;overflow:hidden}
+.platform-system-card:before{content:"";position:absolute;right:-20px;top:-20px;width:64px;height:64px;border-radius:18px;background:#ffffff0a;transform:rotate(18deg)}
+.platform-system-card>span{position:relative;align-self:flex-start;padding:5px 7px;border-radius:7px;background:#7557ff18;color:#c8bfff;font:900 7px "Chakra Petch";letter-spacing:.8px;text-transform:uppercase}
+.platform-system-card h4{position:relative;margin:2px 0 0;font:900 13px/1.2 "Chakra Petch"}
+.platform-system-card p{position:relative;flex:1;margin:0;color:#8794aa;font-size:8px;line-height:1.5}
+.platform-system-card button{position:relative;align-self:flex-start;border:1px solid #55e6ff66;border-radius:8px;background:#55e6ff14;color:#bff7ff;padding:8px 10px;font:900 7px "Chakra Petch";letter-spacing:.8px;cursor:pointer}
+.platform-system-card button:hover{background:#55e6ff2b;color:#fff}
+.platform-system-card em{position:absolute;right:10px;bottom:10px;font:900 7px "Chakra Petch";font-style:normal;letter-spacing:.7px;color:#7d8aa0}
+.platform-system-card.ready{border-color:#34e1a15e;background:radial-gradient(circle at 100% 0,#34e1a119,transparent 34%),#111a2b}
+.platform-system-card.ready em{color:#69ebbd}
+.platform-system-card.sim{border-color:#55e6ff4e}
+.platform-system-card.sim em{color:#7eeeff}
+.platform-system-card.roadmap{border-color:#ffc74d55;background:radial-gradient(circle at 100% 0,#ffc74d19,transparent 34%),#121a2d}
+.platform-system-card.roadmap em{color:#ffd580}
+.platform-console{margin-top:14px;padding:14px;border:1px solid #34e1a151;border-radius:14px;background:#08151d;color:#aef9dc;font:900 9px/1.5 "Chakra Petch";letter-spacing:.5px}
+@media(max-width:1180px){.platform-system-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:820px){.platform-system-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.platform-lab-head{flex-direction:column}.platform-lab-head>span{white-space:normal}.platform-lab-summary{grid-template-columns:1fr 1fr 1fr}}
+@media(max-width:560px){.platform-system-grid,.platform-lab-summary{grid-template-columns:1fr}.platform-system-grid{max-height:none}.platform-lab{padding:16px}}
