@@ -607,7 +607,8 @@
   $$('[data-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 
   const updateNotes = [
-    { version:'UPDATE 25 • LATEST', badge:'UPDATE 25', title:'Platform Guide', summary:'Robox now has a Platform page for the game hub, creator tools, Robux economy, safety, genres, history notes, and future roadmap ideas.', features:['New Platform button on the sidebar and home screen','Core features, creator tools, popular genres, safety, and economy sections','Roadmap cards for engine, discovery, marketplace, audio, identity, and trust upgrades'] },
+    { version:'UPDATE 26 • LATEST', badge:'UPDATE 26', title:'Offline App', summary:'Robox now caches the app shell, core files, main image, world templates, and download package so it can reopen after the first online visit.', features:['New web app manifest for installing or saving Robox','Service worker caches the main game, styles, scripts, image, templates, and ZIP','Offline reload support after opening the public link once while online'] },
+    { version:'UPDATE 25', badge:'UPDATE 25', title:'Platform Guide', summary:'Robox now has a Platform page for the game hub, creator tools, Robux economy, safety, genres, history notes, and future roadmap ideas.', features:['New Platform button on the sidebar and home screen','Core features, creator tools, popular genres, safety, and economy sections','Roadmap cards for engine, discovery, marketplace, audio, identity, and trust upgrades'] },
     { version:'UPDATE 24', badge:'UPDATE 24', title:'Mouse Look', summary:'3D Brainrot worlds now let you move the mouse to look around while you play.', features:['Click the 3D game to lock mouse look','Move the mouse to look left, right, up, and down','WASD movement follows the camera direction in 3D Brainrot worlds'] },
     { version:'UPDATE 23', badge:'UPDATE 23', title:'3D Brainrot Obby', summary:'Brainrot worlds now use a behind-the-player 3D obby camera, and platforms can grow without the old 32 × 32 stop.', features:['Brainrot base games look like forward-running 3D platform worlds','WASD moves like an obby: forward, back, left, and right','Expand keeps growing your creator platform with no fixed max size'] },
     { version:'UPDATE 22', badge:'UPDATE 22', title:'Brainrot Bases', summary:'Brainrot worlds now have a real base game: grab brainrots, carry them home, and score rewards.', features:['Brainrot worlds automatically turn on base-game mode','Glowing brainrots spawn in the world for players to collect','Bring a brainrot to YOUR BASE to store it and earn Robux'] },
@@ -664,6 +665,22 @@
   $('#previousUpdate').addEventListener('click', () => renderUpdate(activeUpdateIndex - 1));
   $('#nextUpdate').addEventListener('click', () => renderUpdate(activeUpdateIndex + 1));
   renderUpdate(0);
+
+  function registerOfflineApp() {
+    if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').then(() => {
+        navigator.storage?.persist?.().catch(() => {});
+        const flag = 'robox-offline-ready-v26';
+        if (!localStorage.getItem(flag)) {
+          localStorage.setItem(flag, 'yes');
+          showToast('Offline ready', 'Robox can reopen after this first online visit');
+        }
+      }).catch(() => {});
+    });
+    window.addEventListener('offline', () => showToast('Offline mode', 'Using saved Robox files'));
+  }
+  registerOfflineApp();
 
   const currentAppVersion = Number(appConfig.version) || 0;
   const canonicalAppUrl = appConfig.canonicalUrl || 'https://mrawesomepro1.github.io/AWESOMECRAFT/robox-2-0/';
@@ -723,7 +740,7 @@
   }
   function injectRobuxStoreUI() {
     const download = $('#downloadGameButton');
-    if (download) download.href = appConfig.downloadFile || 'robox-update-25-download.zip';
+    if (download) download.href = appConfig.downloadFile || 'robox-update-26-download.zip';
     const walletPill = $('#walletCoins')?.closest('.coin-pill');
     if (walletPill && !$('#topRobuxButton')) walletPill.insertAdjacentElement('afterend', makeRobuxButton('topRobuxButton', 'robux-store-button top-robux-button', 'BUY'));
     if ($('#downloadGameButton') && !$('#homeRobuxButton')) $('#downloadGameButton').insertAdjacentElement('beforebegin', makeRobuxButton('homeRobuxButton', 'home-robux-button', 'BUY ROBUX'));

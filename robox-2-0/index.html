@@ -8,7 +8,11 @@
   <meta http-equiv="Expires" content="0">
   <meta name="theme-color" content="#0c1020">
   <title>Robox — Play Beyond</title>
-  <link rel="stylesheet" href="styles.css?v=25">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Robox">
+  <link rel="stylesheet" href="styles.css?v=26">
+  <link rel="stylesheet" href="update-26.css?v=26">
   <style>.avatar-page-actions{display:flex;align-items:center;gap:10px}.open-skin-maker{border:1px solid #8069f36e;border-radius:10px;background:#7557ff20;color:#c9c0ff;padding:11px 14px;text-decoration:none;font:700 8px "Chakra Petch";letter-spacing:.7px}@media(max-width:680px){.avatar-page-actions{width:100%}.open-skin-maker{flex:1;text-align:center}}</style>
 </head>
 <body>
@@ -137,7 +141,7 @@
             <h2>Welcome back, <span id="welcomeName">Player</span></h2>
             <p>Your world library is empty and ready for whatever comes next.</p>
           </div>
-        <div class="home-quick-actions"><button class="home-account-button" id="homeSwitchAccountButton"><span>♙</span> SWITCH ACCOUNT</button><button class="home-controls-button" id="homeControlsButton"><span>⌨</span> CONTROLS</button><button class="home-platform-button" data-view="platform"><span>▦</span> PLATFORM</button><button class="home-update-button" id="checkUpdatesButton"><span>↻</span> CHECK UPDATE</button><a class="home-download-button" id="downloadGameButton" href="robox-update-25-download.zip" download><span>⇩</span> DOWNLOAD</a></div>
+        <div class="home-quick-actions"><button class="home-account-button" id="homeSwitchAccountButton"><span>♙</span> SWITCH ACCOUNT</button><button class="home-controls-button" id="homeControlsButton"><span>⌨</span> CONTROLS</button><button class="home-platform-button" data-view="platform"><span>▦</span> PLATFORM</button><button class="home-update-button" id="checkUpdatesButton"><span>↻</span> CHECK UPDATE</button><a class="home-download-button" id="downloadGameButton" href="robox-update-26-download.zip" download><span>⇩</span> DOWNLOAD</a></div>
         </div>
 
         <section class="main-screen-card" aria-label="Robox main screen">
@@ -147,7 +151,7 @@
             <span class="feature-badge">NEW MAIN SCREEN</span>
             <h3>ROBOX</h3>
             <p>A bigger home page with friends, games, worlds, and your creations all ready to launch.</p>
-            <button class="play-btn" data-view="updates"><span>→</span>SEE UPDATE 25</button>
+            <button class="play-btn" data-view="updates"><span>→</span>SEE UPDATE 26</button>
           </div>
         </section>
 
@@ -318,41 +322,42 @@
       </section>
 
       <section class="view" id="updatesView">
-        <div class="page-heading"><div><p class="eyebrow">WHAT'S NEW</p><h2>Robox Updates</h2><p>Move through earlier releases and see what changed.</p></div><span class="update-version" id="updateVersion">UPDATE 25</span></div>
+        <div class="page-heading"><div><p class="eyebrow">WHAT'S NEW</p><h2>Robox Updates</h2><p>Move through earlier releases and see what changed.</p></div><span class="update-version" id="updateVersion">UPDATE 26</span></div>
         <div class="updates-layout">
           <div class="updates-list" id="updatesList">
-            <button class="active" data-update-index="0"><span>NEW</span><b>Platform Guide</b><small>Big hub, creator, economy, safety, and roadmap page.</small></button>
-            <button data-update-index="1"><span>24</span><b>Mouse Look</b><small>Move the mouse to look around in 3D.</small></button>
-            <button data-update-index="2"><span>23</span><b>3D Brainrot Obby</b><small>Behind-player 3D and endless platforms.</small></button>
-            <button data-update-index="3"><span>22</span><b>Brainrot Bases</b><small>Grab brainrots and bring them to base.</small></button>
-            <button data-update-index="4"><span>21</span><b>World Files</b><small>Import a file to make a world.</small></button>
-            <button data-update-index="5"><span>20</span><b>Public World Rooms</b><small>Join live players inside published worlds.</small></button>
-            <button data-update-index="6"><span>19</span><b>Shop Item Maker</b><small>Create things to sell in the shop.</small></button>
-            <button data-update-index="7"><span>18</span><b>iPad Shop Button</b><small>Touch players get a SHOP button in-game.</small></button>
-            <button data-update-index="8"><span>17</span><b>Promo Codes</b><small>Use code 2017 for 100% off.</small></button>
-            <button data-update-index="9"><span>16</span><b>Infinite Custom Amounts</b><small>Exact deposits and no custom Robux cap.</small></button>
-            <button data-update-index="10"><span>15</span><b>Pro One Banking</b><small>Connect Kidtopia Money to the banking website.</small></button>
-            <button data-update-index="11"><span>14</span><b>Robux Machines</b><small>Place machines and buy Robux with Kidtopia Money.</small></button>
-            <button data-update-index="12"><span>13</span><b>Renamed to Robox</b><small>The app name is now just Robox.</small></button>
-            <button data-update-index="13"><span>12</span><b>Multiplayer Setup Needed</b><small>Real players need an online server.</small></button>
-            <button data-update-index="14"><span>11</span><b>Robux Store</b><small>Buy in-game Robux bundles.</small></button>
-            <button data-update-index="15"><span>10</span><b>Standalone Skin Maker</b><small>Create skins in a separate app, then upload them.</small></button>
-            <button data-update-index="16"><span>9</span><b>Pet Designer</b><small>Make a custom pet for R 1,000.</small></button>
-            <button data-update-index="17"><span>8</span><b>Pets & Robux Shop</b><small>Buy pets and bring one into every world.</small></button>
-            <button data-update-index="18"><span>7</span><b>Stay Current & Download</b><small>Reload missing features or download Robox.</small></button>
-            <button data-update-index="19"><span>6</span><b>Control Switcher</b><small>Choose Auto, Keyboard, or Touch.</small></button>
-            <button data-update-index="20"><span>5</span><b>Multiple Accounts</b><small>Switch between saved player profiles.</small></button>
-            <button data-update-index="21"><span>4</span><b>Invites & Permissions</b><small>Invite players and choose who can build.</small></button>
-            <button data-update-index="22"><span>3</span><b>Expandable Worlds</b><small>Grow platforms and publish games.</small></button>
-            <button data-update-index="23"><span>2</span><b>World Creator</b><small>Create, save, and delete your own worlds.</small></button>
-            <button data-update-index="24"><span>1</span><b>Accounts & Friends</b><small>Age checks, friends, and daily Day 1.</small></button>
+            <button class="active" data-update-index="0"><span>NEW</span><b>Offline App</b><small>Open Robox once, then reload it offline.</small></button>
+            <button data-update-index="1"><span>25</span><b>Platform Guide</b><small>Big hub, creator, economy, safety, and roadmap page.</small></button>
+            <button data-update-index="2"><span>24</span><b>Mouse Look</b><small>Move the mouse to look around in 3D.</small></button>
+            <button data-update-index="3"><span>23</span><b>3D Brainrot Obby</b><small>Behind-player 3D and endless platforms.</small></button>
+            <button data-update-index="4"><span>22</span><b>Brainrot Bases</b><small>Grab brainrots and bring them to base.</small></button>
+            <button data-update-index="5"><span>21</span><b>World Files</b><small>Import a file to make a world.</small></button>
+            <button data-update-index="6"><span>20</span><b>Public World Rooms</b><small>Join live players inside published worlds.</small></button>
+            <button data-update-index="7"><span>19</span><b>Shop Item Maker</b><small>Create things to sell in the shop.</small></button>
+            <button data-update-index="8"><span>18</span><b>iPad Shop Button</b><small>Touch players get a SHOP button in-game.</small></button>
+            <button data-update-index="9"><span>17</span><b>Promo Codes</b><small>Use code 2017 for 100% off.</small></button>
+            <button data-update-index="10"><span>16</span><b>Infinite Custom Amounts</b><small>Exact deposits and no custom Robux cap.</small></button>
+            <button data-update-index="11"><span>15</span><b>Pro One Banking</b><small>Connect Kidtopia Money to the banking website.</small></button>
+            <button data-update-index="12"><span>14</span><b>Robux Machines</b><small>Place machines and buy Robux with Kidtopia Money.</small></button>
+            <button data-update-index="13"><span>13</span><b>Renamed to Robox</b><small>The app name is now just Robox.</small></button>
+            <button data-update-index="14"><span>12</span><b>Multiplayer Setup Needed</b><small>Real players need an online server.</small></button>
+            <button data-update-index="15"><span>11</span><b>Robux Store</b><small>Buy in-game Robux bundles.</small></button>
+            <button data-update-index="16"><span>10</span><b>Standalone Skin Maker</b><small>Create skins in a separate app, then upload them.</small></button>
+            <button data-update-index="17"><span>9</span><b>Pet Designer</b><small>Make a custom pet for R 1,000.</small></button>
+            <button data-update-index="18"><span>8</span><b>Pets & Robux Shop</b><small>Buy pets and bring one into every world.</small></button>
+            <button data-update-index="19"><span>7</span><b>Stay Current & Download</b><small>Reload missing features or download Robox.</small></button>
+            <button data-update-index="20"><span>6</span><b>Control Switcher</b><small>Choose Auto, Keyboard, or Touch.</small></button>
+            <button data-update-index="21"><span>5</span><b>Multiple Accounts</b><small>Switch between saved player profiles.</small></button>
+            <button data-update-index="22"><span>4</span><b>Invites & Permissions</b><small>Invite players and choose who can build.</small></button>
+            <button data-update-index="23"><span>3</span><b>Expandable Worlds</b><small>Grow platforms and publish games.</small></button>
+            <button data-update-index="24"><span>2</span><b>World Creator</b><small>Create, save, and delete your own worlds.</small></button>
+            <button data-update-index="25"><span>1</span><b>Accounts & Friends</b><small>Age checks, friends, and daily Day 1.</small></button>
           </div>
           <article class="update-detail" id="updateDetail">
-            <p class="eyebrow" id="updateKicker">UPDATE 25 • LATEST</p>
-            <h3 id="updateTitle">Platform Guide</h3>
-            <p id="updateSummary">Robox now has a Platform page for the game hub, creator tools, Robux economy, safety, genres, history notes, and future roadmap ideas.</p>
-            <ul id="updateFeatures"><li>New Platform button on the sidebar and home screen</li><li>Core features, creator tools, popular genres, safety, and economy sections</li><li>Roadmap cards for engine, discovery, marketplace, audio, identity, and trust upgrades</li></ul>
-            <div class="update-navigation"><button id="previousUpdate" disabled>← PREVIOUS</button><span id="updatePosition">1 / 25</span><button id="nextUpdate">NEXT →</button></div>
+            <p class="eyebrow" id="updateKicker">UPDATE 26 • LATEST</p>
+            <h3 id="updateTitle">Offline App</h3>
+            <p id="updateSummary">Robox now caches the app shell, core files, main image, world templates, and download package so it can reopen after the first online visit.</p>
+            <ul id="updateFeatures"><li>New web app manifest for installing or saving Robox</li><li>Service worker caches the main game, styles, scripts, image, templates, and ZIP</li><li>Offline reload support after opening the public link once while online</li></ul>
+            <div class="update-navigation"><button id="previousUpdate" disabled>← PREVIOUS</button><span id="updatePosition">1 / 26</span><button id="nextUpdate">NEXT →</button></div>
           </article>
         </div>
       </section>
@@ -526,7 +531,7 @@
     </div>
   </div>
 
-  <script src="config.js?v=25"></script>
-  <script src="game.js?v=25"></script>
+  <script src="config.js?v=26"></script>
+  <script src="game.js?v=26"></script>
 </body>
 </html>

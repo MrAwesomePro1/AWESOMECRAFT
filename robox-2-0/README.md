@@ -62,6 +62,8 @@ Update 24 adds mouse look to 3D Brainrot worlds. Click inside the game to lock t
 
 Update 25 adds the Robox Platform Guide. The new Platform page explains the online game hub, creation tools, Robux economy, popular genres, safety and moderation ideas, platform history notes, creator workflows, discovery, marketplace, social audio, trust, commerce, and future engine roadmap items. Shared links can use `?version=25` to avoid old cached copies.
 
+Update 26 makes the public Robox app available offline after the first online visit. It adds a web app manifest, registers a service worker, and caches the app shell, styles, scripts, main screen image, world templates, version file, and Update 26 download package. Shared links can use `?version=26` to avoid old cached copies.
+
 ## Publishing games
 
 New worlds begin as private drafts. Creators can publish a draft as a game in the shared Published Games list, then use Update Live to push later block changes. Deleting a world removes its draft and published copy permanently; deletion records prevent it from returning after the next login.

@@ -23,3 +23,5 @@ Version 8 updates the Open Robox shortcut to Robox Update 23.
 Version 9 updates the Open Robox shortcut to Robox Update 24.
 
 Version 10 updates the Open Robox shortcut to Robox Update 25.
+
+Version 11 updates the Open Robox shortcut to Robox Update 26.

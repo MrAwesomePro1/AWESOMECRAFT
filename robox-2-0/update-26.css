@@ -1,0 +1,4 @@
+/* Update 26: offline app shell */
+.offline-ready-pill{display:inline-flex;align-items:center;gap:7px;border:1px solid #34e1a160;border-radius:999px;background:#34e1a112;color:#9ff4d4;padding:7px 10px;font:900 8px "Chakra Petch";letter-spacing:.8px}
+.offline-ready-pill:before{content:"";width:7px;height:7px;border-radius:50%;background:#34e1a1;box-shadow:0 0 10px #34e1a1}
+.home-download-button:after{content:"OFFLINE";margin-left:2px;padding:3px 5px;border-radius:999px;background:#34e1a120;color:#b9ffe7;font-size:6px;letter-spacing:.8px}
